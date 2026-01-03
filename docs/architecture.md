@@ -22,7 +22,7 @@ cmswap is a modern Web3 application built with a server-side rendered frontend t
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │              Web3 Integration Layer                   │   │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │   │
-│  │  │ wagmi v2  │  │  viem    │  │ Reown AppKit    │  │   │
+│  │  │ wagmi v2  │  │  viem    │  │ Custom Wallet UI │  │   │
 │  │  └──────────┘  └──────────┘  └──────────────────┘  │   │
 │  │  ┌──────────────────────────────────────────────┐  │   │
 │  │  │     TanStack Query (Data Caching)           │  │   │
@@ -118,15 +118,15 @@ viem is used for:
 - Wallet method signatures
 - Public RPC calls
 
-### Reown AppKit
+### Wallet Connection (wagmi)
 
-Reown AppKit provides:
-- Wallet connection UI
-- 150+ wallet support
-- Chain switching
-- Account management
+Custom wallet UI components using wagmi hooks:
+- Wallet connection modal (useConnect, useDisconnect)
+- Account display (useAccount)
+- Network switching (useSwitchChain)
+- Balance fetching (useBalance)
 
-**Current Status:** Configured but using wagmi directly for MVP. AppKit UI integration pending.
+**Approach:** Using wagmi directly gives full control and smaller bundle size.
 
 ## Protocol Integrations
 
@@ -247,7 +247,7 @@ const { data: balance } = useQuery({
 ### Swap Flow
 
 ```
-1. User connects wallet (Reown AppKit)
+1. User connects wallet (custom wallet UI)
    └─> wagmi useAccount() hook gets address
 
 2. User selects tokens and amount

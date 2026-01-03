@@ -10,7 +10,7 @@ const chains = [
 
 export function Chains() {
     return (
-        <section className="border-y border-gray-800 bg-gray-900/30 py-16">
+        <section className="bg-gray-900/30 py-16">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
                     <h2 className="text-2xl font-bold sm:text-3xl">

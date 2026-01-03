@@ -41,7 +41,7 @@ const navigation = [
 
 export function Footer() {
     return (
-        <footer className="border-t border-gray-800 bg-gray-900/50 py-12">
+        <footer className="bg-gray-900/50 py-12">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
                     {navigation.map((section) => (

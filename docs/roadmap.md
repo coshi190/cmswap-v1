@@ -25,8 +25,7 @@ Implementation phases and TODO list for cmswap development.
 - [x] Configure TypeScript
 - [x] Set up Tailwind CSS
 - [x] Install shadcn/ui
-- [x] Configure wagmi + viem
-- [x] Set up Reown AppKit
+- [x] Configure wagmi + viem (using wagmi directly, no AppKit dependency)
 - [x] Configure TanStack Query
 - [x] Create multi-chain configuration (6 chains)
 - [x] Build landing page
@@ -58,7 +57,6 @@ cmswap/
 │       └── footer.tsx          ✅
 ├── lib/
 │   ├── wagmi.ts                ✅ wagmi config + chains
-│   ├── reown.ts                ✅ Reown AppKit config
 │   └── utils.ts                ✅ Utilities
 ├── docs/
 │   ├── README.md               ✅
@@ -81,11 +79,11 @@ cmswap/
 
 ### Features
 
-- [ ] Wallet connection UI
-  - [ ] Connect button in header
-  - [ ] Account address display
-  - [ ] Balance display
-  - [ ] Network switcher
+- [x] Wallet connection UI
+  - [x] Connect button using wagmi hooks (useConnect, useAccount)
+  - [x] Account address display
+  - [x] Balance display
+  - [x] Network switcher (useSwitchChain)
 - [ ] Token selection
   - [ ] Token search
   - [ ] Popular tokens list
@@ -461,16 +459,3 @@ Want to help build cmswap? Check out our [contributing guidelines](../CONTRIBUTI
 3. **Documentation** - Improve docs and add examples
 4. **Smart Contracts** - Help audit and improve contracts
 5. **Translations** - Add multi-language support
-
----
-
-## Changelog
-
-### 2025-01-02
-
-- ✅ Phase 1 complete: Foundation, landing page, Web3 setup
-- ✅ shadcn/ui configured
-- ✅ Multi-chain support (6 chains)
-- ✅ Documentation created
-- ✅ Bun runtime configured
-- ✅ Vercel deployment ready
