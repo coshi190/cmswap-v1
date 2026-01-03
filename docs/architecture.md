@@ -1,15 +1,19 @@
 # cmswap Architecture
 
+> **Version**: 0.1.1
+> **Status**: Early Development - Wallet Connection & Landing Page Complete
+
 ## System Overview
 
-cmswap is a modern Web3 application built with a server-side rendered frontend that communicates directly with blockchain networks and DeFi protocols. No backend server is required for core functionality.
+cmswap is a modern Web3 application built with a server-side rendered frontend. Currently implemented features focus on wallet connection infrastructure and landing page. Swap, bridge, and launchpad features are planned for future phases.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     User Browser                            │
 │                                                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Swap UI    │  │  Bridge UI   │  │ Launchpad UI │      │
+│  │  Landing UI  │  │   Header     │  │  Wallet UI   │      │
+│  │  (IMPLEMENTED)│  │  (IMPLEMENTED)│  │  (IMPLEMENTED)│      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
 │         │                   │                   │            │
 │  ┌──────────────────────────────────────────────────────┐   │
@@ -29,79 +33,117 @@ cmswap is a modern Web3 application built with a server-side rendered frontend t
 │  │  └──────────────────────────────────────────────┘  │   │
 │  └──────────────────────────────────────────────────────┘   │
 │         │                   │                   │            │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Protocol Integration Layer               │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │   │
-│  │  │  1inch   │  │LayerZero │  │  Uniswap V4 SDK  │  │   │
-│  │  │   API    │  │ Wormhole │  │                  │  │   │
-│  │  └──────────┘  └──────────┘  └──────────────────┘  │   │
-│  └──────────────────────────────────────────────────────┘   │
-│         │                   │                   │            │
 └─────────┼───────────────────┼───────────────────┼────────────┘
           │                   │                   │
 ┌─────────────────────────────────────────────────────────────┐
 │              Blockchain Networks (EVM Chains)               │
-│  Ethereum, BSC, Polygon, Arbitrum, Optimism, Base           │
+│  BNB Chain, KUB Chain, KUB Testnet, JB Chain, Base, World  │
 └─────────────────────────────────────────────────────────────┘
+
+⚠️ Protocol Integration Layer (1inch, LayerZero, Uniswap) - NOT YET IMPLEMENTED
 ```
+
+---
+
+## Current Implementation (v0.1.1)
+
+### ✅ Implemented Features
+
+- **Landing Page**: Hero, Features, Supported Chains, CTA, Footer sections
+- **Web3 Wallet Connection**: Full 4-component wallet connection system
+- **Multi-Chain Support**: 6 chains with network switching
+- **shadcn/ui Integration**: 8 UI components configured
+- **Responsive Header**: Desktop/mobile navigation with wallet integration
+
+### ❌ Not Implemented (Planned)
+
+- **Swap Feature**: Token selection, quotes, execution (Phase 2)
+- **Bridge Feature**: Cross-chain transfers (Phase 3)
+- **Launchpad**: Token creation and liquidity pools (Phase 4)
+- **State Management**: Zustand stores for transaction tracking
+- **Protocol Services**: 1inch, LayerZero, Uniswap integrations
+- **Custom Hooks**: Data fetching hooks for balances, prices, etc.
+
+---
 
 ## Frontend Architecture
 
 ### Next.js App Router
 
-**Why App Router?**
-- React Server Components for better performance
-- Built-in data fetching and caching
-- Streaming and suspense support
-- Better SEO with server-side rendering
+**Configuration:**
+- React Server Components enabled
+- Server-Side Rendering for initial page load
+- Static Site Generation for landing page
+- Client-Side Rendering for Web3 features
 
-**Key Routes:**
+**Current Routes:**
 ```
-/              # Landing page (SSG)
-/swap          # Swap feature (CSR)
-/bridge        # Bridge feature (CSR)
-/launchpad     # Launchpad feature (CSR)
+/              # Landing page (SSG) ✅
+/swap          # Swap feature (Planned) ❌
+/bridge        # Bridge feature (Planned) ❌
+/launchpad     # Launchpad feature (Planned) ❌
 ```
 
-### Component Architecture
+### Component Architecture (ACTUAL)
 
 ```
 components/
-├── ui/                    # shadcn/ui base components
-│   ├── button.tsx
-│   ├── card.tsx
-│   └── ...
-├── landing/               # Landing page components
-│   ├── hero.tsx
-│   ├── features.tsx
-│   └── ...
-├── web3/                  # Wallet & Web3 components
-│   ├── wallet-connect.tsx
-│   ├── network-switcher.tsx
-│   └── ...
-├── swap/                  # Swap feature components
-│   ├── swap-panel.tsx
-│   ├── token-select.tsx
-│   └── ...
-├── bridge/                # Bridge feature components
-│   └── ...
-└── launchpad/             # Launchpad feature components
-    └── ...
+├── ui/                    # shadcn/ui base components ✅
+│   ├── button.tsx         # Button with variants (default, destructive, outline, secondary, ghost, link)
+│   ├── card.tsx           # Card component with subcomponents
+│   ├── avatar.tsx         # Avatar with fallback support
+│   ├── dialog.tsx         # Modal dialog component
+│   ├── dropdown-menu.tsx  # Full dropdown menu system
+│   ├── navigation-menu.tsx # Navigation menu for site nav
+│   ├── separator.tsx      # Visual separator/divider
+│   └── sheet.tsx          # Side sheet (mobile menu)
+│
+├── landing/               # Landing page components ✅
+│   ├── hero.tsx           # Hero section with CTA
+│   ├── features.tsx       # Features grid
+│   ├── chains.tsx         # Supported chains display
+│   ├── cta.tsx            # Call-to-action section
+│   └── footer.tsx         # Footer component
+│
+├── layout/                # Layout components ✅
+│   └── header.tsx         # Main navigation header with wallet integration
+│
+├── web3/                  # Web3/Wallet components ✅
+│   ├── connect-button.tsx # Main wallet connection trigger
+│   ├── connect-modal.tsx  # Wallet selection dialog
+│   ├── account-dropdown.tsx # Account actions (copy, explorer, disconnect)
+│   └── network-switcher.tsx # Network/chain switching dropdown
+│
+├── swap/                  # Swap feature (Planned) ❌
+├── bridge/                # Bridge feature (Planned) ❌
+└── launchpad/             # Launchpad feature (Planned) ❌
 ```
 
-## Web3 Integration Layer
+---
 
-### wagmi Configuration
+## Web3 Integration Layer (IMPLEMENTED)
 
-Located in `lib/wagmi.ts`, this file configures:
-- Supported chains
-- RPC endpoints (Alchemy, public RPCs)
-- Cookie storage for SSR
-- Chain metadata for UI
+### Chain Configuration
 
+**Location:** `lib/wagmi.ts`
+
+**Supported Chains (6):**
+
+| Chain | Chain ID | RPC URL | Explorer | Symbol |
+|-------|----------|---------|----------|--------|
+| **BNB Chain (BSC)** | 56 | thirdweb.com | bscscan.com | BNB |
+| **KUB Chain (Bitkub)** | 96 | bitkubchain.io | bkcscan.com | KUB |
+| **KUB Testnet** | 97 | bitkubchain.io | testnet.bkcscan.com | tKUB |
+| **JB Chain** | 88 | jibchain.net | exp-l1.jibchain.net | JBC |
+| **Base** | 8453 | base.org | basescan.org | ETH |
+| **Worldchain** | (from wagmi/chains) | alchemy.com | alchemy.com | ETH |
+
+**Default Chain:** Base (chain ID 8453)
+
+**Wagmi Configuration:**
 ```typescript
 export const wagmiConfig = createConfig({
-  chains: supportedChains,        // ETH, BSC, POLYGON, ARB, OP, BASE
+  chains: supportedChains,        // 6 chains listed above
   transports: { ... },            // RPC URLs per chain
   ssr: true,                      // Server-side rendering support
   storage: createStorage({
@@ -110,97 +152,102 @@ export const wagmiConfig = createConfig({
 })
 ```
 
+### Wallet Connection Components
+
+**Component Hierarchy:**
+```
+ConnectButton (components/web3/connect-button.tsx)
+├── When Disconnected:
+│   └── Shows "Connect Wallet" button
+│       └── Opens ConnectModal
+└── When Connected:
+    └── Shows AccountInfo (formatted address)
+        └── Opens AccountDropdown
+            ├── Copy Address
+            ├── View on Explorer
+            └── Disconnect
+
+NetworkSwitcher (components/web3/network-switcher.tsx)
+└── Shows current chain with icon
+    └── Opens dropdown with all chains
+        └── Allows chain switching
+```
+
+**Component Details:**
+
+#### ConnectButton (`connect-button.tsx`)
+- **Purpose:** Main entry point for wallet connection
+- **Hooks:** `useAccount()`, `useConnect()`
+- **States:** Connected → Shows address, Disconnected → Shows button
+- **Dependencies:** ConnectModal, AccountDropdown, Button component
+
+#### ConnectModal (`connect-modal.tsx`)
+- **Purpose:** Wallet selection interface
+- **Hooks:** `useConnect()`
+- **Features:**
+  - Lists available wallet connectors (injected, walletConnect, coinbaseWallet)
+  - Custom wallet name mapping for better UX
+  - Loading state during connection
+  - Error handling with user rejection detection (error code 4001)
+  - Toast notifications for feedback
+  - Modal stays open on error for retry
+
+#### AccountDropdown (`account-dropdown.tsx`)
+- **Purpose:** Account management menu
+- **Hooks:** `useAccount()`, `useBalance()`, `useDisconnect()`, `useChainId()`
+- **Features:**
+  - Displays formatted address (e.g., `0x1234...5678`)
+  - Shows token balance with symbol
+  - Avatar with address initials (e.g., `12`)
+  - Copy address to clipboard (with error handling)
+  - View on block explorer (opens in new tab with `rel="noopener noreferrer"`)
+  - Disconnect wallet
+  - Chain metadata integration for explorer URLs
+
+#### NetworkSwitcher (`network-switcher.tsx`)
+- **Purpose:** Network/chain switching interface
+- **Hooks:** `useChainId()`, `useSwitchChain()`
+- **Features:**
+  - Shows current network name and icon
+  - Active chain indicator (green dot)
+  - Lists all supported chains with icons
+  - Loading state during switch
+  - Toast notifications for success/failure
+  - Uses Next.js Image component for chain logos
+
 ### viem Usage
 
-viem is used for:
-- Type-safe contract interactions
+Currently used for:
+- Type-safe chain configuration
+- Transport layer (HTTP RPC calls)
+- Wallet method signatures (via wagmi)
+
+Planned for:
+- Contract interactions (Swap, Bridge, Launchpad)
 - Transaction encoding/decoding
-- Wallet method signatures
-- Public RPC calls
+- Custom contract calls
 
-### Wallet Connection (wagmi)
-
-Custom wallet UI components using wagmi hooks:
-- Wallet connection modal (useConnect, useDisconnect)
-- Account display (useAccount)
-- Network switching (useSwitchChain)
-- Balance fetching (useBalance)
-
-**Approach:** Using wagmi directly gives full control and smaller bundle size.
-
-## Protocol Integrations
-
-### Swap Aggregation (1inch API)
-
-**Why 1inch?**
-- 150+ liquidity sources aggregated
-- Best price routing algorithm
-- Multi-chain support
-- No API key required for basic usage
-
-**Implementation:**
-```typescript
-// services/1inch.ts
-// GET /swap/v6.0/{chain_id}/quote
-// GET /swap/v6.0/{chain_id}/swap
-```
-
-**Data Flow:**
-```
-User Input → 1inch Quote API → Display Quote → User Approves → 1inch Swap API → Execute Transaction
-```
-
-### Cross-Chain Bridge (LayerZero)
-
-**Why LayerZero?**
-- Lightweight messaging protocol
-- Fast finality
-- Broad chain support
-- Stargate Finance for stablecoins
-
-**Implementation:**
-```typescript
-// services/layerzero.ts
-// Stargate SDK for token bridging
-```
-
-**Data Flow:**
-```
-Select Source/Dest Chain → Get Bridge Quote → User Approves → Execute Bridge → Track Status
-```
-
-### Memecoin Launchpad (Uniswap V4)
-
-**Why Uniswap V4?**
-- Hooks for custom functionality
-- Concentrated liquidity
-- Gas efficiency
-- Largest DEX ecosystem
-
-**Implementation:**
-```typescript
-// services/uniswap.ts
-// Uniswap V4 SDK for pool creation
-// Foundry for token deployment
-```
-
-**Data Flow:**
-```
-Token Metadata → Deploy ERC20 → Create Liquidity Pool → Add Liquidity → Token Tradable
-```
+---
 
 ## State Management
 
-### Client State
+### Current State (v0.1.1)
 
-**Zustand** for UI state:
-- Transaction queue
-- User preferences
-- Theme selection
-- Modal states
+**TanStack Query** - Installed and configured for data caching:
+- Used by wagmi for internal caching
+- QueryClient configured in `app/providers.tsx`
+- No custom queries implemented yet
 
+**React State** - Component-level state:
+- Modal open/close states
+- Mobile menu state
+- Form inputs (not yet implemented)
+
+### Planned State Management
+
+**Zustand** (Dependency installed, not implemented):
 ```typescript
-// store/useTransactionStore.ts
+// PLANNED: store/useTransactionStore.ts
 interface TransactionStore {
   transactions: Transaction[]
   addTransaction: (tx: Transaction) => void
@@ -208,108 +255,133 @@ interface TransactionStore {
 }
 ```
 
-### Server State
-
-**TanStack Query** for blockchain data:
-- Token balances
-- Token prices
-- Transaction history
-- Pool reserves
-
+**Custom Hooks** (Planned):
 ```typescript
-// hooks/useTokenBalance.ts
+// PLANNED: hooks/useTokenBalance.ts
 const { data: balance } = useQuery({
   queryKey: ['balance', address, token],
   queryFn: () => fetchBalance(address, token),
-  staleTime: 30_000, // 30 seconds
+  staleTime: 30_000,
 })
+
+// PLANNED: hooks/useSwap.ts
+// PLANNED: hooks/useTokenApproval.ts
+// PLANNED: hooks/useBridge.ts
 ```
 
-## Security Architecture
+---
 
-### Client-Side Security
+## Planned Features (Roadmap)
 
-1. **No Private Keys** - All signing happens in user's wallet
-2. **Transaction Simulation** - Show transaction details before signing
-3. **Input Validation** - Zod schemas for all user inputs
-4. **Rate Limiting** - API call throttling
-5. **CSP Headers** - Content Security Policy configured
+### Phase 2: Swap Feature
 
-### Smart Contract Security (Phase 2)
-
-1. **Slither** - Static analysis
-2. **Foundry Fuzzing** - Property-based testing
-3. **Invariant Testing** - Critical property verification
-4. **Third-party Audit** - Professional security audit
-
-## Data Flow Examples
-
-### Swap Flow
-
+**Components to Create:**
 ```
-1. User connects wallet (custom wallet UI)
-   └─> wagmi useAccount() hook gets address
+components/swap/
+├── swap-panel.tsx       # Main swap interface
+├── token-select.tsx     # Token selection modal
+├── swap-button.tsx      # Swap action button
+└── swap-settings.tsx    # Slippage settings
+```
 
-2. User selects tokens and amount
-   └─> TanStack Query fetches balances
+**Protocol Integration:**
+```typescript
+// PLANNED: services/1inch.ts
+// GET /swap/v6.0/{chain_id}/quote
+// GET /swap/v6.0/{chain_id}/swap
+```
 
-3. Request swap quote
+**Data Flow (Planned):**
+```
+1. User connects wallet (✅ Implemented)
+2. User selects tokens and amount (❌ Not implemented)
+3. Request swap quote (❌ Not implemented)
    └─> 1inch API called via services/1inch.ts
    └─> Quote displayed to user
-
-4. User approves swap
+4. User approves swap (❌ Not implemented)
    └─> wagmi useWriteContract() prepares transaction
    └─> Wallet prompts for signature
-
-5. Transaction executed
+5. Transaction executed (❌ Not implemented)
    └─> Transaction hash captured
    └─> Added to transaction store
    └─> Status tracked until confirmed
 ```
 
-### Bridge Flow
+### Phase 3: Bridge Feature
 
+**Components to Create:**
 ```
-1. User selects source and destination chains
-   └─> wagmi useSwitchChain() for chain switching
-
-2. User selects token and amount
-   └─> LayerZero/Stargate quote fetched
-
-3. User approves bridge
-   └─> Cross-chain transaction initiated
-
-4. Transaction tracking
-   └─> Source chain transaction confirmed
-   └─> Relayer processes bridge
-   └─> Destination chain transaction confirmed
+components/bridge/
+├── bridge-panel.tsx       # Main bridge interface
+├── chain-select.tsx       # Chain selector
+└── bridge-status.tsx      # Bridge status tracker
 ```
+
+**Protocol Integration:**
+```typescript
+// PLANNED: services/layerzero.ts
+// Stargate SDK for token bridging
+```
+
+### Phase 4: Launchpad
+
+**Smart Contracts:**
+```solidity
+// PLANNED: contracts/src/
+├── LaunchpadToken.sol        # ERC20 implementation
+├── LaunchpadFactory.sol      # Factory pattern
+└── interfaces/
+    └── ILaunchpad.sol         # Launchpad interface
+```
+
+**Components to Create:**
+```
+components/launchpad/
+├── launch-form.tsx           # Token creation form
+├── deploy-status.tsx         # Deployment progress
+├── pool-config.tsx           # Liquidity pool setup
+└── token-page.tsx            # Deployed token page
+```
+
+---
+
+## Security Architecture
+
+### Implemented Security Measures (v0.1.1)
+
+1. **No Private Keys** - All signing happens in user's wallet
+2. **External Links** - `rel="noopener noreferrer"` on explorer links
+3. **Clipboard Security** - Try/catch wrapper with user feedback
+4. **User Rejection Detection** - Error code 4001 handled gracefully
+5. **Input Validation** - TypeScript strict mode enabled
+
+### Planned Security Measures
+
+1. **Transaction Simulation** - Show transaction details before signing
+2. **Zod Validation** - Schemas for all user inputs
+3. **Rate Limiting** - API call throttling
+4. **CSP Headers** - Content Security Policy
+5. **Smart Contract Audit** - Third-party security audit before mainnet
+
+---
 
 ## Performance Optimizations
 
-### 1. Server-Side Rendering
+### Implemented (v0.1.1)
 
-- Landing page pre-rendered at build time
-- Dynamic data loaded on client-side
-- Streaming for faster initial page load
+1. **Static Generation** - Landing page pre-rendered at build time
+2. **Code Splitting** - Route-based splitting automatic with Next.js
+3. **Cookie Storage** - Efficient SSR-compatible state storage
+4. **Image Optimization** - Next.js Image component for chain logos
 
-### 2. Static Generation
+### Planned Optimizations
 
-- Marketing pages generated as static HTML
-- Cached on CDN (Vercel Edge Network)
-- Instant page loads
+1. **Streaming** - Suspense support for faster initial load
+2. **Component Lazy Loading** - For large feature components
+3. **Aggressive Caching** - TanStack Query with 30s stale time
+4. **CDN Caching** - Vercel Edge Network for static assets
 
-### 3. Code Splitting
-
-- Route-based splitting automatic with Next.js
-- Component lazy loading for large features
-- Dynamic imports for heavy libraries
-
-### 4. Caching Strategy
-
-- TanStack Query with 30s stale time
-- Immutable cache for token lists
-- Aggressive revalidation for prices
+---
 
 ## Deployment Architecture
 
@@ -329,35 +401,208 @@ const { data: balance } = useQuery({
          ┌────────────────┼────────────────┐
          ▼                ▼                ▼
     ┌─────────┐    ┌──────────┐    ┌──────────┐
-    │ Alchemy │    │  1inch   │    │LayerZero │
-    │   RPC   │    │   API    │    │   API    │
+    │  RPCs   │    │ Planned  │    │ Planned  │
+    │ (Thirdweb/   │ 1inch   │    │LayerZero │
+    │  Alchemy)│   │   API   │    │   API    │
     └─────────┘    └──────────┘    └──────────┘
 ```
 
+**Current RPC Providers:**
+- BSC: thirdweb.com
+- KUB Chain: bitkubchain.io
+- JB Chain: jibchain.net
+- Base: base.org
+- Worldchain: alchemy.com (public)
+
+---
+
 ## Monitoring & Observability
 
-### Client-Side
+### Implemented (v0.1.1)
 
-- **Vercel Analytics** - Page views, Web Vitals
-- **Sentry** - Error tracking, performance monitoring
+- **Vercel Analytics** - Page views, Web Vitals (configured)
+- **Sentry** - Error tracking (configured, not actively used)
+
+### Planned Monitoring
+
 - **Custom Events** - Transaction success/failure rates
-
-### Server-Side
-
 - **Vercel Logs** - Serverless function logs
 - **Rate Limiting** - API call monitoring
 - **Cost Tracking** - RPC usage monitoring
 
+---
+
+## Type Definitions
+
+**Location:** `types/web3.ts`
+
+**Defined Types:**
+```typescript
+// Wallet connection types
+interface ConnectModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+interface WalletOption {
+  id: string
+  name: string
+  type: string
+}
+
+// Account display types
+interface AccountDisplayProps {
+  className?: string
+}
+
+// Network selection types
+interface NetworkOption {
+  chainId: number
+  name: string
+  icon: string
+}
+
+// Connection state types
+type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
+
+interface ConnectionState {
+  status: ConnectionStatus
+  address?: string
+  chainId?: number
+  error?: Error
+}
+```
+
+---
+
+## Utility Functions
+
+**Location:** `lib/utils.ts`
+
+**Implemented:**
+```typescript
+// Class name merger for Tailwind CSS
+export function cn(...inputs: ClassValue[]): string
+
+// Address formatter (e.g., "0x1234567890abcdef" → "0x1234...cdef")
+export function formatAddress(address: string, startChars = 6, endChars = 4): string
+```
+
+---
+
+## Dependencies (v0.1.1)
+
+**Core:**
+- Next.js: 15.2.0
+- React: 19.0.0
+- TypeScript: 5.8.0
+
+**Web3:**
+- wagmi: 2.15.0
+- viem: 2.25.0
+- @tanstack/react-query: 5.62.0
+
+**UI:**
+- Radix UI (avatar, dialog, dropdown-menu, navigation-menu, separator, slot)
+- Tailwind CSS: 3.4.0
+- lucide-react: 0.562.0 (icons)
+- framer-motion: 11.15.0 (animations)
+- react-hot-toast: 2.5.0 (notifications)
+
+**Development:**
+- ESLint: 9.0.0
+- Prettier: 3.4.0
+- Husky: 9.1.0 (git hooks)
+- Vitest: 2.1.0 (testing)
+- Playwright: 1.49.0 (E2E testing)
+
+**Installed but Not Used:**
+- Zustand: 5.0.0 (planned for state management)
+- React Hook Form: 7.55.0 (planned for launchpad forms)
+- Zod: 3.24.0 (planned for input validation)
+
+---
+
+## Component Data Flow Examples
+
+### Wallet Connection Flow (IMPLEMENTED ✅)
+
+```
+1. User clicks "Connect Wallet"
+   └─> ConnectButton opens ConnectModal
+
+2. User selects wallet (e.g., MetaMask)
+   └─> wagmi useConnect() hook initiates connection
+   └─> Loading state shown
+
+3. Connection successful
+   └─> Modal closes
+   └─> Toast success notification
+   └─> ConnectButton shows formatted address
+   └─> AccountDropdown becomes available
+
+4. User clicks address
+   └─> AccountDropdown opens
+   └─> Shows balance and chain info
+
+5. User copies address
+   └─> Clipboard API called
+   └─> Toast success notification
+
+6. User clicks "View on Explorer"
+   └─> Opens chain explorer in new tab
+   └─> Uses rel="noopener noreferrer"
+
+7. User clicks "Disconnect"
+   └─> wagmi useDisconnect() hook
+   └─> Toast success notification
+   └─> ConnectButton resets to "Connect Wallet"
+```
+
+### Network Switch Flow (IMPLEMENTED ✅)
+
+```
+1. User sees current chain (e.g., "BNB Chain")
+   └─> NetworkSwitcher shows chain name and icon
+
+2. User clicks network dropdown
+   └─> Lists all 6 supported chains
+   └─> Shows active indicator on current chain
+
+3. User selects different chain (e.g., "Base")
+   └─> wagmi useSwitchChain() initiates switch
+   └─> Loading state shown
+
+4. Switch successful
+   └─> Toast success notification
+   └─> NetworkSwitcher updates to "Base"
+   └─> Account balance updates for new chain
+```
+
+---
+
 ## Future Architecture Enhancements
 
-### Phase 2
+### Phase 2 (Swap)
 
 1. **API Routes** - Backend API for complex queries
-2. **Database** - User preferences, transaction history
-3. **Indexing** - The Graph for historical data
+2. **Data Indexing** - The Graph for historical data
+3. **Transaction Queue** - Zustand store for tx tracking
 
-### Phase 3
+### Phase 3 (Bridge)
 
-1. **Microservices** - Separate services for swap/bridge/launchpad
-2. **Caching Layer** - Redis for price data
+1. **Cross-chain State** - Track transactions across chains
+2. **Relayer Monitoring** - Track LayerZero message delivery
+3. **Bridge Status UI** - Real-time bridge progress
+
+### Phase 4 (Launchpad)
+
+1. **Contract Deployment** - Foundry integration
+2. **Pool Management** - Uniswap V4 SDK
+3. **Token Metadata** - IPFS for token images/info
+
+### Phase 5 (Polish)
+
+1. **Microservices** - Separate services for each feature
+2. **Redis Cache** - Price data caching
 3. **WebSocket** - Real-time price updates
