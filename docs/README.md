@@ -30,18 +30,18 @@ bun run build
 
 cmswap is a Web3 aggregation platform with three core features:
 
-1. **Aggregate Swap** - Best rates across 150+ DEXs via 1inch API
-2. **Cross-Chain Bridge** - Seamless token bridging via LayerZero
-3. **Memecoin Launchpad** - Token launch platform via Uniswap V4
+1. **Aggregate Swap** - Direct smart contract integration with multi-DEX protocol support (Uniswap V2/V3, Stable, Aggregators)
+2. **Cross-Chain Bridge** - Seamless token bridging via LayerZero (coming)
+3. **Memecoin Launchpad** - Token launch platform via Uniswap V4 (coming)
 
 ### Supported Chains
 
-- Ethereum (ETH)
 - BNB Chain (BSC)
-- Polygon (MATIC)
-- Arbitrum
-- Optimism
+- KUB Chain (Bitkub)
+- KUB Testnet
+- JB Chain (Jibchain)
 - Base
+- Worldchain
 
 ## Tech Stack Summary
 
@@ -49,8 +49,9 @@ cmswap is a Web3 aggregation platform with three core features:
 |----------|------------|
 | Frontend | Next.js 15, React 19, TypeScript |
 | Styling | Tailwind CSS, shadcn/ui |
-| Web3 | wagmi, viem, Reown AppKit |
+| Web3 | wagmi v2, viem v2 |
 | State | Zustand, TanStack Query |
+| Notifications | Sonner |
 | Runtime | Bun |
 | Hosting | Vercel |
 
@@ -60,22 +61,25 @@ cmswap is a Web3 aggregation platform with three core features:
 cmswap/
 ├── app/                    # Next.js App Router
 │   ├── page.tsx           # Landing page
-│   ├── swap/              # Swap feature (coming)
+│   ├── swap/              # Swap feature (implemented)
 │   ├── bridge/            # Bridge feature (coming)
 │   └── launchpad/         # Launchpad feature (coming)
 ├── components/
 │   ├── ui/                # shadcn/ui components
 │   ├── landing/           # Landing page components
 │   ├── web3/              # Web3-specific components
-│   ├── swap/              # Swap components (coming)
-│   ├── bridge/            # Bridge components (coming)
-│   └── launchpad/         # Launchpad components (coming)
+│   └── swap/              # Swap components
 ├── lib/
-│   ├── wagmi.ts          # wagmi & chain configuration
-│   └── utils.ts          # Utility functions
-├── services/             # API clients (1inch, etc.)
-├── hooks/                # Custom React hooks
-└── docs/                 # This documentation
+│   ├── abis/              # Contract ABIs (ERC20, Uniswap V3)
+│   ├── dex-config.ts      # Multi-DEX protocol configuration
+│   ├── tokens.ts          # Token lists per chain
+│   ├── utils.ts           # Utility functions
+│   └── wagmi.ts           # wagmi & chain configuration
+├── services/              # DEX services, token utilities
+├── hooks/                 # Custom React hooks
+├── store/                 # Zustand state management
+├── types/                 # TypeScript types
+└── docs/                  # This documentation
 ```
 
 ## Development
@@ -90,10 +94,8 @@ cmswap/
 Create a `.env.local` file:
 
 ```bash
-# Get your API keys from respective services
+# Optional: Alchemy API for enhanced RPC
 NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key
-NEXT_PUBLIC_1INCH_API_KEY=your_1inch_key
-NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
 ```
 
 ### Available Scripts
@@ -106,10 +108,28 @@ bun run lint     # Run ESLint
 bun run test     # Run tests (coming)
 ```
 
+## Current Implementation
+
+### Phase 2: Swap Feature (In Progress)
+
+**Implemented:**
+- Multi-DEX protocol abstraction (V2, V3, Stable, Aggregator support)
+- Uniswap V3 integration on KUB Testnet
+- Wallet connection with multi-chain support
+- Token selection and balance display
+- Price quotes with pool liquidity detection
+- Swap execution with simulation
+- Transaction tracking with block explorer links
+
+**Pending:**
+- Multi-DEX price comparison
+- Testing on KUB testnet
+- Additional DEX integrations
+
 ## Contributing
 
 Contributions are welcome! Please read our contributing guidelines before submitting PRs.
 
 ## License
 
-[Your License Here]
+MIT

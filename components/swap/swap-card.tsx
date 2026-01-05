@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { parseUnits, formatUnits } from 'viem'
 import type { Token } from '@/types/tokens'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,7 @@ import { ArrowDownUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { isSameToken } from '@/services/tokens'
 import { isValidNumberInput } from '@/lib/utils'
+import { getChainMetadata } from '@/lib/wagmi'
 
 export interface SwapCardProps {
     tokens?: Token[]
@@ -30,6 +31,7 @@ export interface SwapCardProps {
 export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     const tokens = tokensOverride || KUB_TESTNET_TOKENS
     const { address } = useAccount()
+    const chainId = useChainId()
     const {
         tokenIn,
         tokenOut,
@@ -159,12 +161,21 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         }
     }, [simulationError])
     useEffect(() => {
-        if (isSuccess) {
-            toast.success('Swap successful! Transaction submitted.')
+        if (isSuccess && swapHash) {
+            const meta = getChainMetadata(chainId)
+            const explorerUrl = meta?.explorer
+                ? `${meta.explorer}/tx/${swapHash}`
+                : `https://etherscan.io/tx/${swapHash}`
+            toast.success('Swap successful!', {
+                action: {
+                    label: 'View Transaction',
+                    onClick: () => window.open(explorerUrl, '_blank', 'noopener,noreferrer'),
+                },
+            })
             refetchBalanceIn?.()
             refetchBalanceOut?.()
         }
-    }, [isSuccess, refetchBalanceIn, refetchBalanceOut])
+    }, [isSuccess, swapHash, chainId, refetchBalanceIn, refetchBalanceOut])
     useEffect(() => {
         if (swapIsError && swapError) {
             toast.error(swapError.message || 'Swap failed. Please try again.')
