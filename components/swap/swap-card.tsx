@@ -15,7 +15,8 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useUniV3SwapExecution } from '@/hooks/useUniV3SwapExecution'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
-import { formatBalance } from '@/services/tokens'
+import { formatBalance, formatTokenAmount } from '@/services/tokens'
+import { showErrorToast } from '@/lib/errors'
 import { KUB_TESTNET_TOKENS } from '@/lib/tokens'
 import { TokenSelect } from './token-select'
 import { ArrowDownUp } from 'lucide-react'
@@ -108,8 +109,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         }
         setIsLoading(isQuoteLoading)
         if (isError && error) {
-            const errorMessage = (error as Error)?.message || 'Failed to get quote'
-            toast.error(errorMessage)
+            showErrorToast(error, 'Failed to get quote')
         }
     }, [quote, isQuoteLoading, isError, error, tokenOut, setQuote, setIsLoading])
     const displayAmountOut = useMemo(() => {
@@ -166,8 +166,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     })
     useEffect(() => {
         if (simulationError) {
-            const errorMessage = simulationError.message || 'Unable to simulate swap'
-            toast.error(`Simulation failed: ${errorMessage}`)
+            showErrorToast(simulationError, 'Simulation failed')
         }
     }, [simulationError])
     useEffect(() => {
@@ -188,7 +187,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     }, [isSuccess, swapHash, chainId, refetchBalanceIn, refetchBalanceOut])
     useEffect(() => {
         if (swapIsError && swapError) {
-            toast.error(swapError.message || 'Swap failed. Please try again.')
+            showErrorToast(swapError, 'Swap failed')
         }
     }, [swapIsError, swapError])
     useEffect(() => {
@@ -201,13 +200,21 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     const handleSwapTokens = () => {
         swapTokens()
     }
+    const handleMaxAmount = () => {
+        if (tokenIn && balanceInValue > 0n) {
+            setAmountIn(formatTokenAmount(balanceInValue, tokenIn.decimals))
+        }
+    }
     return (
         <Card>
             <CardContent className="space-y-6 p-6">
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="amount-in">From</Label>
-                        <span className="text-xs text-muted-foreground">
+                        <span
+                            className="text-xs text-muted-foreground cursor-pointer hover:underline"
+                            onClick={handleMaxAmount}
+                        >
                             Balance:{' '}
                             {tokenIn
                                 ? isLoadingBalanceIn
