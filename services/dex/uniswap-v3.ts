@@ -1,7 +1,14 @@
-import type { Address } from 'viem'
+import { encodeFunctionData, type Address, type Hex } from 'viem'
 import type { SwapParams } from '@/types/swap'
 import { getV3Config, COMMON_FEE_TIERS, DEFAULT_FEE_TIER } from '@/lib/dex-config'
 import { getSwapAddress } from '@/services/tokens'
+import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
+
+/**
+ * Uniswap V3 Router uses address(2) as ADDRESS_THIS placeholder for multicall
+ * When used as recipient, tells the router to keep tokens in itself for subsequent operations
+ */
+export const ADDRESS_THIS = '0x0000000000000000000000000000000000000002' as Address
 
 /**
  * Get pool address from factory
@@ -149,4 +156,63 @@ export function calculatePriceImpact(
     // Price impact calculation would require more data from the pool
     // For now, returning undefined
     return undefined
+}
+
+/**
+ * Encode exactInputSingle call for multicall
+ */
+export function encodeExactInputSingle(params: {
+    tokenIn: Address
+    tokenOut: Address
+    fee: number
+    recipient: Address
+    amountIn: bigint
+    amountOutMinimum: bigint
+    sqrtPriceLimitX96: bigint
+}): Hex {
+    return encodeFunctionData({
+        abi: UNISWAP_V3_SWAP_ROUTER_ABI,
+        functionName: 'exactInputSingle',
+        args: [params],
+    })
+}
+
+/**
+ * Encode unwrapWETH9 call for multicall
+ */
+export function encodeUnwrapWETH9(amountMinimum: bigint, recipient: Address): Hex {
+    return encodeFunctionData({
+        abi: UNISWAP_V3_SWAP_ROUTER_ABI,
+        functionName: 'unwrapWETH9',
+        args: [amountMinimum, recipient],
+    })
+}
+
+/**
+ * Build multicall data for swapping to native token
+ * Returns array of encoded calls: [exactInputSingle, unwrapWETH9]
+ */
+export function buildMulticallSwapToNative(
+    params: SwapParams,
+    fee: number,
+    chainId: number
+): Hex[] {
+    const tokenIn = getSwapAddress(params.tokenIn, chainId)
+    const tokenOut = getSwapAddress(params.tokenOut, chainId)
+
+    // Step 1: exactInputSingle with recipient = ADDRESS_THIS (router holds wrapped token)
+    const swapCall = encodeExactInputSingle({
+        tokenIn,
+        tokenOut,
+        fee,
+        recipient: ADDRESS_THIS,
+        amountIn: params.amountIn,
+        amountOutMinimum: params.amountOutMinimum,
+        sqrtPriceLimitX96: 0n,
+    })
+
+    // Step 2: unwrapWETH9 to send native token to actual recipient
+    const unwrapCall = encodeUnwrapWETH9(params.amountOutMinimum, params.recipient)
+
+    return [swapCall, unwrapCall]
 }

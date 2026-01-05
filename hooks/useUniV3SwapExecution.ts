@@ -1,13 +1,14 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi'
-import type { Address } from 'viem'
+import type { Address, Hex } from 'viem'
 import type { Token } from '@/types/tokens'
 import type { SwapParams, SwapResult } from '@/types/swap'
 import { getV3Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
 import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
-import { buildSwapParams } from '@/services/dex/uniswap-v3'
+import { buildSwapParams, buildMulticallSwapToNative } from '@/services/dex/uniswap-v3'
 import { isNativeToken } from '@/lib/wagmi'
 
 export interface UseUniV3SwapExecutionParams {
@@ -46,6 +47,8 @@ export function useUniV3SwapExecution({
 }: UseUniV3SwapExecutionParams): UseUniV3SwapExecutionResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = getV3Config(tokenIn.chainId, selectedDex)
+    const isNativeInput = isNativeToken(tokenIn.address as Address)
+    const isNativeOutput = isNativeToken(tokenOut.address as Address)
     const swapParams: SwapParams = {
         tokenIn: tokenIn.address as Address,
         tokenOut: tokenOut.address as Address,
@@ -55,7 +58,24 @@ export function useUniV3SwapExecution({
         slippageTolerance: Math.floor(slippage * 100), // Convert to basis points
         deadline: Math.floor(Date.now() / 1000) + deadlineMinutes * 60,
     }
-    const params = buildSwapParams(swapParams, fee, tokenIn.chainId)
+    const contractCall = useMemo(() => {
+        const txValue = isNativeInput ? amountIn : undefined
+        if (isNativeOutput) {
+            const multicallData = buildMulticallSwapToNative(swapParams, fee, tokenIn.chainId)
+            return {
+                functionName: 'multicall' as const,
+                args: [multicallData] as [Hex[]],
+                value: txValue,
+            }
+        } else {
+            const params = buildSwapParams(swapParams, fee, tokenIn.chainId)
+            return {
+                functionName: 'exactInputSingle' as const,
+                args: [params] as const,
+                value: txValue,
+            }
+        }
+    }, [isNativeInput, isNativeOutput, swapParams, fee, tokenIn.chainId])
     const {
         data: simulationData,
         isLoading: isPreparing,
@@ -63,9 +83,9 @@ export function useUniV3SwapExecution({
     } = useSimulateContract({
         address: dexConfig?.swapRouter,
         abi: UNISWAP_V3_SWAP_ROUTER_ABI,
-        functionName: 'exactInputSingle',
-        args: [params],
-        value: isNativeToken(tokenIn.address) ? amountIn : undefined,
+        functionName: contractCall.functionName,
+        args: contractCall.args,
+        value: contractCall.value,
         chainId: tokenIn.chainId,
         query: {
             enabled: amountIn > 0n,

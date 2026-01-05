@@ -90,6 +90,23 @@ export const UNISWAP_V3_SWAP_ROUTER_ABI = [
             { name: 'tick', type: 'int24', indexed: false },
         ],
     },
+    {
+        type: 'function',
+        name: 'multicall',
+        stateMutability: 'payable',
+        inputs: [{ name: 'data', type: 'bytes[]' }],
+        outputs: [{ name: 'results', type: 'bytes[]' }],
+    },
+    {
+        type: 'function',
+        name: 'unwrapWETH9',
+        stateMutability: 'payable',
+        inputs: [
+            { name: 'amountMinimum', type: 'uint256' },
+            { name: 'recipient', type: 'address' },
+        ],
+        outputs: [],
+    },
 ] as const
 
 export type UniswapV3SwapRouterAbi = typeof UNISWAP_V3_SWAP_ROUTER_ABI
