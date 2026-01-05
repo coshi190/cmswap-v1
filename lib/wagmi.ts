@@ -1,25 +1,32 @@
 import { http, createConfig } from 'wagmi'
 import { cookieStorage, createStorage } from 'wagmi'
-import { bsc, bitkub, bitkubTestnet, jbc, base, worldchain } from 'wagmi/chains'
+import { bsc, bitkub, jbc, base, worldchain } from 'wagmi/chains'
+import type { Address } from 'viem'
 
-// Get projectId from Reown (formerly WalletConnect)
-// Get your project ID at https://cloud.reown.com
-export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 'demo-project-id'
+export const kubTestnet = {
+    id: 25925,
+    name: 'KUB Testnet',
+    nativeCurrency: { name: 'KUB', symbol: 'KUB', decimals: 18 },
+    rpcUrls: {
+        default: { http: ['https://rpc-testnet.bitkubchain.io'] },
+    },
+    blockExplorers: {
+        default: { name: 'KUB Testnet Explorer', url: 'https://testnet.bkcscan.com' },
+    },
+    testnet: true,
+} as const
 
 // Supported chains for cmswap
-export const supportedChains = [bsc, bitkub, bitkubTestnet, jbc, base, worldchain] as const
+export const supportedChains = [bsc, bitkub, kubTestnet, jbc, base, worldchain] as const
 
-// Default chain for the app
-export const defaultChain = base
-
-// Alchemy RPC configuration (add your API key to .env.local)
-const _alchemyApiKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || ''
+// Default chain for the app (KUB Testnet for swap feature)
+export const defaultChain = kubTestnet
 
 // Configure RPC URLs
 const rpcUrls = {
     [bsc.id]: 'https://56.rpc.thirdweb.com',
     [bitkub.id]: 'https://rpc.bitkubchain.io',
-    [bitkubTestnet.id]: 'https://rpc-testnet.bitkubchain.io',
+    [kubTestnet.id]: 'https://rpc-testnet.bitkubchain.io',
     [jbc.id]: 'https://rpc-l1.jibchain.net',
     [base.id]: 'https://mainnet.base.org',
     [worldchain.id]: 'https://worldchain-mainnet.g.alchemy.com/public',
@@ -31,7 +38,7 @@ export const wagmiConfig = createConfig({
     transports: {
         [bsc.id]: http(rpcUrls[bsc.id]),
         [bitkub.id]: http(rpcUrls[bitkub.id]),
-        [bitkubTestnet.id]: http(rpcUrls[bitkubTestnet.id]),
+        [kubTestnet.id]: http(rpcUrls[kubTestnet.id]),
         [jbc.id]: http(rpcUrls[jbc.id]),
         [base.id]: http(rpcUrls[base.id]),
         [worldchain.id]: http(rpcUrls[worldchain.id]),
@@ -46,7 +53,7 @@ export const wagmiConfig = createConfig({
 export const chainIds = {
     bsc: bsc.id,
     bitkub: bitkub.id,
-    bitkubTestnet: bitkubTestnet.id,
+    kubTestnet: kubTestnet.id,
     jbc: jbc.id,
     base: base.id,
     worldchain: worldchain.id,
@@ -66,9 +73,9 @@ export const chainMetadata = {
         icon: '/chains/kubchain.png',
         explorer: 'https://www.bkcscan.com',
     },
-    [bitkubTestnet.id]: {
+    [kubTestnet.id]: {
         name: 'KUB Testnet',
-        symbol: 'tKUB',
+        symbol: 'KUB',
         icon: '/chains/kubchain.png',
         explorer: 'https://testnet.bkcscan.com',
     },
@@ -95,4 +102,12 @@ export const chainMetadata = {
 // Get chain metadata by ID
 export function getChainMetadata(chainId: number) {
     return chainMetadata[chainId as keyof typeof chainMetadata]
+}
+
+/**
+ * Check if an address is a native token (ETH, KUB, etc.)
+ * Native tokens use special addresses: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+ */
+export function isNativeToken(address: Address): boolean {
+    return address.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 }

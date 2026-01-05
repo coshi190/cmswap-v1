@@ -4,13 +4,15 @@ Implementation phases and TODO list for cmswap development.
 
 ## Project Status
 
-**Current Phase**: Phase 1 Complete ✅
+**Current Phase**: Phase 2 - Swap Feature (In Progress 🚧)
 
-- [x] Project initialization
-- [x] Landing page
-- [x] Web3 configuration (wagmi, viem, Reown)
-- [x] shadcn/ui setup
-- [x] Multi-chain configuration
+- [x] Phase 1: Foundation ✅
+- [ ] Phase 2: Swap Feature 🚧 (50% complete)
+  - [x] Multi-DEX config abstraction
+  - [x] Uniswap V3 integration
+  - [x] Swap UI with token selection
+  - [ ] Testing on KUB testnet
+  - [ ] Multi-DEX expansion
 
 ---
 
@@ -72,91 +74,222 @@ cmswap/
 
 ---
 
-## Phase 2: Swap Feature (NEXT)
+## Phase 2: Swap Feature (IN PROGRESS 🚧)
 
 **Duration**: 1-2 weeks
-**Goal**: Implement DEX aggregation swap
+**Goal**: Implement multi-DEX swap with direct smart contract integration
 
-### Features
+**Initial Chain**: KUB Testnet
+
+### Implemented Features ✅
 
 - [x] Wallet connection UI
   - [x] Connect button using wagmi hooks (useConnect, useAccount)
   - [x] Account address display
   - [x] Balance display
   - [x] Network switcher (useSwitchChain)
-- [ ] Token selection
-  - [ ] Token search
-  - [ ] Popular tokens list
-  - [ ] Custom token input (address)
-  - [ ] Token import warning
-- [ ] Swap interface
-  - [ ] From/To token inputs
-  - [ ] Amount input with validation
-  - [ ] Swap button
-  - [ ] Settings (slippage, deadline)
-- [ ] Price quotes
-  - [ ] Fetch quotes from 1inch API
+- [x] Token selection
+  - [x] Token search
+  - [x] Popular tokens list (KUB testnet tokens)
+  - [x] Custom token input (address)
+  - [x] Token import warning
+- [x] Swap interface
+  - [x] From/To token inputs
+  - [x] Amount input with validation
+  - [x] Swap button
+  - [x] Settings (slippage, deadline) - in store
+- [x] Multi-DEX price quotes
+  - [x] Fetch quotes from Uniswap V3 via smart contracts
+  - [x] Pool liquidity detection (tries all fee tiers)
+  - [x] Display best quote
+  - [x] Display minimum received
+- [x] Swap execution
+  - [x] Prepare transaction data
+  - [x] Request wallet signature
+  - [x] Execute swap via Uniswap V3 smart contract
+  - [x] Handle errors
+- [x] Transaction tracking
+  - [x] Pending state
+  - [x] Success confirmation
+  - [x] Error handling (Sonner toasts)
+
+### Pending Features
+
+- [ ] Multi-DEX price comparison
+  - [ ] Fetch quotes from multiple DEXs in parallel
+  - [ ] Display best price with source DEX label
+  - [ ] Show alternative DEX quotes
   - [ ] Display price impact
-  - [ ] Display minimum received
   - [ ] Display gas estimate
-- [ ] Swap execution
-  - [ ] Prepare transaction
-  - [ ] Request wallet signature
-  - [ ] Submit to 1inch API
-  - [ ] Handle errors
-- [ ] Transaction tracking
-  - [ ] Pending state
-  - [ ] Success confirmation
-  - [ ] Error handling
-  - [ ] Transaction history
+- [ ] Transaction history
 
-### API Integration
+### DEX Integration
 
-**1inch API v6**
+**Direct Smart Contract Calls via wagmi/viem**
 
 ```typescript
-// GET /swap/v6.0/{chain_id}/quote
-// GET /swap/v6.0/{chain_id}/swap
+// Key wagmi hooks:
+// useReadContract  - Fetch quotes, balances, allowances
+// useWriteContract - Execute swaps, approvals
+// useSimulateContract - Pre-validate transactions
+// useWaitForTransactionReceipt - Track confirmation
 ```
 
-**Chains**: Ethereum, BSC, Polygon (initial)
+**KUB Testnet DEX Strategy:**
 
-### Files to Create
+| DEX | Protocol | Status |
+|-----|----------|--------|
+| cmswap | Uniswap V3 fork | ✅ Integrated |
+
+**Multi-DEX Aggregation:**
+- [ ] Query all available DEXs in parallel
+- [ ] Compare and sort by best output amount
+- [ ] Display best quote prominently
+- [x] Allow manual DEX selection
+
+### Files Created
 
 ```
+lib/
+├── abis/                           ✅ Contract ABIs
+│   ├── erc20.ts                    ✅ ERC20 ABI
+│   ├── uniswap-v3-quoter.ts        ✅ Uniswap V3 QuoterV2 ABI
+│   ├── uniswap-v3-router.ts        ✅ Uniswap V3 SwapRouter ABI
+│   └── index.ts                    ✅ ABIs export
+│
+├── dex-config.ts                   ✅ Multi-DEX protocol abstraction
+└── tokens.ts                       ✅ KUB testnet token list
+
 components/swap/
-├── swap-panel.tsx           # Main swap interface
-├── token-select.tsx          # Token selection modal
-├── swap-button.tsx           # Swap action button
-└── swap-settings.tsx         # Slippage settings
+├── swap-card.tsx                   ✅ Main swap interface
+├── token-select.tsx                ✅ Token selection modal
+└── dex-select-card.tsx             ✅ DEX selection UI
 
 services/
-├── 1inch.ts                  # 1inch API client
-└── tokens.ts                 # Token metadata
+├── tokens.ts                       ✅ Token operations
+└── dex/
+    └── uniswap-v3.ts               ✅ Uniswap V3 protocol service
 
 hooks/
-├── useSwap.ts                # Swap logic
-├── useTokenBalance.ts        # Token balance
-└── useTokenApproval.ts       # Token approval
+├── useTokenBalance.ts              ✅ Token balance (native/ERC20)
+├── useTokenApproval.ts             ✅ Generic token approval (any protocol)
+├── useUniV3Quote.ts                ✅ Uniswap V3 quote fetching
+├── useUniV3SwapExecution.ts        ✅ Uniswap V3 swap execution
+└── useDebounce.ts                  ✅ Debounce utility
 
 store/
-└── useSwapStore.ts           # Swap state
+└── swap-store.ts                   ✅ Swap state management
 
 types/
-└── swap.ts                   # Swap types
+├── swap.ts                         ✅ Swap types
+├── dex.ts                          ✅ DEX protocol types
+└── tokens.ts                       ✅ Token metadata types
+
+app/
+└── swap/
+    └── page.tsx                    ✅ Swap page
 ```
 
 ### TODO
 
-- [ ] Create `services/1inch.ts` API client
-- [ ] Create `services/tokens.ts` for token metadata
-- [ ] Build swap-panel component
-- [ ] Build token-select modal
-- [ ] Integrate 1inch quote API
-- [ ] Integrate 1inch swap API
-- [ ] Add transaction state management
-- [ ] Test on testnet (Sepolia)
-- [ ] Test on mainnet (small amounts)
+- [x] Research KUB testnet DEX ecosystem ✅
+  - [x] Found cmswap (Uniswap V3 fork) ✅
+  - [x] Identified testnet tokens (KUB, tKKUB, testKUB, testToken) ✅
+- [x] Create `lib/abis/` with ERC20 and Uniswap V3 ABIs ✅
+- [x] Create `lib/dex-config.ts` with multi-DEX protocol support ✅
+- [x] Create `lib/tokens.ts` with KUB testnet token list ✅
+- [x] Build DEX service layer
+  - [x] Create `services/tokens.ts` abstract types ✅
+  - [x] Implement `services/dex/uniswap-v3.ts` ✅
+- [x] Build custom hooks
+  - [x] Create `hooks/useTokenBalance.ts` ✅
+  - [x] Create `hooks/useTokenApproval.ts` ✅ (generic for any protocol)
+  - [x] Create `hooks/useUniV3Quote.ts` ✅
+  - [x] Create `hooks/useUniV3SwapExecution.ts` ✅
+  - [x] Create `hooks/useDebounce.ts` ✅
+- [x] Build swap UI components
+  - [x] Build swap-card component ✅
+  - [x] Build token-select component ✅
+  - [x] Build dex-select-card component ✅
+  - [ ] Build swap-settings (slippage, deadline) - Partial (in store)
+- [x] Create swap page at `app/swap/page.tsx` ✅
+- [x] Add swap route to navigation ✅
+- [ ] Test on KUB testnet with faucet tokens - Pending
+- [x] Add error handling and user feedback (Sonner toasts) ✅
+
+---
+
+## Architecture
+
+### Multi-DEX Protocol Support
+
+The swap system uses a protocol-agnostic architecture to support multiple DEX types:
+
+```typescript
+// Supported protocol types
+enum ProtocolType {
+  V2 = 'v2',           // Uniswap V2 forks (constant product AMM)
+  V3 = 'v3',           // Uniswap V3 forks (concentrated liquidity)
+  STABLE = 'stable',   // Stable swap (Curve-style)
+  AGGREGATOR = 'aggregator' // 1inch-style aggregators
+}
+
+// Protocol-specific configs
+interface V2Config {
+  protocolType: ProtocolType.V2
+  factory: Address
+  router: Address
+  wnative?: Address
+}
+
+interface V3Config {
+  protocolType: ProtocolType.V3
+  factory: Address
+  quoter: Address
+  swapRouter: Address
+  feeTiers?: number[]
+  defaultFeeTier?: number
+}
+
+interface StableConfig {
+  protocolType: ProtocolType.STABLE
+  registry: Address
+  poolFinder?: Address
+  basePool?: Address
+}
+
+interface AggregatorConfig {
+  protocolType: ProtocolType.AGGREGATOR
+  aggregator: Address
+  apiEndpoint?: string
+}
+```
+
+### Key Features
+
+1. **Generic Token Approval** - `useTokenApproval` works with any DEX protocol via `getProtocolSpender()`
+2. **Store Integration** - `selectedDex` from store propagates to all hooks
+3. **Native Token Handling** - `0xeeee...` address for native tokens, auto-wrapped for swaps
+4. **Smart Balance Formatting** - `formatBalance()` handles large/small numbers elegantly
+5. **Pool Liquidity Detection** - Quote hook checks all fee tiers, selects pool with most liquidity
+
+### Contract Addresses (KUB Testnet)
+
+| Contract | Address |
+|----------|--------|
+| Factory | `0xCBd41F872FD46964bD4Be4d72a8bEBA9D656565b` |
+| Quoter V2 | `0x3F64C4Dfd224a102A4d705193a7c40899Cf21fFe` |
+| Swap Router | `0x3C5514335dc4E2B0D9e1cc98ddE219c50173c5Be` |
+| Wrapped KUB (tKKUB) | `0x700D3ba307E1256e509eD3E45D6f9dff441d6907` |
+
+### Token List (KUB Testnet)
+
+| Symbol | Address | Type |
+|--------|---------|------|
+| KUB | `0xeeee...` | Native |
+| tKKUB | `0x700D...` | ERC20 (Wrapped) |
+| testKUB | `0xE7f6...` | ERC20 |
+| testToken | `0x2335...` | ERC20 |
 
 ---
 
