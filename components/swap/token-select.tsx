@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChevronDown, Search } from 'lucide-react'
@@ -98,7 +97,6 @@ function TokenList({
                                 </Card>
                             ))}
                         </div>
-                        <Separator className="mt-4" />
                     </div>
                 )}
                 <div className="py-2">

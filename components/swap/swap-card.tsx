@@ -21,6 +21,7 @@ import { TokenSelect } from './token-select'
 import { ArrowDownUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { isSameToken } from '@/services/tokens'
+import { isValidNumberInput } from '@/lib/utils'
 
 export interface SwapCardProps {
     tokens?: Token[]
@@ -200,8 +201,17 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                             type="text"
                             placeholder="0.0"
                             className="flex-1"
+                            autoFocus
+                            autoComplete="off"
+                            inputMode="decimal"
+                            pattern="^[0-9]*\.?[0-9]*$"
                             value={amountIn}
-                            onChange={(e) => setAmountIn(e.target.value)}
+                            onChange={(e) => {
+                                const value = e.target.value
+                                if (isValidNumberInput(value)) {
+                                    setAmountIn(value)
+                                }
+                            }}
                         />
                         <TokenSelect
                             token={tokenIn}
@@ -243,6 +253,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                             placeholder="0.0"
                             className="flex-1"
                             readOnly
+                            autoComplete="off"
                             value={displayAmountOut}
                         />
                         <TokenSelect
