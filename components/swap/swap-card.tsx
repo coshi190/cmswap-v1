@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { parseUnits, formatUnits } from 'viem'
 import type { Token } from '@/types/tokens'
@@ -14,6 +14,7 @@ import { useUniV3Quote } from '@/hooks/useUniV3Quote'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUniV3SwapExecution } from '@/hooks/useUniV3SwapExecution'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
+import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { formatBalance, formatTokenAmount } from '@/services/tokens'
 import { showErrorToast } from '@/lib/errors'
@@ -30,6 +31,7 @@ export interface SwapCardProps {
 }
 
 export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
+    useSwapUrlSync()
     const tokens = tokensOverride || KUB_TESTNET_TOKENS
     const { address } = useAccount()
     const chainId = useChainId()
@@ -45,6 +47,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         setQuote,
         setIsLoading,
     } = useSwapStore()
+    const hasInitializedTokensRef = useRef(false)
     const {
         balance: balanceInValue,
         isLoading: isLoadingBalanceIn,
@@ -191,8 +194,9 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         }
     }, [swapIsError, swapError])
     useEffect(() => {
-        if (!tokenIn && tokens.length > 0 && tokens[0]) {
+        if (!hasInitializedTokensRef.current && !tokenIn && tokens.length > 0 && tokens[0]) {
             setTokenIn(tokens[0])
+            hasInitializedTokensRef.current = true
         }
     }, [tokenIn, tokens, setTokenIn])
     const isConfirmingApproval = approvalHash && isConfirmingApprovalRaw

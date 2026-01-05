@@ -9,6 +9,8 @@ interface SwapStore extends SwapState {
     settings: SwapSettings
     // DEX selection
     selectedDex: DEXType
+    // URL sync state
+    isUpdatingFromUrl: boolean
 
     // Actions
     setTokenIn: (token: Token | null) => void
@@ -23,6 +25,7 @@ interface SwapStore extends SwapState {
     setSlippagePreset: (preset: '0.1' | '0.5' | '1' | 'custom') => void
     setDeadlineMinutes: (minutes: number) => void
     setExpertMode: (enabled: boolean) => void
+    setIsUpdatingFromUrl: (updating: boolean) => void
     swapTokens: () => void
     reset: () => void
 }
@@ -44,6 +47,7 @@ const initialState: SwapState = {
     quote: null,
     isLoading: false,
     error: null,
+    isUpdatingFromUrl: false,
 }
 
 export const useSwapStore = create<SwapStore>()(
@@ -122,6 +126,8 @@ export const useSwapStore = create<SwapStore>()(
                         amountOut: state.amountIn,
                         quote: null,
                     })),
+
+                setIsUpdatingFromUrl: (updating) => set({ isUpdatingFromUrl: updating }),
 
                 // Reset to initial state
                 reset: () => set(initialState),

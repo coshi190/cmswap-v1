@@ -80,6 +80,28 @@ export interface SwapState {
     quote: QuoteResult | null
     isLoading: boolean
     error: string | null
+    isUpdatingFromUrl: boolean
+}
+
+/**
+ * URL parameters for swap page
+ * Format: /swap?input={address}&output={address}&amount={string}
+ */
+export interface SwapUrlParams {
+    input?: string // Token address
+    output?: string // Token address
+    amount?: string // Input amount as decimal string
+}
+
+/**
+ * Validated and parsed URL parameters
+ */
+export interface ParsedSwapUrlParams {
+    tokenIn: Token | null
+    tokenOut: Token | null
+    amountIn: string
+    isValid: boolean
+    errors: string[]
 }
 
 // Import Token type from tokens.ts

@@ -5,8 +5,21 @@ import { kubTestnet } from '@/lib/wagmi'
 import { Button } from '@/components/ui/button'
 import { SwapCard } from '@/components/swap/swap-card'
 import { DexSelectCard } from '@/components/swap/dex-select-card'
+import { Suspense } from 'react'
 
 export default function SwapPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-screen items-center justify-center">Loading...</div>
+            }
+        >
+            <SwapContent />
+        </Suspense>
+    )
+}
+
+function SwapContent() {
     const { isConnected } = useAccount()
     const chainId = useChainId()
     const { switchChain } = useSwitchChain()
