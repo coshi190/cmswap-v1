@@ -14,11 +14,15 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronDown, Search, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getPopularTokens } from '@/lib/tokens'
-import { kubTestnet } from '@/lib/wagmi'
 import { formatBalance } from '@/services/tokens'
+import { toastSuccess } from '@/lib/toast'
+
+function truncateAddress(address: string): string {
+    if (!address || address.length < 10) return address
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
 
 interface TokenListProps {
     tokens: Token[]
@@ -38,14 +42,15 @@ function TokenList({
     isLoadingBalances,
 }: TokenListProps) {
     const [searchQuery, setSearchQuery] = useState('')
-    const popularTokens = getPopularTokens(kubTestnet.id)
+    const handleCopyAddress = (e: React.MouseEvent, address: string) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(address)
+        toastSuccess('Address copied to clipboard')
+    }
     const filteredTokens = tokens.filter(
         (token) =>
             token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            token.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    const regularTokens = filteredTokens.filter(
-        (token) => !popularTokens.find((pt) => pt.address === token.address)
+            token.address.toLowerCase().includes(searchQuery.toLowerCase())
     )
     const getBalance = (tokenAddress: string) => {
         if (isLoadingBalances) return '...'
@@ -69,54 +74,23 @@ function TokenList({
                     />
                 </div>
             </div>
-            <ScrollArea className="h-80">
-                {popularTokens.length > 0 && searchQuery === '' && (
-                    <div className="py-2">
-                        <div className="grid grid-cols-3 gap-2">
-                            {popularTokens.map((token) => (
-                                <Card
-                                    key={token.address}
-                                    onClick={() => onSelect(token)}
-                                    className={cn(
-                                        'cursor-pointer transition-colors hover:bg-accent',
-                                        selectedToken?.address === token.address && 'bg-accent'
-                                    )}
-                                >
-                                    <CardContent className="flex flex-col items-center gap-1 p-3">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={token.logo} alt={token.symbol} />
-                                            <AvatarFallback className="bg-primary/10 text-primary">
-                                                {token.symbol.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-sm font-medium">{token.symbol}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {getBalance(token.address)}
-                                        </span>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                )}
+            <ScrollArea className="h-96">
                 <div className="py-2">
-                    {searchQuery === '' && popularTokens.length > 0 && (
-                        <p className="mb-3 text-xs font-medium text-muted-foreground">
-                            {searchQuery ? 'Search Results' : 'All Tokens'}
-                        </p>
-                    )}
-                    {(searchQuery ? filteredTokens : regularTokens).length === 0 ? (
+                    <p className="mb-3 text-xs font-medium text-muted-foreground">
+                        {searchQuery ? 'Search Results' : 'All Tokens'}
+                    </p>
+                    {filteredTokens.length === 0 ? (
                         <div className="py-8 text-center text-sm text-muted-foreground">
                             No tokens found
                         </div>
                     ) : (
                         <div className="space-y-1">
-                            {(searchQuery ? filteredTokens : regularTokens).map((token) => (
+                            {filteredTokens.map((token) => (
                                 <Card
                                     key={token.address}
                                     onClick={() => onSelect(token)}
                                     className={cn(
-                                        'cursor-pointer transition-colors hover:bg-accent',
+                                        'cursor-pointer border-none',
                                         selectedToken?.address === token.address && 'bg-accent'
                                     )}
                                 >
@@ -129,9 +103,19 @@ function TokenList({
                                         </Avatar>
                                         <div className="flex flex-1 flex-col">
                                             <span className="font-medium">{token.symbol}</span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {token.name}
-                                            </span>
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                <span className="font-mono">
+                                                    {truncateAddress(token.address)}
+                                                </span>
+                                                <button
+                                                    onClick={(e) =>
+                                                        handleCopyAddress(e, token.address)
+                                                    }
+                                                    className="hover:text-foreground"
+                                                >
+                                                    <Copy className="h-3 w-3" />
+                                                </button>
+                                            </div>
                                         </div>
                                         <span className="text-sm text-muted-foreground">
                                             {getBalance(token.address)}

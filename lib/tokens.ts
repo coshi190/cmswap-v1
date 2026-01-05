@@ -80,26 +80,3 @@ export function searchTokens(chainId: number, query: string): Token[] {
             token.address.toLowerCase().includes(lowerQuery)
     )
 }
-
-/**
- * Popular tokens (shown first in selection)
- */
-export const POPULAR_TOKENS: Partial<Record<number, string[]>> = {
-    [kubTestnet.id]: ['KUB', 'tKKUB', 'testKUB'],
-}
-
-/**
- * Get popular tokens for a chain
- */
-export function getPopularTokens(chainId: number): Token[] {
-    const popularSymbols = POPULAR_TOKENS[chainId] || []
-    const tokens = TOKEN_LISTS[chainId] || []
-
-    return tokens
-        .filter((token) => popularSymbols.includes(token.symbol))
-        .sort((a, b) => {
-            const aIndex = popularSymbols.indexOf(a.symbol)
-            const bIndex = popularSymbols.indexOf(b.symbol)
-            return aIndex - bIndex
-        })
-}

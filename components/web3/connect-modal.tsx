@@ -4,7 +4,7 @@ import { useConnect } from 'wagmi'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Wallet, Loader2 } from 'lucide-react'
-import { toastSuccess, toastError } from '@/lib/toast-error'
+import { toastSuccess, toastError } from '@/lib/toast'
 import type { ConnectModalProps } from '@/types/web3'
 
 const WALLET_NAMES: Record<string, string> = {

@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Loader2, ChevronDown } from 'lucide-react'
-import { toastSuccess, toastError } from '@/lib/toast-error'
+import { toastSuccess, toastError } from '@/lib/toast'
 
 export function NetworkSwitcher({ className = '' }: { className?: string }) {
     const chainId = useChainId()
