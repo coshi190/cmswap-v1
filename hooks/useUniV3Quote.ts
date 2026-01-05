@@ -11,7 +11,7 @@ import { UNISWAP_V3_QUOTER_V2_ABI } from '@/lib/abis/uniswap-v3-quoter'
 import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
 import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
 import { buildQuoteParams } from '@/services/dex/uniswap-v3'
-import { isSameToken, getSwapAddress } from '@/services/tokens'
+import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'
 
 export interface UseUniV3QuoteParams {
     tokenIn: Token | null
@@ -26,6 +26,8 @@ export interface UseUniV3QuoteResult {
     isError: boolean
     error: Error | null
     fee: number
+    isWrapUnwrap: boolean
+    wrapOperation: 'wrap' | 'unwrap' | null
 }
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address
@@ -39,6 +41,9 @@ export function useUniV3Quote({
     const { selectedDex } = useSwapStore()
     const dexConfig = tokenIn ? getV3Config(tokenIn.chainId, selectedDex) : null
     const chainId = tokenIn?.chainId ?? 1
+    const wrapOperation = useMemo(() => {
+        return getWrapOperation(tokenIn, tokenOut)
+    }, [tokenIn, tokenOut])
     const tokenInAddress = tokenIn
         ? getSwapAddress(tokenIn.address as Address, chainId)
         : ZERO_ADDRESS
@@ -172,6 +177,7 @@ export function useUniV3Quote({
         !!dexConfig &&
         tokenIn.chainId === tokenOut.chainId &&
         !isSameToken(tokenIn, tokenOut) &&
+        !wrapOperation &&
         !!bestPool &&
         !!bestFee
     const quoteParams = isReadyForQuote
@@ -200,6 +206,14 @@ export function useUniV3Quote({
         },
     })
     const quote: QuoteResult | null = useMemo(() => {
+        if (wrapOperation && tokenIn && tokenOut && amountIn > 0n) {
+            return {
+                amountOut: amountIn,
+                sqrtPriceX96After: 0n,
+                initializedTicksCrossed: 0,
+                gasEstimate: wrapOperation === 'wrap' ? 50000n : 40000n,
+            }
+        }
         if (!data) return null
         return {
             amountOut: data[0],
@@ -207,21 +221,39 @@ export function useUniV3Quote({
             initializedTicksCrossed: Number(data[2]),
             gasEstimate: data[3],
         }
-    }, [data])
+    }, [data, wrapOperation, tokenIn, tokenOut, amountIn])
     const displayError = useMemo(() => {
         if (isError && error) return error as Error
-        if (!isLoadingPool && !bestPool && tokenIn && tokenOut && baseQueryEnabled) {
+        if (
+            !wrapOperation &&
+            !isLoadingPool &&
+            !bestPool &&
+            tokenIn &&
+            tokenOut &&
+            baseQueryEnabled
+        ) {
             return new Error(
                 `No pool found for ${tokenIn.symbol}/${tokenOut.symbol}. Try a different token pair.`
             )
         }
         return null
-    }, [isError, error, isLoadingPool, bestPool, tokenIn, tokenOut, baseQueryEnabled])
+    }, [
+        isError,
+        error,
+        isLoadingPool,
+        bestPool,
+        tokenIn,
+        tokenOut,
+        baseQueryEnabled,
+        wrapOperation,
+    ])
     return {
         quote,
-        isLoading: isQuoteLoading || isLoadingPool,
+        isLoading: wrapOperation ? false : isQuoteLoading || isLoadingPool,
         isError: !!displayError,
         error: displayError,
-        fee: bestFee ?? DEFAULT_FEE_TIER,
+        fee: wrapOperation ? 0 : (bestFee ?? DEFAULT_FEE_TIER),
+        isWrapUnwrap: !!wrapOperation,
+        wrapOperation,
     }
 }

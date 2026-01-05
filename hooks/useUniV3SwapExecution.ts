@@ -10,6 +10,8 @@ import { useSwapStore } from '@/store/swap-store'
 import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
 import { buildSwapParams, buildMulticallSwapToNative } from '@/services/dex/uniswap-v3'
 import { isNativeToken } from '@/lib/wagmi'
+import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
+import { WETH9_ABI } from '@/lib/abis/weth9'
 
 export interface UseUniV3SwapExecutionParams {
     tokenIn: Token
@@ -33,6 +35,7 @@ export interface UseUniV3SwapExecutionResult {
     error: Error | null
     hash: Address | undefined
     simulationError: Error | null
+    isWrapUnwrap: boolean
 }
 
 export function useUniV3SwapExecution({
@@ -47,6 +50,9 @@ export function useUniV3SwapExecution({
 }: UseUniV3SwapExecutionParams): UseUniV3SwapExecutionResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = getV3Config(tokenIn.chainId, selectedDex)
+    const wrapOperation = useMemo(() => {
+        return getWrapOperation(tokenIn, tokenOut)
+    }, [tokenIn, tokenOut])
     const isNativeInput = isNativeToken(tokenIn.address as Address)
     const isNativeOutput = isNativeToken(tokenOut.address as Address)
     const swapParams: SwapParams = {
@@ -59,6 +65,27 @@ export function useUniV3SwapExecution({
         deadline: Math.floor(Date.now() / 1000) + deadlineMinutes * 60,
     }
     const contractCall = useMemo(() => {
+        if (wrapOperation) {
+            const wrappedAddress = getWrappedNativeAddress(tokenIn.chainId)
+
+            if (wrapOperation === 'wrap') {
+                return {
+                    address: wrappedAddress,
+                    abi: WETH9_ABI,
+                    functionName: 'deposit' as const,
+                    args: [] as const,
+                    value: amountIn,
+                }
+            } else {
+                return {
+                    address: wrappedAddress,
+                    abi: WETH9_ABI,
+                    functionName: 'withdraw' as const,
+                    args: [amountIn] as [bigint],
+                    value: undefined,
+                }
+            }
+        }
         const txValue = isNativeInput ? amountIn : undefined
         if (isNativeOutput) {
             const multicallData = buildMulticallSwapToNative(swapParams, fee, tokenIn.chainId)
@@ -75,22 +102,37 @@ export function useUniV3SwapExecution({
                 value: txValue,
             }
         }
-    }, [isNativeInput, isNativeOutput, swapParams, fee, tokenIn.chainId])
+    }, [wrapOperation, tokenIn, amountIn, swapParams, fee, isNativeInput, isNativeOutput])
     const {
         data: simulationData,
         isLoading: isPreparing,
         error: simulationError,
-    } = useSimulateContract({
-        address: dexConfig?.swapRouter,
-        abi: UNISWAP_V3_SWAP_ROUTER_ABI,
-        functionName: contractCall.functionName,
-        args: contractCall.args,
-        value: contractCall.value,
-        chainId: tokenIn.chainId,
-        query: {
-            enabled: amountIn > 0n,
-        },
-    })
+    } = useSimulateContract(
+        (wrapOperation
+            ? {
+                  address: (contractCall as { address: Address }).address,
+                  abi: WETH9_ABI,
+                  functionName:
+                      wrapOperation === 'wrap' ? ('deposit' as const) : ('withdraw' as const),
+                  args: wrapOperation === 'wrap' ? ([] as const) : ([amountIn] as const),
+                  value: wrapOperation === 'wrap' ? amountIn : undefined,
+                  chainId: tokenIn.chainId,
+                  query: {
+                      enabled: amountIn > 0n,
+                  },
+              }
+            : {
+                  address: dexConfig!.swapRouter,
+                  abi: UNISWAP_V3_SWAP_ROUTER_ABI,
+                  functionName: contractCall.functionName,
+                  args: contractCall.args,
+                  value: contractCall.value,
+                  chainId: tokenIn.chainId,
+                  query: {
+                      enabled: amountIn > 0n,
+                  },
+              }) as any // eslint-disable-line @typescript-eslint/no-explicit-any -- complex conditional type union
+    )
     const {
         data: hash,
         writeContract: swap,
@@ -102,7 +144,7 @@ export function useUniV3SwapExecution({
         hash,
     })
     const executeSwap = () => {
-        if (!dexConfig) {
+        if (!dexConfig && !wrapOperation) {
             console.error('Swap execution failed: DEX config not found for chain', tokenIn.chainId)
             return
         }
@@ -127,5 +169,6 @@ export function useUniV3SwapExecution({
         error: error as Error | null,
         hash,
         simulationError: simulationError as Error | null,
+        isWrapUnwrap: !!wrapOperation,
     }
 }

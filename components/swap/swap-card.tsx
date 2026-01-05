@@ -20,7 +20,7 @@ import { KUB_TESTNET_TOKENS } from '@/lib/tokens'
 import { TokenSelect } from './token-select'
 import { ArrowDownUp } from 'lucide-react'
 import { toast } from 'sonner'
-import { isSameToken } from '@/services/tokens'
+import { isSameToken, getWrapOperation } from '@/services/tokens'
 import { isValidNumberInput } from '@/lib/utils'
 import { getChainMetadata } from '@/lib/wagmi'
 
@@ -94,6 +94,8 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         isError,
         error,
         fee,
+        isWrapUnwrap,
+        wrapOperation,
     } = useUniV3Quote({
         tokenIn,
         tokenOut,
@@ -119,6 +121,9 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         return '0'
     }, [quote, isQuoteLoading, isError, tokenOut])
     const isSameTokenSwap = isSameToken(tokenIn, tokenOut)
+    const wrapOp = useMemo(() => {
+        return getWrapOperation(tokenIn, tokenOut)
+    }, [tokenIn, tokenOut])
     const amountOutMinimum = useMemo(() => {
         if (!quote || !tokenOut) return 0n
         return calculateMinOutput(quote.amountOut, Math.floor(settings.slippage * 100))
@@ -134,6 +139,11 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         owner: address,
         amountToApprove: amountInBigInt,
     })
+    const needsApprovalCheck = useMemo(() => {
+        if (wrapOp === 'wrap') return false
+        if (wrapOp === 'unwrap') return false
+        return needsApproval
+    }, [needsApproval, wrapOp])
     const {
         swap,
         isPreparing,
@@ -278,37 +288,62 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                     </div>
                 </div>
                 {quote && tokenIn && tokenOut && !isQuoteLoading && (
-                    <div className="space-y-1 rounded-lg bg-muted/50 p-3 text-xs">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Rate</span>
-                            <span className="font-medium">
-                                1 {tokenIn.symbol} ={' '}
-                                {amountIn && parseFloat(amountIn) > 0
-                                    ? (parseFloat(displayAmountOut) / parseFloat(amountIn)).toFixed(
-                                          6
-                                      )
-                                    : '0'}{' '}
-                                {tokenOut.symbol}
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Min. Received</span>
-                            <span className="font-medium">
-                                {formatUnits(
-                                    calculateMinOutput(
-                                        quote.amountOut,
-                                        Math.floor(settings.slippage * 100)
-                                    ),
-                                    tokenOut.decimals
-                                )}{' '}
-                                {tokenOut.symbol}
-                            </span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Fee</span>
-                            <span className="font-medium">{(fee / 10000).toFixed(2)}%</span>
-                        </div>
-                    </div>
+                    <Card className="bg-muted/50">
+                        <CardContent className="space-y-1 p-3 text-xs">
+                            {isWrapUnwrap && (
+                                <>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Operation</span>
+                                        <span className="font-semibold">
+                                            {wrapOperation === 'wrap'
+                                                ? 'Wrap KUB → tKKUB'
+                                                : 'Unwrap tKKUB → KUB'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Rate</span>
+                                        <span className="font-semibold">1:1</span>
+                                    </div>
+                                </>
+                            )}
+                            {!isWrapUnwrap && (
+                                <>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Rate</span>
+                                        <span className="font-medium">
+                                            1 {tokenIn.symbol} ={' '}
+                                            {amountIn && parseFloat(amountIn) > 0
+                                                ? (
+                                                      parseFloat(displayAmountOut) /
+                                                      parseFloat(amountIn)
+                                                  ).toFixed(6)
+                                                : '0'}{' '}
+                                            {tokenOut.symbol}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Min. Received</span>
+                                        <span className="font-medium">
+                                            {formatUnits(
+                                                calculateMinOutput(
+                                                    quote.amountOut,
+                                                    Math.floor(settings.slippage * 100)
+                                                ),
+                                                tokenOut.decimals
+                                            )}{' '}
+                                            {tokenOut.symbol}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Fee</span>
+                                        <span className="font-medium">
+                                            {(fee / 10000).toFixed(2)}%
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Slippage: {settings.slippage}%</span>
@@ -324,10 +359,10 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         isSameTokenSwap ||
                         isPreparing ||
                         isExecuting ||
-                        (needsApproval && (isApproving || isConfirmingApproval))
+                        (needsApprovalCheck && (isApproving || isConfirmingApproval))
                     }
                     onClick={() => {
-                        if (needsApproval) {
+                        if (needsApprovalCheck) {
                             approve()
                         } else if (!isPreparing) {
                             swap()
@@ -336,23 +371,35 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                 >
                     {isSameTokenSwap
                         ? 'Select Different Tokens'
-                        : needsApproval
-                          ? isApproving
-                              ? 'Approving...'
-                              : isConfirmingApproval
-                                ? 'Confirming...'
-                                : `Approve ${tokenIn?.symbol || 'Token'}`
-                          : isPreparing
-                            ? 'Simulating...'
-                            : isExecuting
-                              ? 'Swapping...'
-                              : isConfirmingSwap
-                                ? 'Confirming...'
-                                : isQuoteLoading
-                                  ? 'Fetching Quote...'
-                                  : tokenIn && tokenOut
-                                    ? 'Swap'
-                                    : 'Select Tokens'}
+                        : isWrapUnwrap
+                          ? isPreparing
+                              ? 'Simulating...'
+                              : isExecuting
+                                ? wrapOperation === 'wrap'
+                                    ? 'Wrapping...'
+                                    : 'Unwrapping...'
+                                : isConfirmingSwap
+                                  ? 'Confirming...'
+                                  : wrapOperation === 'wrap'
+                                    ? 'Wrap KUB'
+                                    : 'Unwrap tKKUB'
+                          : needsApprovalCheck
+                            ? isApproving
+                                ? 'Approving...'
+                                : isConfirmingApproval
+                                  ? 'Confirming...'
+                                  : `Approve ${tokenIn?.symbol || 'Token'}`
+                            : isPreparing
+                              ? 'Simulating...'
+                              : isExecuting
+                                ? 'Swapping...'
+                                : isConfirmingSwap
+                                  ? 'Confirming...'
+                                  : isQuoteLoading
+                                    ? 'Fetching Quote...'
+                                    : tokenIn && tokenOut
+                                      ? 'Swap'
+                                      : 'Select Tokens'}
                 </Button>
             </CardContent>
         </Card>

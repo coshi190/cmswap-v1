@@ -241,9 +241,46 @@ export function isSameToken(tokenA: Token | null, tokenB: Token | null): boolean
     if (!tokenA || !tokenB) return false
     if (tokenA.chainId !== tokenB.chainId) return false
 
+    // Native-wrapped pairs should be considered different for wrap/unwrap operations
+    if (isNativeWrappedPair(tokenA, tokenB)) return false
+
     // Compare using swap addresses (handles native → wrapped conversion)
     const addressA = getSwapAddress(tokenA.address as Address, tokenA.chainId)
     const addressB = getSwapAddress(tokenB.address as Address, tokenB.chainId)
 
     return addressA.toLowerCase() === addressB.toLowerCase()
+}
+
+/**
+ * Check if two tokens form a native-wrapped pair
+ */
+export function isNativeWrappedPair(tokenA: Token | null, tokenB: Token | null): boolean {
+    if (!tokenA || !tokenB) return false
+    if (tokenA.chainId !== tokenB.chainId) return false
+
+    const isANative = isNativeToken(tokenA.address as Address)
+    const isBNative = isNativeToken(tokenB.address as Address)
+
+    // Both native or both wrapped - not a native-wrapped pair
+    if (isANative && isBNative) return false
+    if (!isANative && !isBNative) return false
+
+    // One is native, check if the other is the wrapped version
+    const wrappedAddress = getWrappedNativeAddress(tokenA.chainId)
+    const nonNativeAddress = isANative ? tokenB.address : tokenA.address
+
+    return nonNativeAddress.toLowerCase() === wrappedAddress.toLowerCase()
+}
+
+/**
+ * Determine wrap/unwrap operation type
+ */
+export function getWrapOperation(
+    tokenIn: Token | null,
+    tokenOut: Token | null
+): 'wrap' | 'unwrap' | null {
+    if (!isNativeWrappedPair(tokenIn, tokenOut)) return null
+
+    const isInputNative = isNativeToken(tokenIn?.address as Address)
+    return isInputNative ? 'wrap' : 'unwrap'
 }
