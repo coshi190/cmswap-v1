@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useChainId } from 'wagmi'
 import { parseUnits, formatUnits } from 'viem'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,7 +14,7 @@ import { ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 
 export function DexSelectCard() {
     const [expanded, setExpanded] = useState(false)
-    const { selectedDex, setSelectedDex, tokenIn, tokenOut, amountIn } = useSwapStore()
+    const { selectedDex, setSelectedDex, tokenIn, tokenOut, amountIn, settings } = useSwapStore()
     const chainId = useChainId()
     const supportedDexs = getSupportedDexs(chainId)
     const amountInBigInt = useMemo(() => {
@@ -25,12 +25,17 @@ export function DexSelectCard() {
             return 0n
         }
     }, [amountIn, tokenIn])
-    const { dexQuotes, bestQuoteDex } = useMultiDexQuotes({
+    const { dexQuotes, bestQuoteDex, priceDifferences } = useMultiDexQuotes({
         tokenIn,
         tokenOut,
         amountIn: amountInBigInt,
         enabled: !!tokenIn && !!tokenOut && amountInBigInt > 0n,
     })
+    useEffect(() => {
+        if (settings?.autoSelectBestDex && bestQuoteDex && bestQuoteDex !== selectedDex) {
+            setSelectedDex(bestQuoteDex)
+        }
+    }, [bestQuoteDex, selectedDex, setSelectedDex, settings?.autoSelectBestDex])
     const availableDexs = Object.values(DEX_REGISTRY).filter((dex) =>
         supportedDexs.includes(dex.id)
     )
@@ -51,11 +56,21 @@ export function DexSelectCard() {
         if (quoteData.quote && tokenOut) {
             const amountOut = formatUnits(quoteData.quote.amountOut, tokenOut.decimals)
             const isBest = bestQuoteDex === dexId
+            const priceDiff = priceDifferences[dexId]
             return (
                 <div className="flex items-center gap-2">
                     <span className={`text-sm font-medium ${isBest ? 'text-green-600' : ''}`}>
                         {parseFloat(amountOut).toFixed(6)} {tokenOut.symbol}
                     </span>
+                    {!isBest &&
+                        priceDiff !== null &&
+                        priceDiff !== undefined &&
+                        priceDiff !== 0 && (
+                            <span className="text-xs text-orange-500">
+                                {priceDiff > 0 ? '+' : ''}
+                                {priceDiff.toFixed(2)}% vs best
+                            </span>
+                        )}
                 </div>
             )
         }

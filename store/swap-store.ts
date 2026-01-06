@@ -28,6 +28,7 @@ interface SwapStore extends SwapState {
     setSlippagePreset: (preset: '0.1' | '0.5' | '1' | 'custom') => void
     setDeadlineMinutes: (minutes: number) => void
     setExpertMode: (enabled: boolean) => void
+    setAutoSelectBestDex: (enabled: boolean) => void
     setIsUpdatingFromUrl: (updating: boolean) => void
     setDexQuotes: (quotes: Record<DEXType, DexQuote>) => void
     setBestQuoteDex: (dexId: DEXType | null) => void
@@ -42,6 +43,7 @@ const defaultSettings: SwapSettings = {
     slippagePreset: '0.5',
     deadlineMinutes: 20,
     expertMode: false,
+    autoSelectBestDex: true,
 }
 
 // Initial swap state
@@ -125,6 +127,14 @@ export const useSwapStore = create<SwapStore>()(
                         },
                     })),
 
+                setAutoSelectBestDex: (enabled) =>
+                    set((state) => ({
+                        settings: {
+                            ...state.settings,
+                            autoSelectBestDex: enabled,
+                        },
+                    })),
+
                 // Swap tokens (reverse)
                 swapTokens: () =>
                     set((state) => ({
@@ -151,6 +161,18 @@ export const useSwapStore = create<SwapStore>()(
                 partialize: (state) => ({
                     settings: state.settings,
                 }),
+                // CRITICAL: Merge persisted settings with defaults to handle new fields
+                merge: (persistedState, currentState) => {
+                    const persisted = persistedState as Partial<SwapStore>
+                    return {
+                        ...currentState,
+                        // Deep merge settings to include new fields from defaults
+                        settings: {
+                            ...defaultSettings, // Start with defaults (includes new fields)
+                            ...persisted.settings, // Override with persisted values
+                        },
+                    }
+                },
             }
         ),
         { name: 'cmswap-swap' }
@@ -165,3 +187,4 @@ export const useSwapAmounts = () =>
     useSwapStore((state) => ({ amountIn: state.amountIn, amountOut: state.amountOut }))
 export const useDexQuotes = () => useSwapStore((state) => state.dexQuotes)
 export const useBestQuoteDex = () => useSwapStore((state) => state.bestQuoteDex)
+export const useAutoSelectBestDex = () => useSwapStore((state) => state.settings.autoSelectBestDex)

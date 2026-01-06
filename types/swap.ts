@@ -82,6 +82,7 @@ export interface SwapSettings {
     slippagePreset: SlippagePreset
     deadlineMinutes: number
     expertMode: boolean
+    autoSelectBestDex: boolean
 }
 
 /**

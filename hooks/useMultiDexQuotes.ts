@@ -27,6 +27,7 @@ export interface UseMultiDexQuotesResult {
     bestQuoteDex: DEXType | null
     isAnyLoading: boolean
     hasAnyQuote: boolean
+    priceDifferences: Record<DEXType, number | null>
 }
 
 export function useMultiDexQuotes({
@@ -130,6 +131,38 @@ export function useMultiDexQuotes({
         })[0]
         return best?.dexId ?? null
     }, [quotes])
+    const priceDifferences = useMemo(() => {
+        const differences: Record<DEXType, number | null> = {}
+        if (!bestQuoteDex) {
+            Object.keys(quotes).forEach((dexId) => {
+                differences[dexId] = null
+            })
+            return differences
+        }
+        const bestQuote = quotes[bestQuoteDex]?.quote
+        if (!bestQuote) {
+            Object.keys(quotes).forEach((dexId) => {
+                differences[dexId] = null
+            })
+            return differences
+        }
+        const bestAmountOut = bestQuote.amountOut
+        Object.entries(quotes).forEach(([dexId, dexQuote]) => {
+            if (dexQuote.quote && !dexQuote.isLoading && !dexQuote.isError) {
+                if (dexId === bestQuoteDex) {
+                    differences[dexId] = 0
+                } else {
+                    const currentAmountOut = dexQuote.quote.amountOut
+                    const percentageDiff =
+                        (Number(currentAmountOut - bestAmountOut) / Number(bestAmountOut)) * 100
+                    differences[dexId] = percentageDiff
+                }
+            } else {
+                differences[dexId] = null
+            }
+        })
+        return differences
+    }, [quotes, bestQuoteDex])
     const isAnyLoading = Object.values(quotes).some((q) => q.isLoading)
     const hasAnyQuote = Object.values(quotes).some((q) => q.quote !== null)
     return {
@@ -137,5 +170,6 @@ export function useMultiDexQuotes({
         bestQuoteDex,
         isAnyLoading,
         hasAnyQuote,
+        priceDifferences,
     }
 }
