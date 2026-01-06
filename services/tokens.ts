@@ -223,9 +223,9 @@ export function getWrappedNativeAddress(chainId: number): Address {
  * Get the address to use for DEX operations
  * Returns wrapped address for native tokens, original address otherwise
  */
-export function getSwapAddress(tokenAddress: Address, chainId: number): Address {
+export function getSwapAddress(tokenAddress: Address, chainId: number, wnative?: Address): Address {
     if (isNativeToken(tokenAddress)) {
-        return getWrappedNativeAddress(chainId)
+        return wnative || getWrappedNativeAddress(chainId)
     }
     return tokenAddress
 }

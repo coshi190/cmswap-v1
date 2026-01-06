@@ -128,6 +128,23 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
             },
         },
     },
+    jibswap: {
+        dexId: 'jibswap',
+        defaultProtocol: ProtocolType.V2,
+        priority: 2,
+        protocols: {
+            [jbc.id]: {
+                [ProtocolType.V2]: {
+                    protocolType: ProtocolType.V2,
+                    chainId: jbc.id,
+                    enabled: true,
+                    factory: '0x4BBdA880C5A0cDcEc6510f0450c6C8bC5773D499' as Address,
+                    router: '0x766F8C9321704DC228D43271AF9b7aAB0E529D38' as Address,
+                    wnative: '0x99999999990FC47611b74827486218f3398A4abD' as Address,
+                },
+            },
+        },
+    },
 }
 
 /**

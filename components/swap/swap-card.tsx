@@ -11,14 +11,18 @@ import { Input } from '@/components/ui/input'
 import { useSwapStore } from '@/store/swap-store'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { useUniV3Quote } from '@/hooks/useUniV3Quote'
+import { useUniV2Quote } from '@/hooks/useUniV2Quote'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useUniV3SwapExecution } from '@/hooks/useUniV3SwapExecution'
+import { useUniV2SwapExecution } from '@/hooks/useUniV2SwapExecution'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
+import { calculateMinOutput as calculateMinOutputV2 } from '@/services/dex/uniswap-v2'
 import { formatBalance, formatTokenAmount } from '@/services/tokens'
 import { toastError } from '@/lib/toast'
 import { getTokensForChain } from '@/lib/tokens'
+import { getDexConfig, isV2Config } from '@/lib/dex-config'
 import { TokenSelect } from './token-select'
 import { SettingsDialog } from './settings-dialog'
 import { ArrowDownUp } from 'lucide-react'
@@ -49,7 +53,10 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         setIsLoading,
         setSlippage,
         setDeadlineMinutes,
+        selectedDex,
     } = useSwapStore()
+    const dexConfig = getDexConfig(chainId, selectedDex)
+    const isV2Protocol = dexConfig && isV2Config(dexConfig)
     const hasInitializedTokensRef = useRef(false)
     const {
         balance: balanceInValue,
@@ -95,20 +102,27 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
             return 0n
         }
     }, [debouncedAmountIn, tokenIn])
+    const v3Quote = useUniV3Quote({
+        tokenIn,
+        tokenOut,
+        amountIn: amountInBigInt,
+        enabled: !isV2Protocol,
+    })
+    const v2Quote = useUniV2Quote({
+        tokenIn,
+        tokenOut,
+        amountIn: amountInBigInt,
+        enabled: !!isV2Protocol,
+    })
     const {
         quote,
         isLoading: isQuoteLoading,
         isError,
         error,
-        fee,
         isWrapUnwrap,
         wrapOperation,
-    } = useUniV3Quote({
-        tokenIn,
-        tokenOut,
-        amountIn: amountInBigInt,
-        enabled: true,
-    })
+    } = isV2Protocol ? v2Quote : v3Quote
+    const fee = isV2Protocol ? 3000 : (v3Quote.fee ?? 3000)
     useEffect(() => {
         if (quote && tokenOut) {
             setQuote(quote)
@@ -132,8 +146,9 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     }, [tokenIn, tokenOut])
     const amountOutMinimum = useMemo(() => {
         if (!quote || !tokenOut) return 0n
-        return calculateMinOutput(quote.amountOut, Math.floor(settings.slippage * 100))
-    }, [quote, tokenOut, settings.slippage])
+        const calcFn = isV2Protocol ? calculateMinOutputV2 : calculateMinOutput
+        return calcFn(quote.amountOut, Math.floor(settings.slippage * 100))
+    }, [quote, tokenOut, settings.slippage, isV2Protocol])
     const {
         needsApproval,
         isApproving,
@@ -150,6 +165,25 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         if (wrapOp === 'unwrap') return false
         return needsApproval
     }, [needsApproval, wrapOp])
+    const v3Swap = useUniV3SwapExecution({
+        tokenIn: tokenIn ?? tokens[0]!,
+        tokenOut: tokenOut ?? tokens[1] ?? tokens[0]!,
+        amountIn: amountInBigInt,
+        amountOutMinimum,
+        recipient: address ?? '0x0',
+        slippage: settings.slippage,
+        deadlineMinutes: settings.deadlineMinutes,
+        fee,
+    })
+    const v2Swap = useUniV2SwapExecution({
+        tokenIn: tokenIn ?? tokens[0]!,
+        tokenOut: tokenOut ?? tokens[1] ?? tokens[0]!,
+        amountIn: amountInBigInt,
+        amountOutMinimum,
+        recipient: address ?? '0x0',
+        slippage: settings.slippage,
+        deadlineMinutes: settings.deadlineMinutes,
+    })
     const {
         swap,
         isPreparing,
@@ -160,16 +194,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         error: swapError,
         hash: swapHash,
         simulationError,
-    } = useUniV3SwapExecution({
-        tokenIn: tokenIn ?? tokens[0]!,
-        tokenOut: tokenOut ?? tokens[1] ?? tokens[0]!,
-        amountIn: amountInBigInt,
-        amountOutMinimum,
-        recipient: address ?? '0x0',
-        slippage: settings.slippage,
-        deadlineMinutes: settings.deadlineMinutes,
-        fee,
-    })
+    } = isV2Protocol ? v2Swap : v3Swap
     useEffect(() => {
         if (simulationError) {
             toastError(simulationError, 'Simulation failed')
@@ -354,13 +379,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Min. Received</span>
                                         <span className="font-medium">
-                                            {formatUnits(
-                                                calculateMinOutput(
-                                                    quote.amountOut,
-                                                    Math.floor(settings.slippage * 100)
-                                                ),
-                                                tokenOut.decimals
-                                            )}{' '}
+                                            {formatUnits(amountOutMinimum, tokenOut.decimals)}{' '}
                                             {tokenOut.symbol}
                                         </span>
                                     </div>
@@ -393,7 +412,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         !tokenOut ||
                         isQuoteLoading ||
                         isSameTokenSwap ||
-                        isPreparing ||
+                        (isPreparing && !needsApprovalCheck) ||
                         isExecuting ||
                         (needsApprovalCheck && (isApproving || isConfirmingApproval))
                     }

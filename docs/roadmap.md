@@ -7,10 +7,11 @@ Implementation phases and TODO list for cmswap development.
 **Current Phase**: Phase 2 - Swap Feature (In Progress 🚧)
 
 - [x] Phase 1: Foundation ✅
-- [ ] Phase 2: Swap Feature 🚧 (80% complete)
+- [ ] Phase 2: Swap Feature 🚧 (95% complete)
   - [x] KUB Testnet integration
   - [x] JB Chain cmswap V3 integration ✅
-  - [ ] JB Chain multi-DEX expansion (jibswap V2, commudao)
+  - [x] JB Chain jibswap V2 integration ✅
+  - [ ] JB Chain commudao integration
 - [ ] Phase 3: Earn Feature 🆕
 - [ ] Phase 4: Bridge Feature
 - [ ] Phase 5: Launchpad Feature
@@ -97,8 +98,8 @@ Implementation phases and TODO list for cmswap development.
   - [ ] Display best price with source DEX label
   - [ ] Show alternative DEX quotes
   - [ ] Display price impact
-  - [ ] Display gas estimate
-- [ ] Transaction history
+
+**Current Status**: All DEX integrations implemented (cmswap V3, jibswap V2). Only testing and commudao integration remain.
 
 ### DEX Selector UI ✅
 
@@ -155,21 +156,22 @@ Implementation phases and TODO list for cmswap development.
 - [x] Test quote and swap on JBC
 - [x] Verify all fee tiers have liquidity
 
-**Step 2: jibswap V2 Integration**
-- [ ] Create `services/dex/uniswap-v2.ts` service
-- [ ] Add V2 ABIs to `lib/abis/`:
+**Step 2: jibswap V2 Integration** ✅ Implementation Complete
+- [x] Create `services/dex/uniswap-v2.ts` service
+- [x] Add V2 ABIs to `lib/abis/`:
   - `uniswap-v2-router.ts` - Router ABI
   - `uniswap-v2-factory.ts` - Factory ABI
   - `uniswap-v2-pair.ts` - Pair ABI (for reserves)
-- [ ] Create `hooks/useUniV2Quote.ts`
+- [x] Create `hooks/useUniV2Quote.ts`
   - Fetch quote via `getAmountsOut` call
   - Handle path construction
-- [ ] Create `hooks/useUniV2SwapExecution.ts`
+- [x] Create `hooks/useUniV2SwapExecution.ts`
   - Prepare swap transaction data
   - Execute via Router
-- [ ] Add jibswap to `DEX_CONFIGS_REGISTRY` in `dex-config.ts`
-- [ ] Add jibswap to `DEX_REGISTRY` in `types/dex.ts`
-- [ ] Test quote and swap on JBC
+- [x] Add jibswap to `DEX_CONFIGS_REGISTRY` in `dex-config.ts`
+- [x] Add jibswap to `DEX_REGISTRY` in `types/dex.ts` (already existed)
+- [x] Update `swap-card.tsx` for protocol-aware quote/swap selection
+- [ ] ⏳ Test quote and swap on JBC (only remaining task)
 
 **Step 3: commudao Custom AMM Integration**
 - [ ] Research commudao AMM implementation details
@@ -242,9 +244,9 @@ lib/
 │   ├── erc20.ts                    ✅ ERC20 ABI
 │   ├── uniswap-v3-quoter.ts        ✅ Uniswap V3 QuoterV2 ABI
 │   ├── uniswap-v3-router.ts        ✅ Uniswap V3 SwapRouter ABI
-│   ├── uniswap-v2-router.ts        🆕 Uniswap V2 Router ABI (jibswap)
-│   ├── uniswap-v2-factory.ts       🆕 Uniswap V2 Factory ABI
-│   ├── uniswap-v2-pair.ts          🆕 Uniswap V2 Pair ABI
+│   ├── uniswap-v2-router.ts        ✅ Uniswap V2 Router ABI (jibswap)
+│   ├── uniswap-v2-factory.ts       ✅ Uniswap V2 Factory ABI
+│   ├── uniswap-v2-pair.ts          ✅ Uniswap V2 Pair ABI
 │   └── index.ts                    ✅ ABIs export
 │
 ├── dex-config.ts                   ✅ Multi-DEX protocol abstraction
@@ -260,7 +262,7 @@ services/
 ├── tokens.ts                       ✅ Token operations
 └── dex/
     ├── uniswap-v3.ts               ✅ Uniswap V3 protocol service
-    ├── uniswap-v2.ts               🆕 Uniswap V2 protocol service (jibswap)
+    ├── uniswap-v2.ts               ✅ Uniswap V2 protocol service (jibswap)
     └── commudao.ts                 🆕 Commudao custom AMM service
 
 hooks/
@@ -268,8 +270,8 @@ hooks/
 ├── useTokenApproval.ts             ✅ Generic token approval (any protocol)
 ├── useUniV3Quote.ts                ✅ Uniswap V3 quote fetching
 ├── useUniV3SwapExecution.ts        ✅ Uniswap V3 swap execution
-├── useUniV2Quote.ts                🆕 Uniswap V2 quote fetching (jibswap)
-├── useUniV2SwapExecution.ts        🆕 Uniswap V2 swap execution
+├── useUniV2Quote.ts                ✅ Uniswap V2 quote fetching (jibswap)
+├── useUniV2SwapExecution.ts        ✅ Uniswap V2 swap execution
 ├── useCommudaoQuote.ts             🆕 Commudao quote fetching
 ├── useCommudaoSwapExecution.ts     🆕 Commudao swap execution
 └── useDebounce.ts                  ✅ Debounce utility
@@ -327,9 +329,9 @@ app/
   - [x] Implement dynamic chain switching in swap UI
   - [x] Add URL parameter sync for shareable swap links
   - [ ] Test quote and swap on JBC
-- [ ] Implement jibswap V2 integration
-  - [ ] Create V2 service and hooks
-  - [ ] Add V2 ABIs
+- [x] Implement jibswap V2 integration ✅
+  - [x] Create V2 service and hooks
+  - [x] Add V2 ABIs
   - [ ] Test quote and swap on JBC
 - [ ] Implement commudao custom AMM integration
   - [ ] Create custom service and hooks
@@ -756,10 +758,7 @@ POST /api/quests/complete      # Complete quest
 
 ### Additional Chains
 
-- [ ] Arbitrum integration
-- [ ] Optimism integration
-- [ ] Base integration
-- [ ] Avalanche integration
+- [ ] Hyperliquid integration (future)
 - [ ] Solana integration (future)
 
 ### Advanced Swap Features
@@ -804,13 +803,6 @@ POST /api/quests/complete      # Complete quest
 - [ ] WalletConnect deep linking
 - [ ] Push notifications
 
-### Governance
-
-- [ ] CMSWAP token
-- [ ] Governance contracts
-- [ ] Voting mechanism
-- [ ] Proposal system
-
 ### Staking & Yield
 
 - [ ] Staking pool
@@ -824,22 +816,6 @@ POST /api/quests/complete      # Complete quest
 - [ ] Token comments
 - [ ] Community voting
 - [ ] Social sharing
-
----
-
-## Dependencies
-
-**Phase 2 requires**: Phase 1 complete ✅
-
-**Phase 3 requires**: Phase 2 complete
-
-**Phase 4 requires**: Phase 3 complete
-
-**Phase 5 requires**: Phase 4 complete
-
-**Phase 6 requires**: Phase 5 complete
-
-**Phase 7 requires**: Phase 6 complete
 
 ---
 
@@ -869,4 +845,3 @@ Want to help build cmswap? Check out our [contributing guidelines](../CONTRIBUTI
 2. **Testing** - Write tests for existing features
 3. **Documentation** - Improve docs and add examples
 4. **Smart Contracts** - Help audit and improve contracts
-5. **Translations** - Add multi-language support

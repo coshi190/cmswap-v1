@@ -2,19 +2,19 @@
 
 import { useMemo } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi'
-import type { Address, Hex } from 'viem'
+import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
-import type { SwapParams, SwapResult } from '@/types/swap'
-import { getV3Config } from '@/lib/dex-config'
+import type { SwapResult } from '@/types/swap'
+import { getV2Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
-import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
-import { buildSwapParams, buildMulticallSwapToNative } from '@/services/dex/uniswap-v3'
+import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
+import { buildV2SwapParams } from '@/services/dex/uniswap-v2'
 import { toastError } from '@/lib/toast'
 import { isNativeToken } from '@/lib/wagmi'
 import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
 import { WETH9_ABI } from '@/lib/abis/weth9'
 
-export interface UseUniV3SwapExecutionParams {
+export interface UseUniV2SwapExecutionParams {
     tokenIn: Token
     tokenOut: Token
     amountIn: bigint
@@ -22,10 +22,9 @@ export interface UseUniV3SwapExecutionParams {
     recipient: Address
     slippage: number // in percentage (0.5, 1, etc.)
     deadlineMinutes: number
-    fee: number
 }
 
-export interface UseUniV3SwapExecutionResult {
+export interface UseUniV2SwapExecutionResult {
     swap: () => void
     result: SwapResult | null
     isPreparing: boolean
@@ -39,34 +38,35 @@ export interface UseUniV3SwapExecutionResult {
     isWrapUnwrap: boolean
 }
 
-export function useUniV3SwapExecution({
+export function useUniV2SwapExecution({
     tokenIn,
     tokenOut,
     amountIn,
     amountOutMinimum,
     recipient,
-    slippage,
+    _slippage,
     deadlineMinutes,
-    fee,
-}: UseUniV3SwapExecutionParams): UseUniV3SwapExecutionResult {
+}: UseUniV2SwapExecutionParams): UseUniV2SwapExecutionResult {
     const { selectedDex } = useSwapStore()
-    const dexConfig = getV3Config(tokenIn.chainId, selectedDex)
+    const dexConfig = getV2Config(tokenIn.chainId, selectedDex)
     const wrapOperation = useMemo(() => {
         return getWrapOperation(tokenIn, tokenOut)
     }, [tokenIn, tokenOut])
     const isNativeInput = isNativeToken(tokenIn.address as Address)
     const isNativeOutput = isNativeToken(tokenOut.address as Address)
-    const contractCall = useMemo(() => {
-        const swapParams: SwapParams = {
+    const swapParams = buildV2SwapParams(
+        {
             tokenIn: tokenIn.address as Address,
             tokenOut: tokenOut.address as Address,
             amountIn,
             amountOutMinimum,
             recipient,
-            slippageTolerance: Math.floor(slippage * 100), // Convert to basis points
             deadline: Math.floor(Date.now() / 1000) + deadlineMinutes * 60,
-        }
-
+        },
+        tokenIn.chainId,
+        dexConfig?.wnative
+    )
+    const contractCall = useMemo(() => {
         if (wrapOperation) {
             const wrappedAddress = getWrappedNativeAddress(tokenIn.chainId)
 
@@ -88,35 +88,43 @@ export function useUniV3SwapExecution({
                 }
             }
         }
-        const txValue = isNativeInput ? amountIn : undefined
-        if (isNativeOutput) {
-            const multicallData = buildMulticallSwapToNative(swapParams, fee, tokenIn.chainId)
+        if (isNativeInput) {
             return {
-                functionName: 'multicall' as const,
-                args: [multicallData] as [Hex[]],
-                value: txValue,
+                functionName: 'swapExactETHForTokens' as const,
+                args: [
+                    swapParams.amountOutMin,
+                    swapParams.path,
+                    swapParams.to,
+                    swapParams.deadline,
+                ] as const,
+                value: amountIn,
+            }
+        } else if (isNativeOutput) {
+            return {
+                functionName: 'swapExactTokensForETH' as const,
+                args: [
+                    swapParams.amountIn,
+                    swapParams.amountOutMin,
+                    swapParams.path,
+                    swapParams.to,
+                    swapParams.deadline,
+                ] as const,
+                value: undefined,
             }
         } else {
-            const params = buildSwapParams(swapParams, fee, tokenIn.chainId)
             return {
-                functionName: 'exactInputSingle' as const,
-                args: [params] as const,
-                value: txValue,
+                functionName: 'swapExactTokensForTokens' as const,
+                args: [
+                    swapParams.amountIn,
+                    swapParams.amountOutMin,
+                    swapParams.path,
+                    swapParams.to,
+                    swapParams.deadline,
+                ] as const,
+                value: undefined,
             }
         }
-    }, [
-        wrapOperation,
-        tokenIn,
-        tokenOut,
-        amountIn,
-        amountOutMinimum,
-        recipient,
-        slippage,
-        deadlineMinutes,
-        fee,
-        isNativeInput,
-        isNativeOutput,
-    ])
+    }, [wrapOperation, tokenIn, amountIn, swapParams, isNativeInput, isNativeOutput])
     const {
         data: simulationData,
         isLoading: isPreparing,
@@ -136,8 +144,8 @@ export function useUniV3SwapExecution({
                   },
               }
             : {
-                  address: dexConfig?.swapRouter,
-                  abi: UNISWAP_V3_SWAP_ROUTER_ABI,
+                  address: dexConfig?.router,
+                  abi: UNISWAP_V2_ROUTER_ABI,
                   functionName: contractCall.functionName,
                   args: contractCall.args,
                   value: contractCall.value,
@@ -159,7 +167,7 @@ export function useUniV3SwapExecution({
     })
     const executeSwap = () => {
         if (!dexConfig && !wrapOperation) {
-            toastError('DEX config not found for this chain')
+            toastError('jibswap config not found for this chain')
             return
         }
         if (!simulationData?.request) {
