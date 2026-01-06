@@ -2,6 +2,7 @@ import type { Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import { ERC20_ABI } from '@/lib/abis/erc20'
 import { isNativeToken } from '@/lib/wagmi'
+import { TOKEN_LISTS } from '@/lib/tokens'
 
 /**
  * Get native token balance
@@ -208,19 +209,14 @@ export function isValidTokenAddress(address: string): boolean {
 
 /**
  * Get wrapped native token address for a chain
+ * Uses index 1 from TOKEN_LISTS (convention: index 0 = native, index 1 = wrapped)
  */
 export function getWrappedNativeAddress(chainId: number): Address {
-    // Common wrapped native addresses
-    const wrappedAddresses: Partial<Record<number, Address>> = {
-        // KUB Testnet - tkKUB (wrapped KUB)
-        25925: '0x700D3ba307E1256e509eD3E45D6f9dff441d6907' as Address,
+    const tokens = TOKEN_LISTS[chainId]
+    if (!tokens || tokens.length < 2) {
+        throw new Error(`No wrapped native token found for chain ${chainId}`)
     }
-
-    const address = wrappedAddresses[chainId]
-    if (!address) {
-        throw new Error(`No wrapped native token address configured for chain ${chainId}`)
-    }
-    return address
+    return tokens[1]!.address as Address
 }
 
 /**

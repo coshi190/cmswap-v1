@@ -18,7 +18,7 @@ import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { formatBalance, formatTokenAmount } from '@/services/tokens'
 import { toastError } from '@/lib/toast'
-import { KUB_TESTNET_TOKENS } from '@/lib/tokens'
+import { getTokensForChain } from '@/lib/tokens'
 import { TokenSelect } from './token-select'
 import { SettingsDialog } from './settings-dialog'
 import { ArrowDownUp } from 'lucide-react'
@@ -33,9 +33,9 @@ export interface SwapCardProps {
 
 export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     useSwapUrlSync()
-    const tokens = tokensOverride || KUB_TESTNET_TOKENS
     const { address } = useAccount()
     const chainId = useChainId()
+    const tokens = tokensOverride || getTokensForChain(chainId)
     const {
         tokenIn,
         tokenOut,
@@ -196,6 +196,11 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
             toastError(swapError, 'Swap failed')
         }
     }, [swapIsError, swapError])
+    useEffect(() => {
+        setTokenIn(null)
+        setTokenOut(null)
+        hasInitializedTokensRef.current = false
+    }, [chainId, setTokenIn, setTokenOut])
     useEffect(() => {
         if (!hasInitializedTokensRef.current && !tokenIn && tokens.length > 0 && tokens[0]) {
             setTokenIn(tokens[0])

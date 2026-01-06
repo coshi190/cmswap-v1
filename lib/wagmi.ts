@@ -3,6 +3,9 @@ import { cookieStorage, createStorage } from 'wagmi'
 import { bsc, bitkub, jbc, base, worldchain } from 'wagmi/chains'
 import type { Address } from 'viem'
 
+// Re-export chains for use in other modules
+export { bsc, bitkub, jbc, base, worldchain }
+
 export const kubTestnet = {
     id: 25925,
     name: 'KUB Testnet',

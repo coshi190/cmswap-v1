@@ -7,9 +7,10 @@ Implementation phases and TODO list for cmswap development.
 **Current Phase**: Phase 2 - Swap Feature (In Progress 🚧)
 
 - [x] Phase 1: Foundation ✅
-- [ ] Phase 2: Swap Feature 🚧 (65% complete)
+- [ ] Phase 2: Swap Feature 🚧 (80% complete)
   - [x] KUB Testnet integration
-  - [ ] JB Chain multi-DEX expansion
+  - [x] JB Chain cmswap V3 integration ✅
+  - [ ] JB Chain multi-DEX expansion (jibswap V2, commudao)
 - [ ] Phase 3: Earn Feature 🆕
 - [ ] Phase 4: Bridge Feature
 - [ ] Phase 5: Launchpad Feature
@@ -108,7 +109,7 @@ Implementation phases and TODO list for cmswap development.
 
 | DEX | Protocol | Status | Contract Addresses |
 |-----|----------|--------|-------------------|
-| cmswap | Uniswap V3 fork | Pending | Factory: `0x______`<br>QuoterV2: `0x______`<br>SwapRouter: `0x______` |
+| cmswap | Uniswap V3 fork | ✅ Integrated | Factory: `0x090C6E5fF29251B1eF9EC31605Bdd13351eA316C`<br>QuoterV2: `0xCB0c6E78519f6B4c1b9623e602E831dEf0f5ff7f`<br>SwapRouter: `0x3F7582E36843FF79F173c7DC19f517832496f2D8` |
 | jibswap | Uniswap V2 fork | Pending | Factory: `0x______`<br>Router: `0x______` |
 | commudao | Custom AMM | Pending | Router: `0x______` |
 
@@ -119,19 +120,13 @@ Implementation phases and TODO list for cmswap development.
 
 **Implementation Tasks:**
 
-**Step 1: cmswap V3 on JBC**
-- [ ] Add V3 config for JB chain in `dex-config.ts`
-  ```typescript
-  [jbc.id]: {
-      [ProtocolType.V3]: {
-          factory: '0x______',     // TODO: Fill in
-          quoter: '0x______',       // TODO: Fill in
-          swapRouter: '0x______',   // TODO: Fill in
-          feeTiers: [100, 500, 3000, 10000],
-          defaultFeeTier: 3000
-      }
-  }
-  ```
+**Step 1: cmswap V3 on JBC** ✅
+- [x] Add V3 config for JB chain in `dex-config.ts`
+- [x] Add JB Chain token list with JBC, WJBC, and popular tokens
+- [x] Add WJBC wrapped native address (auto-assigned from token list)
+- [x] Update swap page to support multiple chains (KUB Testnet + JBC)
+- [x] Fix token list to update dynamically when switching chains
+- [x] Implement URL parameter sync (input, output, amount)
 - [ ] Test quote and swap on JBC
 - [ ] Verify all fee tiers have liquidity
 
@@ -148,22 +143,6 @@ Implementation phases and TODO list for cmswap development.
   - Prepare swap transaction data
   - Execute via Router
 - [ ] Add jibswap to `DEX_CONFIGS_REGISTRY` in `dex-config.ts`
-  ```typescript
-  jibswap: {
-      dexId: 'jibswap',
-      defaultProtocol: ProtocolType.V2,
-      priority: 2,
-      protocols: {
-          [jbc.id]: {
-              [ProtocolType.V2]: {
-                  factory: '0x______',   // TODO: Fill in
-                  router: '0x______',     // TODO: Fill in
-                  wnative: '0x______'     // TODO: WJBC address
-              }
-          }
-      }
-  }
-  ```
 - [ ] Add jibswap to `DEX_REGISTRY` in `types/dex.ts`
 - [ ] Test quote and swap on JBC
 
@@ -312,13 +291,16 @@ app/
 
 ### JB Chain Expansion Tasks 🆕
 
-- [ ] Research and document JB Chain DEX ecosystem
-  - [ ] Verify cmswap V3 contract addresses on JBC
+- [x] Research and document JB Chain DEX ecosystem ✅
+  - [x] Verify cmswap V3 contract addresses on JBC
   - [ ] Verify jibswap V2 contract addresses on JBC
   - [ ] Research commudao AMM implementation
-  - [ ] Document JB Chain token list
-- [ ] Implement cmswap V3 on JBC
-  - [ ] Add V3 config for JBC in dex-config.ts
+  - [x] Document JB Chain token list
+- [x] Implement cmswap V3 on JBC ✅
+  - [x] Add V3 config for JBC in dex-config.ts
+  - [x] Add JB Chain token list with native/wrapped tokens
+  - [x] Implement dynamic chain switching in swap UI
+  - [x] Add URL parameter sync for shareable swap links
   - [ ] Test quote and swap on JBC
 - [ ] Implement jibswap V2 integration
   - [ ] Create V2 service and hooks
@@ -332,80 +314,6 @@ app/
   - [ ] Parallel quote fetching
   - [ ] Price comparison UI
   - [ ] Gas cost comparison
-
----
-
-## Architecture
-
-### Multi-DEX Protocol Support
-
-The swap system uses a protocol-agnostic architecture to support multiple DEX types:
-
-```typescript
-// Supported protocol types
-enum ProtocolType {
-  V2 = 'v2',           // Uniswap V2 forks (constant product AMM)
-  V3 = 'v3',           // Uniswap V3 forks (concentrated liquidity)
-  STABLE = 'stable',   // Stable swap (Curve-style)
-  AGGREGATOR = 'aggregator' // 1inch-style aggregators
-}
-
-// Protocol-specific configs
-interface V2Config {
-  protocolType: ProtocolType.V2
-  factory: Address
-  router: Address
-  wnative?: Address
-}
-
-interface V3Config {
-  protocolType: ProtocolType.V3
-  factory: Address
-  quoter: Address
-  swapRouter: Address
-  feeTiers?: number[]
-  defaultFeeTier?: number
-}
-
-interface StableConfig {
-  protocolType: ProtocolType.STABLE
-  registry: Address
-  poolFinder?: Address
-  basePool?: Address
-}
-
-interface AggregatorConfig {
-  protocolType: ProtocolType.AGGREGATOR
-  aggregator: Address
-  apiEndpoint?: string
-}
-```
-
-### Key Features
-
-1. **Generic Token Approval** - `useTokenApproval` works with any DEX protocol via `getProtocolSpender()`
-2. **Store Integration** - `selectedDex` from store propagates to all hooks
-3. **Native Token Handling** - `0xeeee...` address for native tokens, auto-wrapped for swaps
-4. **Smart Balance Formatting** - `formatBalance()` handles large/small numbers elegantly
-5. **Pool Liquidity Detection** - Quote hook checks all fee tiers, selects pool with most liquidity
-
-### Contract Addresses (KUB Testnet)
-
-| Contract | Address |
-|----------|--------|
-| Factory | `0xCBd41F872FD46964bD4Be4d72a8bEBA9D656565b` |
-| Quoter V2 | `0x3F64C4Dfd224a102A4d705193a7c40899Cf21fFe` |
-| Swap Router | `0x3C5514335dc4E2B0D9e1cc98ddE219c50173c5Be` |
-| Wrapped KUB (tKKUB) | `0x700D3ba307E1256e509eD3E45D6f9dff441d6907` |
-
-### Token List (KUB Testnet)
-
-| Symbol | Address | Type |
-|--------|---------|------|
-| KUB | `0xeeee...` | Native |
-| tKKUB | `0x700D...` | ERC20 (Wrapped) |
-| testKUB | `0xE7f6...` | ERC20 |
-| testToken | `0x2335...` | ERC20 |
 
 ---
 

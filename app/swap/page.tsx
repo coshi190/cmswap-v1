@@ -1,11 +1,13 @@
 'use client'
 
 import { useAccount, useChainId, useSwitchChain } from 'wagmi'
-import { kubTestnet } from '@/lib/wagmi'
+import { kubTestnet, jbc } from '@/lib/wagmi'
 import { Button } from '@/components/ui/button'
 import { SwapCard } from '@/components/swap/swap-card'
 import { DexSelectCard } from '@/components/swap/dex-select-card'
 import { Suspense } from 'react'
+
+const SWAP_SUPPORTED_CHAINS = [kubTestnet, jbc] as const
 
 export default function SwapPage() {
     return (
@@ -23,9 +25,9 @@ function SwapContent() {
     const { isConnected } = useAccount()
     const chainId = useChainId()
     const { switchChain } = useSwitchChain()
-    const isCorrectChain = chainId === kubTestnet.id
+    const isCorrectChain = SWAP_SUPPORTED_CHAINS.some((chain) => chain.id === chainId)
     const handleSwitchChain = () => {
-        switchChain({ chainId: kubTestnet.id })
+        switchChain({ chainId: SWAP_SUPPORTED_CHAINS[0].id })
     }
     if (!isConnected) {
         return (
@@ -45,7 +47,7 @@ function SwapContent() {
                 <div className="text-center">
                     <h1 className="mb-4 text-2xl font-bold">Wrong Network</h1>
                     <p className="mb-4 text-muted-foreground">
-                        Please switch to KUB Testnet to use cmswap
+                        Please switch to a supported network to use cmswap
                     </p>
                     <Button onClick={handleSwitchChain}>Switch Network</Button>
                 </div>
