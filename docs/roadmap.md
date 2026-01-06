@@ -100,6 +100,31 @@ Implementation phases and TODO list for cmswap development.
   - [ ] Display gas estimate
 - [ ] Transaction history
 
+### DEX Selector UI ✅
+
+**Component**: `components/swap/dex-select-card.tsx`
+
+**Phase 1: Basic Expandable UI** ✅ (Implemented)
+- [x] Expandable/collapsible card showing selected DEX
+- [x] List of all available DEXs when expanded
+- [x] Chain filtering (only shows DEXs available on current chain)
+- [x] Visual indicator for selected DEX (checkmark + primary color)
+- [x] DEX selection updates store and auto-collapses
+- [x] External link to DEX website
+- [x] Added jibswap and commudao to `DEX_REGISTRY` in `types/dex.ts`
+
+**Phase 2: Multi-DEX Quote Display** (Planned)
+- [ ] Add `dexQuotes` state to `swap-store.ts`
+- [ ] Create `hooks/useMultiDexQuotes.ts` for parallel quote fetching
+- [ ] Display quotes per DEX in expanded view
+- [ ] Show loading/error states for each DEX
+
+**Phase 3: Price Comparison Features** (Planned)
+- [ ] Calculate price difference % vs best price
+- [ ] Highlight best price with trophy/badge
+- [ ] Auto-select best price on mount
+- [ ] Persist user's DEX selection preference
+
 ### JB Chain Multi-DEX Expansion 🆕
 
 **Target Chain**: JB Chain (JBC)
@@ -109,8 +134,8 @@ Implementation phases and TODO list for cmswap development.
 
 | DEX | Protocol | Status | Contract Addresses |
 |-----|----------|--------|-------------------|
-| cmswap | Uniswap V3 fork | ✅ Integrated | Factory: `0x090C6E5fF29251B1eF9EC31605Bdd13351eA316C`<br>QuoterV2: `0xCB0c6E78519f6B4c1b9623e602E831dEf0f5ff7f`<br>SwapRouter: `0x3F7582E36843FF79F173c7DC19f517832496f2D8` |
-| jibswap | Uniswap V2 fork | Pending | Factory: `0x______`<br>Router: `0x______` |
+| cmswap | Uniswap V3 fork | ✅ Integrated
+| jibswap | Uniswap V2 fork | Pending | Factory: `0x4BBdA880C5A0cDcEc6510f0450c6C8bC5773D499`<br>Router: `0x766F8C9321704DC228D43271AF9b7aAB0E529D38` |
 | commudao | Custom AMM | Pending | Router: `0x______` |
 
 **Integration Sequence (One-by-One):**
@@ -127,8 +152,8 @@ Implementation phases and TODO list for cmswap development.
 - [x] Update swap page to support multiple chains (KUB Testnet + JBC)
 - [x] Fix token list to update dynamically when switching chains
 - [x] Implement URL parameter sync (input, output, amount)
-- [ ] Test quote and swap on JBC
-- [ ] Verify all fee tiers have liquidity
+- [x] Test quote and swap on JBC
+- [x] Verify all fee tiers have liquidity
 
 **Step 2: jibswap V2 Integration**
 - [ ] Create `services/dex/uniswap-v2.ts` service

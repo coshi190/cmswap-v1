@@ -15,7 +15,20 @@ export const DEX_REGISTRY: Record<string, DEXMetadata> = {
         name: 'cmswap',
         displayName: 'CMswap',
         icon: 'favicon.ico',
-        description: 'Best prices on KUB Chain',
+        description: 'Uniswap V3 dex',
         website: 'https://cmswap.xyz',
+    },
+    jibswap: {
+        id: 'jibswap',
+        name: 'jibswap',
+        displayName: 'Jibswap',
+        description: 'Uniswap V2 dex',
+        website: 'https://jibswap.xyz',
+    },
+    commudao: {
+        id: 'commudao',
+        name: 'commudao',
+        displayName: 'Commudao',
+        description: 'Custom AMM',
     },
 }
