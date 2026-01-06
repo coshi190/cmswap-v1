@@ -163,6 +163,7 @@ lib/
 components/swap/
 ├── swap-card.tsx                   ✅ Main swap interface
 ├── token-select.tsx                ✅ Token selection modal
+├── settings-dialog.tsx             ✅ Settings modal (slippage, deadline)
 └── dex-select-card.tsx             ✅ DEX selection UI
 
 services/
@@ -211,7 +212,7 @@ app/
   - [x] Build swap-card component ✅
   - [x] Build token-select component ✅
   - [x] Build dex-select-card component ✅
-  - [ ] Build swap-settings (slippage, deadline) - Partial (in store)
+  - [x] Build swap-settings (slippage, deadline) - Complete (settings-dialog.tsx with UI)
 - [x] Create swap page at `app/swap/page.tsx` ✅
 - [x] Add swap route to navigation ✅
 - [ ] Test on KUB testnet with faucet tokens - Pending

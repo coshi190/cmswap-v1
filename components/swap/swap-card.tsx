@@ -20,6 +20,7 @@ import { formatBalance, formatTokenAmount } from '@/services/tokens'
 import { toastError } from '@/lib/toast'
 import { KUB_TESTNET_TOKENS } from '@/lib/tokens'
 import { TokenSelect } from './token-select'
+import { SettingsDialog } from './settings-dialog'
 import { ArrowDownUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { isSameToken, getWrapOperation } from '@/services/tokens'
@@ -46,6 +47,8 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         swapTokens,
         setQuote,
         setIsLoading,
+        setSlippage,
+        setDeadlineMinutes,
     } = useSwapStore()
     const hasInitializedTokensRef = useRef(false)
     const {
@@ -209,6 +212,10 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
             setAmountIn(formatTokenAmount(balanceInValue, tokenIn.decimals))
         }
     }
+    const handleSettingsSave = (slippage: number, deadlineMinutes: number) => {
+        setSlippage(slippage)
+        setDeadlineMinutes(deadlineMinutes)
+    }
     return (
         <Card>
             <CardContent className="space-y-6 p-6">
@@ -356,9 +363,15 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         </CardContent>
                     </Card>
                 )}
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Slippage: {settings.slippage}%</span>
-                    <span>Deadline: {settings.deadlineMinutes}m</span>
+                <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                        <SettingsDialog
+                            currentSlippage={settings.slippage}
+                            currentDeadlineMinutes={settings.deadlineMinutes}
+                            onSave={handleSettingsSave}
+                        />
+                        <span>Slippage: {settings.slippage}%</span>
+                    </div>
                 </div>
                 <Button
                     className="w-full"
