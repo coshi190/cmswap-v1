@@ -40,7 +40,7 @@ export function NetworkSwitcher({ className = '' }: { className?: string }) {
                                 src={currentChain.icon}
                                 alt={currentChain.name}
                                 fill
-                                className="object-cover"
+                                className="rounded-full object-cover"
                             />
                         </div>
                         {isPending ? (
