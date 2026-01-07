@@ -1,4 +1,4 @@
-import { encodeFunctionData, type Address, type Hex } from 'viem'
+import { encodeFunctionData, concat, pad, toHex, type Address, type Hex } from 'viem'
 import type { SwapParams } from '@/types/swap'
 import { getV3Config, COMMON_FEE_TIERS, DEFAULT_FEE_TIER } from '@/lib/dex-config'
 import { getSwapAddress } from '@/services/tokens'
@@ -213,6 +213,122 @@ export function buildMulticallSwapToNative(
 
     // Step 2: unwrapWETH9 to send native token to actual recipient
     const unwrapCall = encodeUnwrapWETH9(params.amountOutMinimum, params.recipient)
+
+    return [swapCall, unwrapCall]
+}
+
+// ============================================================================
+// Multi-Hop Routing Functions
+// ============================================================================
+
+/**
+ * Encode a multi-hop path for V3 exactInput/exactOutput
+ * Path format: tokenA (20 bytes) + fee1 (3 bytes) + tokenB (20 bytes) + fee2 (3 bytes) + tokenC (20 bytes)
+ *
+ * @param tokens Array of token addresses in swap order
+ * @param fees Array of fee tiers (length = tokens.length - 1)
+ */
+export function encodeV3Path(tokens: Address[], fees: number[]): Hex {
+    if (tokens.length < 2) throw new Error('Path must have at least 2 tokens')
+    if (fees.length !== tokens.length - 1) throw new Error('Fees length must be tokens.length - 1')
+
+    const parts: Hex[] = []
+
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i]
+        if (!token) throw new Error(`Token at index ${i} is undefined`)
+
+        // Add token address (20 bytes)
+        parts.push(token.toLowerCase() as Hex)
+
+        // Add fee tier if not the last token (3 bytes = 24 bits)
+        if (i < fees.length) {
+            const fee = fees[i]
+            if (fee === undefined) throw new Error(`Fee at index ${i} is undefined`)
+            const feeHex = pad(toHex(fee), { size: 3 })
+            parts.push(feeHex)
+        }
+    }
+
+    return concat(parts)
+}
+
+/**
+ * Build quote parameters for multi-hop exactInput
+ */
+export function buildMultiHopQuoteParams(
+    tokens: Address[],
+    fees: number[],
+    amountIn: bigint,
+    chainId: number
+) {
+    const swapTokens = tokens.map((t) => getSwapAddress(t, chainId))
+    return {
+        path: encodeV3Path(swapTokens, fees),
+        amountIn,
+    }
+}
+
+/**
+ * Build swap parameters for multi-hop exactInput
+ */
+export function buildMultiHopSwapParams(
+    tokens: Address[],
+    fees: number[],
+    amountIn: bigint,
+    amountOutMinimum: bigint,
+    recipient: Address,
+    chainId: number
+) {
+    const swapTokens = tokens.map((t) => getSwapAddress(t, chainId))
+    return {
+        path: encodeV3Path(swapTokens, fees),
+        recipient,
+        amountIn,
+        amountOutMinimum,
+    }
+}
+
+/**
+ * Encode exactInput call for multicall (multi-hop)
+ */
+export function encodeExactInput(params: {
+    path: Hex
+    recipient: Address
+    amountIn: bigint
+    amountOutMinimum: bigint
+}): Hex {
+    return encodeFunctionData({
+        abi: UNISWAP_V3_SWAP_ROUTER_ABI,
+        functionName: 'exactInput',
+        args: [params],
+    })
+}
+
+/**
+ * Build multicall data for multi-hop swap to native token
+ * Returns array of encoded calls: [exactInput, unwrapWETH9]
+ */
+export function buildMulticallMultiHopSwapToNative(
+    tokens: Address[],
+    fees: number[],
+    amountIn: bigint,
+    amountOutMinimum: bigint,
+    recipient: Address,
+    chainId: number
+): Hex[] {
+    const swapTokens = tokens.map((t) => getSwapAddress(t, chainId))
+
+    // Step 1: exactInput with recipient = ADDRESS_THIS
+    const swapCall = encodeExactInput({
+        path: encodeV3Path(swapTokens, fees),
+        recipient: ADDRESS_THIS,
+        amountIn,
+        amountOutMinimum,
+    })
+
+    // Step 2: unwrapWETH9 to send native token to actual recipient
+    const unwrapCall = encodeUnwrapWETH9(amountOutMinimum, recipient)
 
     return [swapCall, unwrapCall]
 }

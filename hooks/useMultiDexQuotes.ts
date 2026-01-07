@@ -5,6 +5,7 @@ import { useChainId } from 'wagmi'
 import type { Token } from '@/types/tokens'
 import type { DEXType } from '@/types/dex'
 import type { DexQuote } from '@/types/swap'
+import type { RouteQuote } from '@/types/routing'
 import {
     getSupportedDexs,
     getDexConfig,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/dex-config'
 import { useUniV3Quote } from './useUniV3Quote'
 import { useUniV2Quote } from './useUniV2Quote'
+import { useSwapRouting } from './useSwapRouting'
 
 export interface UseMultiDexQuotesParams {
     tokenIn: Token | null
@@ -28,6 +30,8 @@ export interface UseMultiDexQuotesResult {
     isAnyLoading: boolean
     hasAnyQuote: boolean
     priceDifferences: Record<DEXType, number | null>
+    bestRoute: RouteQuote | null
+    isMultiHop: boolean
 }
 
 export function useMultiDexQuotes({
@@ -37,6 +41,13 @@ export function useMultiDexQuotes({
     enabled = true,
 }: UseMultiDexQuotesParams): UseMultiDexQuotesResult {
     const chainId = useChainId()
+    const routing = useSwapRouting({
+        tokenIn,
+        tokenOut,
+        amountIn,
+        enabled,
+        preferMultiHop: true,
+    })
     const supportedDexs = getSupportedDexs(chainId)
     const v3Dexs = supportedDexs.filter((dexId) => {
         const config = getDexConfig(chainId, dexId)
@@ -119,8 +130,30 @@ export function useMultiDexQuotes({
         v2Result.isError,
         v2Result.error,
     ])
+    const quotesWithMultiHop = useMemo(() => {
+        const results = { ...quotes }
+        if (routing.bestRoute?.route.isMultiHop && routing.bestRoute.quote) {
+            const multiHopDexId = routing.bestRoute.dexId
+            if (results[multiHopDexId]) {
+                const existingQuote = results[multiHopDexId].quote
+                if (!existingQuote || routing.bestRoute.quote.amountOut > existingQuote.amountOut) {
+                    results[multiHopDexId] = {
+                        dexId: multiHopDexId,
+                        quote: routing.bestRoute.quote,
+                        isLoading: false,
+                        isError: false,
+                        error: null,
+                        protocolType: routing.bestRoute.protocolType as
+                            | ProtocolType.V2
+                            | ProtocolType.V3,
+                    }
+                }
+            }
+        }
+        return results
+    }, [quotes, routing.bestRoute])
     const bestQuoteDex = useMemo(() => {
-        const validQuotes = Object.values(quotes).filter(
+        const validQuotes = Object.values(quotesWithMultiHop).filter(
             (q) => q.quote && !q.isLoading && !q.isError
         )
         if (validQuotes.length === 0) return null
@@ -130,24 +163,24 @@ export function useMultiDexQuotes({
             return Number(b.quote.amountOut - a.quote.amountOut)
         })[0]
         return best?.dexId ?? null
-    }, [quotes])
+    }, [quotesWithMultiHop])
     const priceDifferences = useMemo(() => {
         const differences: Record<DEXType, number | null> = {}
         if (!bestQuoteDex) {
-            Object.keys(quotes).forEach((dexId) => {
+            Object.keys(quotesWithMultiHop).forEach((dexId) => {
                 differences[dexId] = null
             })
             return differences
         }
-        const bestQuote = quotes[bestQuoteDex]?.quote
+        const bestQuote = quotesWithMultiHop[bestQuoteDex]?.quote
         if (!bestQuote) {
-            Object.keys(quotes).forEach((dexId) => {
+            Object.keys(quotesWithMultiHop).forEach((dexId) => {
                 differences[dexId] = null
             })
             return differences
         }
         const bestAmountOut = bestQuote.amountOut
-        Object.entries(quotes).forEach(([dexId, dexQuote]) => {
+        Object.entries(quotesWithMultiHop).forEach(([dexId, dexQuote]) => {
             if (dexQuote.quote && !dexQuote.isLoading && !dexQuote.isError) {
                 if (dexId === bestQuoteDex) {
                     differences[dexId] = 0
@@ -162,14 +195,16 @@ export function useMultiDexQuotes({
             }
         })
         return differences
-    }, [quotes, bestQuoteDex])
-    const isAnyLoading = Object.values(quotes).some((q) => q.isLoading)
-    const hasAnyQuote = Object.values(quotes).some((q) => q.quote !== null)
+    }, [quotesWithMultiHop, bestQuoteDex])
+    const isAnyLoading = Object.values(quotesWithMultiHop).some((q) => q.isLoading)
+    const hasAnyQuote = Object.values(quotesWithMultiHop).some((q) => q.quote !== null)
     return {
-        dexQuotes: quotes,
+        dexQuotes: quotesWithMultiHop,
         bestQuoteDex,
-        isAnyLoading,
+        isAnyLoading: isAnyLoading || routing.isLoading,
         hasAnyQuote,
         priceDifferences,
+        bestRoute: routing.bestRoute,
+        isMultiHop: routing.bestRoute?.route.isMultiHop ?? false,
     }
 }

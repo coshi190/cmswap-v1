@@ -147,3 +147,73 @@ export function encodeSwapExactTokensForETH(params: {
         args: [params.amountIn, params.amountOutMin, params.path, params.to, params.deadline],
     })
 }
+
+// ============================================================================
+// Multi-Hop Routing Functions
+// ============================================================================
+
+/**
+ * Build multi-hop swap path array for V2 router
+ * V2 uses simple address[] path for multi-hop
+ *
+ * @param tokens Array of token addresses in swap order
+ * @param chainId Chain ID
+ * @param wnative Optional DEX-specific wrapped native token address
+ */
+export function buildMultiHopSwapPath(
+    tokens: Address[],
+    chainId: number,
+    wnative?: Address
+): Address[] {
+    return tokens.map((token) => {
+        const isNative = isNativeToken(token)
+        if (isNative && wnative) {
+            return wnative
+        }
+        return getSwapAddress(token, chainId)
+    })
+}
+
+/**
+ * Build V2 quote params for multi-hop
+ */
+export function buildV2MultiHopQuoteParams(
+    tokens: Address[],
+    amountIn: bigint,
+    chainId: number,
+    wnative?: Address
+) {
+    return {
+        amountIn,
+        path: buildMultiHopSwapPath(tokens, chainId, wnative),
+    }
+}
+
+/**
+ * V2 Multi-hop Swap parameters interface
+ */
+export interface V2MultiHopSwapParams {
+    path: Address[]
+    amountIn: bigint
+    amountOutMinimum: bigint
+    recipient: Address
+    deadline: number
+}
+
+/**
+ * Build V2 swap params for multi-hop
+ */
+export function buildV2MultiHopSwapParams(
+    params: V2MultiHopSwapParams,
+    chainId: number,
+    wnative?: Address
+) {
+    const path = buildMultiHopSwapPath(params.path, chainId, wnative)
+    return {
+        amountIn: params.amountIn,
+        amountOutMin: params.amountOutMinimum,
+        path,
+        to: params.recipient,
+        deadline: BigInt(params.deadline),
+    }
+}

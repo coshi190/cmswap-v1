@@ -55,6 +55,14 @@ export const JB_CHAIN_TOKENS: Token[] = [
         logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreihej2whwsw4p57ayfqxhwijnpmgxtnwhngh5f5pxpvxw73s636hzy',
     },
     {
+        address: '0x99999999990FC47611b74827486218f3398A4abD' as const,
+        symbol: 'jWJBC',
+        name: 'jibswap Wrapped JBC',
+        decimals: 18,
+        chainId: jbc.id,
+        logo: 'https://cmswap.mypinata.cloud/ipfs/bafkreihej2whwsw4p57ayfqxhwijnpmgxtnwhngh5f5pxpvxw73s636hzy',
+    },
+    {
         address: '0x24599b658b57f91E7643f4F154B16bcd2884f9ac' as const,
         symbol: 'JUSDT',
         name: 'JUSDT',

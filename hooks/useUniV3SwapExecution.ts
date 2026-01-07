@@ -8,7 +8,13 @@ import type { SwapParams, SwapResult } from '@/types/swap'
 import { getV3Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
 import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
-import { buildSwapParams, buildMulticallSwapToNative } from '@/services/dex/uniswap-v3'
+import {
+    buildSwapParams,
+    buildMulticallSwapToNative,
+    buildMultiHopSwapParams,
+    buildMulticallMultiHopSwapToNative,
+} from '@/services/dex/uniswap-v3'
+import type { SwapRoute } from '@/types/routing'
 import { toastError } from '@/lib/toast'
 import { isNativeToken } from '@/lib/wagmi'
 import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
@@ -23,6 +29,7 @@ export interface UseUniV3SwapExecutionParams {
     slippage: number // in percentage (0.5, 1, etc.)
     deadlineMinutes: number
     fee: number
+    route?: SwapRoute
 }
 
 export interface UseUniV3SwapExecutionResult {
@@ -48,6 +55,7 @@ export function useUniV3SwapExecution({
     slippage,
     deadlineMinutes,
     fee,
+    route,
 }: UseUniV3SwapExecutionParams): UseUniV3SwapExecutionResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = getV3Config(tokenIn.chainId, selectedDex)
@@ -88,7 +96,39 @@ export function useUniV3SwapExecution({
                 }
             }
         }
+
         const txValue = isNativeInput ? amountIn : undefined
+        if (route?.isMultiHop && route.path.length > 2 && route.fees) {
+            if (isNativeOutput) {
+                const multicallData = buildMulticallMultiHopSwapToNative(
+                    route.path,
+                    route.fees,
+                    amountIn,
+                    amountOutMinimum,
+                    recipient,
+                    tokenIn.chainId
+                )
+                return {
+                    functionName: 'multicall' as const,
+                    args: [multicallData] as [Hex[]],
+                    value: txValue,
+                }
+            } else {
+                const params = buildMultiHopSwapParams(
+                    route.path,
+                    route.fees,
+                    amountIn,
+                    amountOutMinimum,
+                    recipient,
+                    tokenIn.chainId
+                )
+                return {
+                    functionName: 'exactInput' as const,
+                    args: [params] as const,
+                    value: txValue,
+                }
+            }
+        }
         if (isNativeOutput) {
             const multicallData = buildMulticallSwapToNative(swapParams, fee, tokenIn.chainId)
             return {
@@ -116,6 +156,7 @@ export function useUniV3SwapExecution({
         fee,
         isNativeInput,
         isNativeOutput,
+        route,
     ])
     const {
         data: simulationData,

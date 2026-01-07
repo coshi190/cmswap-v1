@@ -8,7 +8,8 @@ import type { SwapResult } from '@/types/swap'
 import { getV2Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
 import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
-import { buildV2SwapParams } from '@/services/dex/uniswap-v2'
+import { buildV2SwapParams, buildV2MultiHopSwapParams } from '@/services/dex/uniswap-v2'
+import type { SwapRoute } from '@/types/routing'
 import { toastError } from '@/lib/toast'
 import { isNativeToken } from '@/lib/wagmi'
 import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
@@ -22,6 +23,7 @@ export interface UseUniV2SwapExecutionParams {
     recipient: Address
     slippage: number
     deadlineMinutes: number
+    route?: SwapRoute
 }
 
 export interface UseUniV2SwapExecutionResult {
@@ -46,6 +48,7 @@ export function useUniV2SwapExecution({
     recipient,
     slippage, // eslint-disable-line @typescript-eslint/no-unused-vars -- reserved for future use
     deadlineMinutes,
+    route,
 }: UseUniV2SwapExecutionParams): UseUniV2SwapExecutionResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = getV2Config(tokenIn.chainId, selectedDex)
@@ -54,22 +57,45 @@ export function useUniV2SwapExecution({
     }, [tokenIn, tokenOut])
     const isNativeInput = isNativeToken(tokenIn.address as Address)
     const isNativeOutput = isNativeToken(tokenOut.address as Address)
-    const swapParams = buildV2SwapParams(
-        {
-            tokenIn: tokenIn.address as Address,
-            tokenOut: tokenOut.address as Address,
-            amountIn,
-            amountOutMinimum,
-            recipient,
-            deadline: Math.floor(Date.now() / 1000) + deadlineMinutes * 60,
-        },
-        tokenIn.chainId,
-        dexConfig?.wnative
-    )
+    const swapParams = useMemo(() => {
+        if (route?.isMultiHop && route.path.length > 2) {
+            return buildV2MultiHopSwapParams(
+                {
+                    path: route.path,
+                    amountIn,
+                    amountOutMinimum,
+                    recipient,
+                    deadline: Math.floor(Date.now() / 1000) + deadlineMinutes * 60,
+                },
+                tokenIn.chainId,
+                dexConfig?.wnative
+            )
+        }
+        return buildV2SwapParams(
+            {
+                tokenIn: tokenIn.address as Address,
+                tokenOut: tokenOut.address as Address,
+                amountIn,
+                amountOutMinimum,
+                recipient,
+                deadline: Math.floor(Date.now() / 1000) + deadlineMinutes * 60,
+            },
+            tokenIn.chainId,
+            dexConfig?.wnative
+        )
+    }, [
+        route,
+        tokenIn,
+        tokenOut,
+        amountIn,
+        amountOutMinimum,
+        recipient,
+        deadlineMinutes,
+        dexConfig,
+    ])
     const contractCall = useMemo(() => {
         if (wrapOperation) {
             const wrappedAddress = getWrappedNativeAddress(tokenIn.chainId)
-
             if (wrapOperation === 'wrap') {
                 return {
                     address: wrappedAddress,

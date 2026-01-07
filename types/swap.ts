@@ -1,5 +1,6 @@
 import type { Address } from 'viem'
 import type { DEXType } from './dex'
+import type { SwapRoute } from './routing'
 import { ProtocolType } from '@/lib/dex-config'
 
 /**
@@ -13,6 +14,9 @@ export interface SwapParams {
     recipient: Address
     slippageTolerance: number // in basis points (100 = 1%, 500 = 5%)
     deadline: number // Unix timestamp in seconds
+    // Multi-hop support
+    path?: Address[] // Full path for multi-hop [tokenIn, ...intermediaries, tokenOut]
+    fees?: number[] // Fee tiers for V3 multi-hop (length = path.length - 1)
 }
 
 /**
@@ -36,6 +40,8 @@ export interface DexQuote {
     error: Error | null
     protocolType: ProtocolType.V2 | ProtocolType.V3
     fee?: number // For V3 protocols
+    route?: SwapRoute // Route information for multi-hop swaps
+    isMultiHop?: boolean
 }
 
 /**
