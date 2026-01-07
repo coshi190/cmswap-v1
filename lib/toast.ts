@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 
-const APP_VERSION = '0.2.3'
+const APP_VERSION = '0.2.4'
 
 const MAX_ERROR_LENGTH = 100
 

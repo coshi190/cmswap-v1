@@ -40,6 +40,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     const { address, isConnected } = useAccount()
     const chainId = useChainId()
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
+    const [isRateFlipped, setIsRateFlipped] = useState(false)
     const tokens = tokensOverride || getTokensForChain(chainId)
     const {
         tokenIn,
@@ -378,15 +379,36 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                                 <>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Rate</span>
-                                        <span className="font-medium">
-                                            1 {tokenIn.symbol} ={' '}
-                                            {amountIn && parseFloat(amountIn) > 0
-                                                ? (
-                                                      parseFloat(displayAmountOut) /
-                                                      parseFloat(amountIn)
-                                                  ).toFixed(6)
-                                                : '0'}{' '}
-                                            {tokenOut.symbol}
+                                        <span
+                                            className="font-medium cursor-pointer hover:underline flex items-center gap-1"
+                                            onClick={() => setIsRateFlipped(!isRateFlipped)}
+                                            title="Click to flip rate"
+                                        >
+                                            {!isRateFlipped ? (
+                                                <>
+                                                    1 {tokenIn.symbol} ={' '}
+                                                    {amountIn && parseFloat(amountIn) > 0
+                                                        ? (
+                                                              parseFloat(displayAmountOut) /
+                                                              parseFloat(amountIn)
+                                                          ).toFixed(6)
+                                                        : '0'}{' '}
+                                                    {tokenOut.symbol}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    1 {tokenOut.symbol} ={' '}
+                                                    {displayAmountOut &&
+                                                    parseFloat(displayAmountOut) > 0
+                                                        ? (
+                                                              parseFloat(amountIn) /
+                                                              parseFloat(displayAmountOut)
+                                                          ).toFixed(6)
+                                                        : '0'}{' '}
+                                                    {tokenIn.symbol}
+                                                </>
+                                            )}
+                                            <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
@@ -447,7 +469,8 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         isSameTokenSwap ||
                         (isPreparing && !needsApprovalCheck) ||
                         isExecuting ||
-                        (needsApprovalCheck && (isApproving || isConfirmingApproval))
+                        (needsApprovalCheck && (isApproving || isConfirmingApproval)) ||
+                        (amountInBigInt > 0n && amountInBigInt > balanceInValue)
                     }
                     onClick={() => {
                         if (!isConnected) {
@@ -465,35 +488,37 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         ? 'Connect Wallet to Swap'
                         : isSameTokenSwap
                           ? 'Select Different Tokens'
-                          : isWrapUnwrap
-                            ? isPreparing
-                                ? 'Simulating...'
-                                : isExecuting
-                                  ? wrapOperation === 'wrap'
-                                      ? 'Wrapping...'
-                                      : 'Unwrapping...'
-                                  : isConfirmingSwap
-                                    ? 'Confirming...'
-                                    : wrapOperation === 'wrap'
-                                      ? 'Wrap KUB'
-                                      : 'Unwrap tKKUB'
-                            : needsApprovalCheck
-                              ? isApproving
-                                  ? 'Approving...'
-                                  : isConfirmingApproval
-                                    ? 'Confirming...'
-                                    : `Approve ${tokenIn?.symbol || 'Token'}`
-                              : isPreparing
-                                ? 'Simulating...'
-                                : isExecuting
-                                  ? 'Swapping...'
-                                  : isConfirmingSwap
-                                    ? 'Confirming...'
-                                    : isQuoteLoading
-                                      ? 'Fetching Quote...'
-                                      : tokenIn && tokenOut
-                                        ? 'Swap'
-                                        : 'Select Tokens'}
+                          : amountInBigInt > 0n && amountInBigInt > balanceInValue
+                            ? 'Insufficient Balance'
+                            : isWrapUnwrap
+                              ? isPreparing
+                                  ? 'Simulating...'
+                                  : isExecuting
+                                    ? wrapOperation === 'wrap'
+                                        ? 'Wrapping...'
+                                        : 'Unwrapping...'
+                                    : isConfirmingSwap
+                                      ? 'Confirming...'
+                                      : wrapOperation === 'wrap'
+                                        ? 'Wrap KUB'
+                                        : 'Unwrap tKKUB'
+                              : needsApprovalCheck
+                                ? isApproving
+                                    ? 'Approving...'
+                                    : isConfirmingApproval
+                                      ? 'Confirming...'
+                                      : `Approve ${tokenIn?.symbol || 'Token'}`
+                                : isPreparing
+                                  ? 'Simulating...'
+                                  : isExecuting
+                                    ? 'Swapping...'
+                                    : isConfirmingSwap
+                                      ? 'Confirming...'
+                                      : isQuoteLoading
+                                        ? 'Fetching Quote...'
+                                        : tokenIn && tokenOut
+                                          ? 'Swap'
+                                          : 'Select Tokens'}
                 </Button>
                 <ConnectModal open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen} />
             </CardContent>
