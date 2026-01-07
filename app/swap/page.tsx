@@ -1,6 +1,6 @@
 'use client'
 
-import { useAccount, useChainId, useSwitchChain } from 'wagmi'
+import { useChainId, useSwitchChain } from 'wagmi'
 import { kubTestnet, jbc } from '@/lib/wagmi'
 import { Button } from '@/components/ui/button'
 import { SwapCard } from '@/components/swap/swap-card'
@@ -22,24 +22,11 @@ export default function SwapPage() {
 }
 
 function SwapContent() {
-    const { isConnected } = useAccount()
     const chainId = useChainId()
     const { switchChain } = useSwitchChain()
     const isCorrectChain = SWAP_SUPPORTED_CHAINS.some((chain) => chain.id === chainId)
     const handleSwitchChain = () => {
         switchChain({ chainId: SWAP_SUPPORTED_CHAINS[0].id })
-    }
-    if (!isConnected) {
-        return (
-            <div className="flex min-h-screen items-start justify-center">
-                <div className="text-center">
-                    <h1 className="mb-4 text-muted-foreground">
-                        Connect your wallet to swap tokens
-                    </h1>
-                    <Button>Connect Wallet</Button>
-                </div>
-            </div>
-        )
     }
     if (!isCorrectChain) {
         return (

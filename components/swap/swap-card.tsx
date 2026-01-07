@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useState } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { parseUnits, formatUnits } from 'viem'
 import type { Token } from '@/types/tokens'
@@ -19,6 +19,7 @@ import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { calculateMinOutput as calculateMinOutputV2 } from '@/services/dex/uniswap-v2'
 import { formatBalance, formatTokenAmount } from '@/services/tokens'
+import { ConnectModal } from '@/components/web3/connect-modal'
 import { toastError } from '@/lib/toast'
 import { getTokensForChain } from '@/lib/tokens'
 import { getDexConfig, isV2Config } from '@/lib/dex-config'
@@ -36,8 +37,9 @@ export interface SwapCardProps {
 
 export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
     useSwapUrlSync()
-    const { address } = useAccount()
+    const { address, isConnected } = useAccount()
     const chainId = useChainId()
+    const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
     const tokens = tokensOverride || getTokensForChain(chainId)
     const {
         tokenIn,
@@ -417,6 +419,10 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         (needsApprovalCheck && (isApproving || isConfirmingApproval))
                     }
                     onClick={() => {
+                        if (!isConnected) {
+                            setIsConnectModalOpen(true)
+                            return
+                        }
                         if (needsApprovalCheck) {
                             approve()
                         } else if (!isPreparing) {
@@ -424,38 +430,41 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
                         }
                     }}
                 >
-                    {isSameTokenSwap
-                        ? 'Select Different Tokens'
-                        : isWrapUnwrap
-                          ? isPreparing
-                              ? 'Simulating...'
-                              : isExecuting
-                                ? wrapOperation === 'wrap'
-                                    ? 'Wrapping...'
-                                    : 'Unwrapping...'
-                                : isConfirmingSwap
-                                  ? 'Confirming...'
-                                  : wrapOperation === 'wrap'
-                                    ? 'Wrap KUB'
-                                    : 'Unwrap tKKUB'
-                          : needsApprovalCheck
-                            ? isApproving
-                                ? 'Approving...'
-                                : isConfirmingApproval
-                                  ? 'Confirming...'
-                                  : `Approve ${tokenIn?.symbol || 'Token'}`
-                            : isPreparing
-                              ? 'Simulating...'
-                              : isExecuting
-                                ? 'Swapping...'
-                                : isConfirmingSwap
-                                  ? 'Confirming...'
-                                  : isQuoteLoading
-                                    ? 'Fetching Quote...'
-                                    : tokenIn && tokenOut
-                                      ? 'Swap'
-                                      : 'Select Tokens'}
+                    {!isConnected
+                        ? 'Connect Wallet to Swap'
+                        : isSameTokenSwap
+                          ? 'Select Different Tokens'
+                          : isWrapUnwrap
+                            ? isPreparing
+                                ? 'Simulating...'
+                                : isExecuting
+                                  ? wrapOperation === 'wrap'
+                                      ? 'Wrapping...'
+                                      : 'Unwrapping...'
+                                  : isConfirmingSwap
+                                    ? 'Confirming...'
+                                    : wrapOperation === 'wrap'
+                                      ? 'Wrap KUB'
+                                      : 'Unwrap tKKUB'
+                            : needsApprovalCheck
+                              ? isApproving
+                                  ? 'Approving...'
+                                  : isConfirmingApproval
+                                    ? 'Confirming...'
+                                    : `Approve ${tokenIn?.symbol || 'Token'}`
+                              : isPreparing
+                                ? 'Simulating...'
+                                : isExecuting
+                                  ? 'Swapping...'
+                                  : isConfirmingSwap
+                                    ? 'Confirming...'
+                                    : isQuoteLoading
+                                      ? 'Fetching Quote...'
+                                      : tokenIn && tokenOut
+                                        ? 'Swap'
+                                        : 'Select Tokens'}
                 </Button>
+                <ConnectModal open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen} />
             </CardContent>
         </Card>
     )
