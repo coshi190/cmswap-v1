@@ -7,16 +7,18 @@ const features = [
     {
         name: 'Aggregate Swap',
         description:
-            'Get the best rates across 150+ DEXs including Uniswap, PancakeSwap, Curve, and more. Save on every trade.',
+            'Compare prices across multiple DEXs and automatically get the best rate. Save on every trade with smart routing.',
         icon: Repeat,
         href: '/swap',
+        comingSoon: false,
     },
     {
         name: 'Cross-Chain Bridge',
         description:
-            'Move tokens seamlessly across 6+ chains including Ethereum, BSC, Polygon, Arbitrum, and more.',
+            'Move tokens seamlessly across multiple chains. Fast, secure, and low-cost cross-chain transfers.',
         icon: GitBranch,
         href: '/bridge',
+        comingSoon: true,
     },
     {
         name: 'Memecoin Launchpad',
@@ -24,6 +26,7 @@ const features = [
             'Launch your own token in minutes. Create, deploy, and add liquidity - all from one simple interface.',
         icon: Rocket,
         href: '/launchpad',
+        comingSoon: true,
     },
 ]
 
@@ -53,7 +56,14 @@ export function Features() {
                                     <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3 w-fit">
                                         <Icon className="h-6 w-6 text-primary" />
                                     </div>
-                                    <CardTitle>{feature.name}</CardTitle>
+                                    <div className="flex items-center gap-2">
+                                        <CardTitle>{feature.name}</CardTitle>
+                                        {feature.comingSoon && (
+                                            <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-500">
+                                                Coming Soon
+                                            </span>
+                                        )}
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-muted-foreground">{feature.description}</p>

@@ -9,7 +9,6 @@ import { Separator } from '@/components/ui/separator'
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -105,8 +104,7 @@ export function SettingsDialog({
             </DialogTrigger>
             <DialogContent className="max-w-md bg-card/95 backdrop-blur-md border-border/50">
                 <DialogHeader>
-                    <DialogTitle>Settings</DialogTitle>
-                    <DialogDescription>Configure your swap preferences</DialogDescription>
+                    <DialogTitle>Configure your swap preferences</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-2">
                     <Label htmlFor="slippage">Max Slippage</Label>
@@ -153,9 +151,6 @@ export function SettingsDialog({
                     </p>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>
-                        Cancel
-                    </Button>
                     <Button onClick={handleSave} disabled={isDisabled}>
                         Apply
                     </Button>

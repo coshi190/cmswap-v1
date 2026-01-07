@@ -15,7 +15,7 @@ export function CTA() {
                             Ready to start trading?
                         </h2>
                         <p className="mt-6 text-lg text-white/90">
-                            Join thousands of users getting the best rates on cmswap. No
+                            Join thousands of users getting the best rates on CMswap. No
                             registration required - just connect your wallet.
                         </p>
                         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
