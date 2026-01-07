@@ -143,7 +143,7 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
             setQuote(bestQuote)
         }
         setIsLoading(isQuoteLoading)
-        if (isError && error) {
+        if (isError && error && !isQuoteLoading && !bestQuote && amountInBigInt > 0n) {
             toastError(error, 'Failed to get quote')
         }
     }, [bestQuote, isQuoteLoading, isError, error, tokenOut, setQuote, setIsLoading])
