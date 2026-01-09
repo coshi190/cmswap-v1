@@ -33,13 +33,22 @@ export function useSwapRouting({
     preferMultiHop = false,
 }: UseSwapRoutingParams): UseSwapRoutingResult {
     const v3Direct = useUniV3Quote({ tokenIn, tokenOut, amountIn, enabled })
-    const v2Direct = useUniV2Quote({ tokenIn, tokenOut, amountIn, enabled })
+    const v2DirectResult = useUniV2Quote({ tokenIn, tokenOut, amountIn, enabled })
+    const v2PrimaryQuote = v2DirectResult.primaryDexId
+        ? v2DirectResult.quotes[v2DirectResult.primaryDexId]
+        : null
     const shouldTryMultiHop = useMemo(() => {
         if (preferMultiHop) return true
         const hasV3Direct = v3Direct.quote && !v3Direct.isError
-        const hasV2Direct = v2Direct.quote && !v2Direct.isError
+        const hasV2Direct = v2PrimaryQuote?.quote && !v2PrimaryQuote?.isError
         return !hasV3Direct && !hasV2Direct
-    }, [preferMultiHop, v3Direct.quote, v3Direct.isError, v2Direct.quote, v2Direct.isError])
+    }, [
+        preferMultiHop,
+        v3Direct.quote,
+        v3Direct.isError,
+        v2PrimaryQuote?.quote,
+        v2PrimaryQuote?.isError,
+    ])
     const v3MultiHop = useUniV3MultiHopQuote({
         tokenIn,
         tokenOut,
@@ -67,20 +76,20 @@ export function useSwapRouting({
                 protocolType: ProtocolType.V3,
             })
         }
-        if (v2Direct.quote && v2Direct.primaryDexId) {
+        if (v2PrimaryQuote?.quote && v2DirectResult.primaryDexId) {
             routes.push({
                 route: {
                     path: [tokenIn?.address, tokenOut?.address].filter(Boolean) as Address[],
                     isMultiHop: false,
                     intermediaryTokens: [],
                 },
-                quote: v2Direct.quote,
-                dexId: v2Direct.primaryDexId,
+                quote: v2PrimaryQuote.quote,
+                dexId: v2DirectResult.primaryDexId,
                 protocolType: ProtocolType.V2,
             })
         }
         return routes
-    }, [v3Direct, v2Direct, tokenIn, tokenOut])
+    }, [v3Direct, v2PrimaryQuote, v2DirectResult.primaryDexId, tokenIn, tokenOut])
     const result = useMemo((): RoutingResult => {
         const allMultiHop = [...v3MultiHop.routes, ...v2MultiHop.routes]
         const allRoutes = [...directRoutes, ...allMultiHop].sort((a, b) =>
@@ -106,13 +115,13 @@ export function useSwapRouting({
     }, [directRoutes, v3MultiHop.routes, v2MultiHop.routes])
     const isLoading =
         v3Direct.isLoading ||
-        v2Direct.isLoading ||
+        v2DirectResult.isLoading ||
         (shouldTryMultiHop && (v3MultiHop.isLoading || v2MultiHop.isLoading))
     const isError =
         v3Direct.isError &&
-        v2Direct.isError &&
+        (v2PrimaryQuote?.isError ?? true) &&
         (!shouldTryMultiHop || (v3MultiHop.isError && v2MultiHop.isError))
-    const error = v3Direct.error || v2Direct.error || v3MultiHop.error || v2MultiHop.error
+    const error = v3Direct.error || v2PrimaryQuote?.error || v3MultiHop.error || v2MultiHop.error
     return {
         ...result,
         isLoading,

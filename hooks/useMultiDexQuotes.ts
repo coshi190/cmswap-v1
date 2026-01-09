@@ -104,14 +104,17 @@ export function useMultiDexQuotes({
                 fee: v3Result.fee ?? undefined,
             }
         }
-        if (v2Result.primaryDexId && results[v2Result.primaryDexId]) {
-            results[v2Result.primaryDexId] = {
-                dexId: v2Result.primaryDexId,
-                quote: v2Result.quote,
-                isLoading: v2Result.isLoading,
-                isError: v2Result.isError,
-                error: v2Result.error,
-                protocolType: ProtocolType.V2,
+        for (const dexId of v2Dexs) {
+            const v2Quote = v2Result.quotes[dexId]
+            if (v2Quote) {
+                results[dexId] = {
+                    dexId,
+                    quote: v2Quote.quote,
+                    isLoading: v2Quote.isLoading,
+                    isError: v2Quote.isError,
+                    error: v2Quote.error,
+                    protocolType: ProtocolType.V2,
+                }
             }
         }
         return results
@@ -124,11 +127,7 @@ export function useMultiDexQuotes({
         v3Result.isError,
         v3Result.error,
         v3Result.fee,
-        v2Result.primaryDexId,
-        v2Result.quote,
-        v2Result.isLoading,
-        v2Result.isError,
-        v2Result.error,
+        v2Result.quotes,
     ])
     const quotesWithMultiHop = useMemo(() => {
         const results = { ...quotes }
