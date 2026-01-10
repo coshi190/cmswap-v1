@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import type { DEXType } from '@/types/dex'
-import { kubTestnet, jbc, bitkub } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain } from './wagmi'
 
 /**
  * Protocol types supported by the DEX system
@@ -134,6 +134,25 @@ export const DEX_CONFIGS_REGISTRY: Record<DEXType, DEXConfiguration> = {
                     factory: '0x090C6E5fF29251B1eF9EC31605Bdd13351eA316C' as Address,
                     quoter: '0xCB0c6E78519f6B4c1b9623e602E831dEf0f5ff7f' as Address,
                     swapRouter: '0x3F7582E36843FF79F173c7DC19f517832496f2D8' as Address,
+                    feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
+                    defaultFeeTier: FEE_TIERS.MEDIUM,
+                },
+            },
+        },
+    },
+    uniswap: {
+        dexId: 'uniswap',
+        defaultProtocol: ProtocolType.V3,
+        priority: 1,
+        protocols: {
+            [worldchain.id]: {
+                [ProtocolType.V3]: {
+                    protocolType: ProtocolType.V3,
+                    chainId: worldchain.id,
+                    enabled: true,
+                    factory: '0x7a5028BDa40e7B173C278C5342087826455ea25a' as Address,
+                    quoter: '0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c' as Address,
+                    swapRouter: '0x091AD9e2e6e5eD44c1c66dB50e49A601F9f36cF6' as Address,
                     feeTiers: [FEE_TIERS.STABLE, FEE_TIERS.LOW, FEE_TIERS.MEDIUM, FEE_TIERS.HIGH],
                     defaultFeeTier: FEE_TIERS.MEDIUM,
                 },
@@ -465,3 +484,13 @@ export const COMMON_FEE_TIERS = [
     FEE_TIERS.HIGH, // 1%
     FEE_TIERS.STABLE, // 0.01%
 ] as const
+
+/**
+ * Get the default DEX for a given chain
+ * Returns 'uniswap' for Worldchain (uses actual Uniswap V3)
+ * Returns 'cmswap' for other chains (uses forked/custom deployments)
+ */
+export function getDefaultDexForChain(chainId: number): DEXType {
+    if (chainId === worldchain.id) return 'uniswap'
+    return 'cmswap'
+}

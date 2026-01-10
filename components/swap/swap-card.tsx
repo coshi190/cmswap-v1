@@ -22,7 +22,7 @@ import { formatBalance, formatTokenAmount } from '@/services/tokens'
 import { ConnectModal } from '@/components/web3/connect-modal'
 import { toastError } from '@/lib/toast'
 import { getTokensForChain } from '@/lib/tokens'
-import { getDexConfig, isV2Config } from '@/lib/dex-config'
+import { getDexConfig, isV2Config, getDefaultDexForChain, getSupportedDexs } from '@/lib/dex-config'
 import { TokenSelect } from './token-select'
 import { SettingsDialog } from './settings-dialog'
 import { ArrowDownUp } from 'lucide-react'
@@ -56,10 +56,18 @@ export function SwapCard({ tokens: tokensOverride }: SwapCardProps) {
         setSlippage,
         setDeadlineMinutes,
         selectedDex,
+        setSelectedDex,
     } = useSwapStore()
     const dexConfig = getDexConfig(chainId, selectedDex)
     const isV2Protocol = dexConfig && isV2Config(dexConfig)
     const hasInitializedTokensRef = useRef(false)
+    const supportedDexs = useMemo(() => getSupportedDexs(chainId), [chainId])
+    useEffect(() => {
+        const defaultDex = getDefaultDexForChain(chainId)
+        if (!supportedDexs.includes(selectedDex)) {
+            setSelectedDex(defaultDex)
+        }
+    }, [chainId, supportedDexs, selectedDex, setSelectedDex])
     const {
         balance: balanceInValue,
         isLoading: isLoadingBalanceIn,

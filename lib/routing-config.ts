@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import type { IntermediaryConfig } from '@/types/routing'
-import { kubTestnet, jbc, bitkub } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain } from './wagmi'
 
 /**
  * Intermediary token addresses for multi-hop routing per chain
@@ -29,6 +29,17 @@ export const INTERMEDIARY_TOKENS: Record<number, IntermediaryConfig> = {
             '0xC4B7C87510675167643e3DE6EEeD4D2c06A9e747' as Address, // WJBC
             '0x24599b658b57f91E7643f4F154B16bcd2884f9ac' as Address, // JUSDT
             '0xFD8Ef75c1cB00A594D02df48ADdc27414Bd07F8a' as Address, // USDT
+        ],
+    },
+    [worldchain.id]: {
+        wrappedNative: '0x4200000000000000000000000000000000000006' as Address, // WETH
+        stables: [
+            '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' as Address, // USDC
+            '0xaec6f1aab292fa4e48e9cbd725b4e4b107e230bb' as Address, // USDT
+        ],
+        priority: [
+            '0x4200000000000000000000000000000000000006' as Address, // WETH (most liquid)
+            '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' as Address, // USDC
         ],
     },
 }

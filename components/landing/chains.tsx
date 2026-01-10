@@ -3,13 +3,13 @@ import Image from 'next/image'
 const liveChains = [
     { name: 'KUB Testnet', icon: '/chains/kubchain.png' },
     { name: 'JB Chain', icon: '/chains/jbchain.png' },
+    { name: 'KUB Chain', icon: '/chains/kubchain.png' },
+    { name: 'Worldchain', icon: '/chains/worldchain.svg' },
 ]
 
 const comingSoonChains = [
     { name: 'Base', icon: '/chains/base.svg' },
-    { name: 'Worldchain', icon: '/chains/worldchain.svg' },
     { name: 'BNB Chain', icon: '/chains/bnbchain.svg' },
-    { name: 'KUB Chain', icon: '/chains/kubchain.png' },
 ]
 
 export function Chains() {
@@ -18,7 +18,7 @@ export function Chains() {
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
                     <h2 className="text-2xl font-bold sm:text-3xl">Multi-Chain Support</h2>
-                    <p className="mt-4 text-gray-400">Live on 2 chains, with 4 more coming soon</p>
+                    <p className="mt-4 text-gray-400">Live on 4 chains, with 2 more coming soon</p>
                 </div>
 
                 {/* Live Now Section */}
@@ -29,7 +29,7 @@ export function Chains() {
                             Live Now
                         </span>
                     </div>
-                    <div className="mx-auto grid max-w-xl grid-cols-2 gap-5">
+                    <div className="mx-auto grid max-w-xl grid-cols-2 gap-5 sm:grid-cols-4">
                         {liveChains.map((chain) => (
                             <div key={chain.name} className="flex flex-col items-center gap-2">
                                 <div className="h-12 w-12 flex items-center justify-center shadow-lg">
@@ -54,7 +54,7 @@ export function Chains() {
                             Coming Soon
                         </span>
                     </div>
-                    <div className="mx-auto grid max-w-xl grid-cols-2 gap-5 sm:grid-cols-4">
+                    <div className="mx-auto grid max-w-xl grid-cols-2 gap-5">
                         {comingSoonChains.map((chain) => (
                             <div key={chain.name} className="flex flex-col items-center gap-2">
                                 <div className="h-12 w-12 flex items-center justify-center shadow-lg opacity-60">

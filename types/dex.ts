@@ -18,6 +18,13 @@ export const DEX_REGISTRY: Record<string, DEXMetadata> = {
         description: 'Uniswap V3 DEX',
         website: 'https://cmswap.xyz',
     },
+    uniswap: {
+        id: 'uniswap',
+        name: 'uniswap',
+        displayName: 'Uniswap V3',
+        description: 'Uniswap V3 DEX',
+        website: 'https://uniswap.org',
+    },
     jibswap: {
         id: 'jibswap',
         name: 'jibswap',

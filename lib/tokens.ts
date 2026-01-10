@@ -1,6 +1,6 @@
 import type { Token } from '@/types/tokens'
 import type { Address } from 'viem'
-import { kubTestnet, jbc, bitkub, isNativeToken } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, isNativeToken } from './wagmi'
 
 export const KUSDT_ADDRESS = '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as const
 
@@ -189,6 +189,73 @@ export const KUB_MAINNET_TOKENS: Token[] = [
     },
 ]
 
+export const WORLDCHAIN_TOKENS: Token[] = [
+    {
+        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as const,
+        symbol: 'ETH',
+        name: 'Ether',
+        decimals: 18,
+        chainId: worldchain.id,
+        logo: 'https://raw.githubusercontent.com/SmolDapp/tokenAssets/refs/heads/main/tokens/8453/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee/logo-32.png',
+    },
+    {
+        address: '0x4200000000000000000000000000000000000006' as const,
+        symbol: 'WETH',
+        name: 'Wrapped Ether',
+        decimals: 18,
+        chainId: worldchain.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/39810/large/weth.png?1724139790',
+    },
+    {
+        address: '0x79A02482A880bCE3F13e09Da970dC34db4CD24d1' as const,
+        symbol: 'USDC',
+        name: 'USDC',
+        decimals: 6,
+        chainId: worldchain.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/6319/large/usdc.png?1696506694',
+    },
+    {
+        address: '0x2cFc85d8E48F8EAB294be644d9E25C3030863003' as const,
+        symbol: 'WLD',
+        name: 'WLD',
+        decimals: 18,
+        chainId: worldchain.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/31069/large/worldcoin.jpeg?1696529903',
+    },
+    {
+        address: '0x03C7054BCB39f7b2e5B2c7AcB37583e32D70Cfa3' as const,
+        symbol: 'WBTC',
+        name: 'Wrapped BTC',
+        decimals: 8,
+        chainId: worldchain.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/51159/large/wbtc_28.png?1730242311',
+    },
+    {
+        address: '0x9B8Df6E244526ab5F6e6400d331DB28C8fdDdb55' as const,
+        symbol: 'uSOL',
+        name: 'uSOL',
+        decimals: 18,
+        chainId: worldchain.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/39987/large/UA-SOL_1.png?1725027946',
+    },
+    {
+        address: '0xab09A728E53d3d6BC438BE95eeD46Da0Bbe7FB38' as const,
+        symbol: 'SUSHI',
+        name: 'SUSHI',
+        decimals: 18,
+        chainId: worldchain.id,
+        logo: 'https://dd.dexscreener.com/ds-data/tokens/worldchain/0xab09a728e53d3d6bc438be95eed46da0bbe7fb38.png?size=lg&key=574fa0',
+    },
+    {
+        address: '0xcd1E32B86953D79a6AC58e813D2EA7a1790cAb63' as const,
+        symbol: 'ORO',
+        name: 'ORO',
+        decimals: 18,
+        chainId: worldchain.id,
+        logo: 'https://coin-images.coingecko.com/coins/images/70441/large/oro.png?1762076294',
+    },
+]
+
 /**
  * Token list by chain ID
  */
@@ -196,6 +263,7 @@ export const TOKEN_LISTS: Record<number, Token[]> = {
     [kubTestnet.id]: KUB_TESTNET_TOKENS,
     [bitkub.id]: KUB_MAINNET_TOKENS,
     [jbc.id]: JB_CHAIN_TOKENS,
+    [worldchain.id]: WORLDCHAIN_TOKENS,
 }
 
 /**
