@@ -74,7 +74,7 @@ function TokenList({ tokens, selectedToken, onSelect }: TokenListProps) {
                 </div>
             </div>
             <ScrollArea className="h-96">
-                <div className="py-2">
+                <div className="py-2 pr-4">
                     <p className="mb-3 text-xs font-medium text-muted-foreground">
                         {searchQuery ? 'Search Results' : 'All Tokens'}
                     </p>
@@ -89,7 +89,7 @@ function TokenList({ tokens, selectedToken, onSelect }: TokenListProps) {
                                     key={token.address}
                                     onClick={() => onSelect(token)}
                                     className={cn(
-                                        'cursor-pointer border-none',
+                                        'cursor-pointer border-none hover:bg-accent',
                                         selectedToken?.address === token.address && 'bg-accent'
                                     )}
                                 >

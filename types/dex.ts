@@ -43,12 +43,14 @@ export const DEX_REGISTRY: Record<string, DEXMetadata> = {
         name: 'udonswap',
         displayName: 'UdonSwap',
         description: 'Uniswap V2 DEX',
+        website: 'https://www.udonswap.io',
     },
     ponder: {
         id: 'ponder',
         name: 'ponder',
         displayName: 'Ponder Finance',
         description: 'Uniswap V2 DEX',
+        website: 'https://www.ponder.finance',
     },
     diamon: {
         id: 'diamon',
