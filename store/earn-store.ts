@@ -28,6 +28,7 @@ interface EarnStore {
     isRemoveLiquidityOpen: boolean
     isCollectFeesOpen: boolean
     isPositionDetailsOpen: boolean
+    isIncreaseLiquidityOpen: boolean
 
     // Settings (persisted)
     settings: EarnSettings
@@ -54,6 +55,8 @@ interface EarnStore {
     closeCollectFees: () => void
     openPositionDetails: (position: PositionWithTokens) => void
     closePositionDetails: () => void
+    openIncreaseLiquidity: (position: PositionWithTokens) => void
+    closeIncreaseLiquidity: () => void
 
     // Settings
     setDefaultSlippage: (slippage: number) => void
@@ -77,6 +80,7 @@ const initialState = {
     isRemoveLiquidityOpen: false,
     isCollectFeesOpen: false,
     isPositionDetailsOpen: false,
+    isIncreaseLiquidityOpen: false,
     activeTab: 'pools' as const,
 }
 
@@ -215,6 +219,19 @@ export const useEarnStore = create<EarnStore>()(
                 closePositionDetails: () =>
                     set({
                         isPositionDetailsOpen: false,
+                        selectedPosition: null,
+                    }),
+
+                // Modal controls - Increase Liquidity
+                openIncreaseLiquidity: (position) =>
+                    set({
+                        isIncreaseLiquidityOpen: true,
+                        selectedPosition: position,
+                    }),
+
+                closeIncreaseLiquidity: () =>
+                    set({
+                        isIncreaseLiquidityOpen: false,
                         selectedPosition: null,
                     }),
 

@@ -12,7 +12,8 @@ import { formatTokenAmount } from '@/services/tokens'
 import type { PositionWithTokens } from '@/types/earn'
 
 function PositionCard({ position }: { position: PositionWithTokens }) {
-    const { openPositionDetails, openCollectFees, openRemoveLiquidity } = useEarnStore()
+    const { openPositionDetails, openCollectFees, openRemoveLiquidity, openIncreaseLiquidity } =
+        useEarnStore()
     const hasFees = position.tokensOwed0 > 0n || position.tokensOwed1 > 0n
     const isClosed = position.liquidity === 0n
     return (
@@ -109,6 +110,18 @@ function PositionCard({ position }: { position: PositionWithTokens }) {
                             }}
                         >
                             Collect
+                        </Button>
+                    )}
+                    {!isClosed && (
+                        <Button
+                            size="sm"
+                            variant="default"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                openIncreaseLiquidity(position)
+                            }}
+                        >
+                            Add
                         </Button>
                     )}
                     {!isClosed && (

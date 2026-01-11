@@ -11,6 +11,7 @@ import { AddLiquidityDialog } from '@/components/positions/add-liquidity-dialog'
 import { RemoveLiquidityDialog } from '@/components/positions/remove-liquidity-dialog'
 import { CollectFeesDialog } from '@/components/positions/collect-fees-dialog'
 import { PositionDetailsModal } from '@/components/positions/position-details-modal'
+import { IncreaseLiquidityDialog } from '@/components/positions/increase-liquidity-dialog'
 import { useEarnStore, useActiveTab } from '@/store/earn-store'
 import { getV3Config } from '@/lib/dex-config'
 import { ConnectButton } from '@/components/web3/connect-button'
@@ -79,6 +80,7 @@ function EarnContent() {
                 <RemoveLiquidityDialog />
                 <CollectFeesDialog />
                 <PositionDetailsModal />
+                <IncreaseLiquidityDialog />
             </div>
         </div>
     )

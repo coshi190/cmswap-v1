@@ -8,8 +8,13 @@ import { useEarnStore, useSelectedPosition } from '@/store/earn-store'
 import { usePositionValue } from '@/hooks/usePositionValue'
 
 export function PositionDetailsModal() {
-    const { isPositionDetailsOpen, closePositionDetails, openCollectFees, openRemoveLiquidity } =
-        useEarnStore()
+    const {
+        isPositionDetailsOpen,
+        closePositionDetails,
+        openCollectFees,
+        openRemoveLiquidity,
+        openIncreaseLiquidity,
+    } = useEarnStore()
     const selectedPosition = useSelectedPosition()
     const {
         amount0Formatted,
@@ -144,6 +149,16 @@ export function PositionDetailsModal() {
                     </Card>
                     {!isClosed && (
                         <div className="flex gap-2">
+                            <Button
+                                className="flex-1"
+                                variant="default"
+                                onClick={() => {
+                                    closePositionDetails()
+                                    openIncreaseLiquidity(selectedPosition)
+                                }}
+                            >
+                                Add Liquidity
+                            </Button>
                             <Button
                                 className="flex-1"
                                 variant="outline"

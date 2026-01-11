@@ -76,18 +76,16 @@ Implementation phases and TODO list for CMswap development.
 **Duration**: 2-3 weeks
 **Goal**: Implement LP position management and LP mining (stake LP tokens to earn rewards)
 
-**Progress**: LP Position Management ~80% complete, LP Mining 0% complete (still TODO)
-
 ### Features
 
-- [x] LP Position Management ✅ (Mostly Complete)
+- [x] LP Position Management ✅
   - [x] Add liquidity interface (create LP positions)
   - [x] Remove liquidity interface
   - [x] Range selection for concentrated liquidity (V3)
   - [x] My LP positions list
   - [x] Position details view
   - [x] Collect fees button
-  - [ ] Add/remove liquidity to existing position (hooks exist, UI not implemented)
+  - [x] Add/remove liquidity to existing position
   - [x] Position value and P&L tracking
 
 - [ ] LP Mining (Stake LP to Earn)
@@ -161,14 +159,6 @@ app/
 ```
 
 ### TODO
-
-**LP Management:**
-- [x] Build pools component (list + card co-located) ✅
-- [x] Build add-liquidity-dialog component ✅
-- [x] Build remove-liquidity-dialog component ✅
-- [x] Build positions-list component ✅
-- [x] Build position-details-modal component ✅
-- [x] Build collect-fees-dialog component ✅
 
 **LP Mining:**
 - [ ] Create Foundry LiquidityMiningPool contract
