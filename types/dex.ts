@@ -57,6 +57,7 @@ export const DEX_REGISTRY: Record<string, DEXMetadata> = {
         name: 'diamon',
         displayName: 'Diamon Finance',
         description: 'Uniswap V2 DEX',
+        website: 'https://app.diamon.finance',
     },
     pancakeswap: {
         id: 'pancakeswap',

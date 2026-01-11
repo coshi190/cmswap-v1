@@ -30,7 +30,7 @@ export function Header() {
                 <div className="flex items-center w-[250px]">
                     <Link href="/" className="flex items-center space-x-2">
                         <Image src="/favicon.ico" alt="cmswap" width={32} height={32} />
-                        <span className="text-xl font-bold">CMswap</span>
+                        <span className="hidden md:inline text-xl font-bold">CMswap</span>
                     </Link>
                 </div>
                 <NavigationMenu className="hidden md:flex flex-1 justify-center">
