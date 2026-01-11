@@ -14,6 +14,7 @@ Implementation phases and TODO list for CMswap development.
 - [ ] Phase 6: Points Feature
 - [ ] Phase 7: Polish & Optimization
 - [ ] Phase 8: Advanced Features (Post-MVP)
+- [ ] Phase 9: Subgraph & Analytics (Post-MVP)
 
 ---
 
@@ -75,39 +76,33 @@ Implementation phases and TODO list for CMswap development.
 **Duration**: 2-3 weeks
 **Goal**: Implement LP position management and LP mining (stake LP tokens to earn rewards)
 
+**Progress**: LP Position Management ~80% complete, LP Mining 0% complete (still TODO)
+
 ### Features
 
-- [ ] LP Position Management
-  - [ ] Add liquidity interface (create LP positions)
-  - [ ] Remove liquidity interface
-  - [ ] Single-sided liquidity provision (if supported by DEX)
-  - [ ] Range selection for concentrated liquidity (V3)
-  - [ ] My LP positions list
-  - [ ] Position details view
-  - [ ] Collect fees button
-  - [ ] Add/remove liquidity to existing position
-  - [ ] Position value and P&L tracking
+- [x] LP Position Management ✅ (Mostly Complete)
+  - [x] Add liquidity interface (create LP positions)
+  - [x] Remove liquidity interface
+  - [x] Range selection for concentrated liquidity (V3)
+  - [x] My LP positions list
+  - [x] Position details view
+  - [x] Collect fees button
+  - [ ] Add/remove liquidity to existing position (hooks exist, UI not implemented)
+  - [x] Position value and P&L tracking
 
 - [ ] LP Mining (Stake LP to Earn)
   - [ ] Stake LP tokens interface
   - [ ] Unstake LP tokens interface
-  - [ ] Mining pool list with APY/TVL display
+  - [ ] Mining pool list
   - [ ] Real-time rewards calculation
   - [ ] Claim rewards button
   - [ ] Compound rewards option (auto-stake rewards)
   - [ ] My staking positions tracker
   - [ ] Unclaimed rewards display
 
-- [ ] Pool Discovery
-  - [ ] Pool list with APY/TVL/Volume display
-  - [ ] Pool search and filtering
-  - [ ] Token pair lookup
-
-- [ ] Fee & Reward Collection
-  - [ ] Claim collected trading fees
-  - [ ] Claim mining rewards
-  - [ ] Fee history
-  - [ ] Reward history
+- [x] Fee & Reward Collection ✅ (Trading Fees Only)
+  - [x] Claim collected trading fees
+  - [ ] Claim mining rewards (requires LP Mining implementation)
 
 ### Files to Create
 
@@ -168,14 +163,12 @@ app/
 ### TODO
 
 **LP Management:**
-- [ ] Build pools component (list + card co-located)
-- [ ] Build add-liquidity-dialog component
-- [ ] Build remove-liquidity-dialog component
-- [ ] Build positions-list component
-- [ ] Build position-details-modal component
-- [ ] Build collect-fees-dialog component
-- [ ] Integrate with DEX protocols (Uniswap V3, CMswap V3, PancakeSwap V3, etc.)
-- [ ] Implement position value and P&L calculation
+- [x] Build pools component (list + card co-located) ✅
+- [x] Build add-liquidity-dialog component ✅
+- [x] Build remove-liquidity-dialog component ✅
+- [x] Build positions-list component ✅
+- [x] Build position-details-modal component ✅
+- [x] Build collect-fees-dialog component ✅
 
 **LP Mining:**
 - [ ] Create Foundry LiquidityMiningPool contract
@@ -184,7 +177,6 @@ app/
 - [ ] Build unified stake-dialog component (stake/unstake modes)
 - [ ] Build claim-dialog component
 - [ ] Build staking-positions component
-- [ ] Implement APY calculation
 - [ ] Integrate TanStack Query for pool data
 - [ ] Add transaction tracking
 - [ ] Create earn-store for persisted settings
@@ -193,7 +185,6 @@ app/
 **Testing:**
 - [ ] Test on KUB testnet
 - [ ] Test on each supported chain
-- [ ] Security audit (before mainnet)
 
 ---
 
@@ -530,6 +521,74 @@ POST /api/quests/complete      # Complete quest
 
 ---
 
+## Phase 9: Subgraph & Analytics (Post-MVP)
+
+**Duration**: 2-3 weeks
+**Goal**: Implement subgraph for real-time analytics and data display
+
+### Features
+
+- [ ] Subgraph Setup
+  - [ ] Set up The Graph node or hosted service
+  - [ ] Write subgraph schema (schema.graphql)
+  - [ ] Create subgraph mapping handlers
+  - [ ] Deploy subgraph to supported chains
+
+- [ ] Pool Analytics
+  - [ ] Pool TVL tracking
+  - [ ] Pool volume tracking
+  - [ ] APY calculation
+  - [ ] Historical data
+
+- [ ] Position Analytics
+  - [ ] Position history
+  - [ ] Fee history
+  - [ ] P&L tracking over time
+
+- [ ] User Analytics
+  - [ ] User transaction history
+  - [ ] Portfolio value tracking
+  - [ ] Reward history
+
+### Files to Create
+
+```
+subgraph/
+├── schema.graphql             # Subgraph schema
+├── subgraph.yaml              # Subgraph manifest
+└── src/
+    ├── pool.ts                # Pool handlers
+    ├── position.ts            # Position handlers
+    ├── token.ts               # Token handlers
+    └── user.ts                # User handlers
+
+services/
+└── subgraph.ts                # Subgraph query service
+
+hooks/
+├── usePoolAnalytics.ts        # Pool TVL, volume, APY
+├── usePositionHistory.ts      # Position history
+└── useUserHistory.ts          # User transaction history
+
+types/
+└── subgraph.ts                # Subgraph types
+```
+
+### TODO
+
+- [ ] Set up The Graph hosted service
+- [ ] Design subgraph schema for pools, positions, tokens
+- [ ] Write event handlers for V3 pools
+- [ ] Deploy subgraph to KUB Chain, JBC, Worldchain, Base, BSC
+- [ ] Add TVL calculation to pool components
+- [ ] Add volume display to pool components
+- [ ] Implement APY calculation for mining pools
+- [ ] Add position history modal
+- [ ] Add fee history to position details
+- [ ] Test subgraph queries
+
+---
+
 ## Future Enhancements
 
 ### Mobile App
@@ -560,7 +619,8 @@ POST /api/quests/complete      # Complete quest
 | Phase 6 | 1-2 weeks | TBD | TBD | 🆕 Points
 | Phase 7 | 1-2 weeks | TBD | TBD | Polish & Optimization
 | **MVP Total** | **8-11 weeks** | **TBD** | **TBD** |
-| Phase 8 | Post-MVP | TBD | TBD |
+| Phase 8 | Post-MVP | TBD | TBD | Advanced Features
+| Phase 9 | 2-3 weeks | TBD | TBD | Subgraph & Analytics |
 
 ---
 

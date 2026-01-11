@@ -1,8 +1,5 @@
 # CMswap Architecture
 
-> **Version**: 0.2.5
-> **Status**: Multi-DEX Swap Aggregation Live (7 DEXs, 6 Chains Active)
-
 ---
 
 ## System Overview
