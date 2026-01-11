@@ -34,7 +34,7 @@ import {
     getAmountsForLiquidity,
 } from '@/lib/liquidity-helpers'
 
-export function useAddLiquidity(params: AddLiquidityParams | null) {
+export function useAddLiquidity(params: AddLiquidityParams | null, skipSimulation?: boolean) {
     const chainId = useChainId()
     const dexConfig = getV3Config(chainId)
     const positionManager = dexConfig?.positionManager
@@ -70,7 +70,7 @@ export function useAddLiquidity(params: AddLiquidityParams | null) {
         ...callData,
         value,
         query: {
-            enabled: isEnabled && !!callData,
+            enabled: isEnabled && !!callData && !skipSimulation,
         },
     })
     const {
@@ -109,7 +109,8 @@ export function useIncreaseLiquidity(
     amount1Desired: bigint,
     position: PositionWithTokens | null,
     slippageBps: number = 50,
-    deadlineMinutes: number = 20
+    deadlineMinutes: number = 20,
+    skipSimulation?: boolean
 ) {
     const chainId = useChainId()
     const dexConfig = getV3Config(chainId)
@@ -182,7 +183,7 @@ export function useIncreaseLiquidity(
         ...callData,
         value,
         query: {
-            enabled: isEnabled && !!callData,
+            enabled: isEnabled && !!callData && !skipSimulation,
         },
     })
     const {
