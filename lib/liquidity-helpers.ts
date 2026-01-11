@@ -179,6 +179,14 @@ export function sqrtPriceX96ToPrice(
     const price = sqrtPrice * sqrtPrice
     const adjustedPrice = price * Math.pow(10, decimals0 - decimals1)
 
+    // Check for full range bounds (near-zero or extremely large values)
+    if (adjustedPrice < 1e-30) {
+        return '0'
+    }
+    if (adjustedPrice > 1e35) {
+        return '∞'
+    }
+
     // Format with appropriate precision
     if (adjustedPrice < 0.0001) {
         return adjustedPrice.toExponential(4)
