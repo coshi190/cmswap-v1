@@ -114,3 +114,18 @@ export function getChainMetadata(chainId: number) {
 export function isNativeToken(address: Address): boolean {
     return address.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 }
+
+/**
+ * Chains that should NOT unwrap wrapped native tokens due to regulatory/KYC reasons
+ * These chains will collect wrapped tokens (KKUB) instead of native tokens
+ */
+export const SKIP_UNWRAP_CHAINS = [bitkub.id] as const
+
+/**
+ * Check if chain should skip native token unwrapping
+ * @param chainId - Chain ID to check
+ * @returns true if chain should skip unwrapping (collect wrapped tokens instead)
+ */
+export function shouldSkipUnwrap(chainId: number): boolean {
+    return SKIP_UNWRAP_CHAINS.includes(chainId as (typeof SKIP_UNWRAP_CHAINS)[number])
+}

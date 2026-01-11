@@ -14,6 +14,7 @@ import {
     getAmountsForLiquidity,
 } from '@/lib/liquidity-helpers'
 import { getWrappedNativeAddress } from '@/services/tokens'
+import { shouldSkipUnwrap } from '@/lib/wagmi'
 
 /**
  * Build decrease liquidity parameters
@@ -124,7 +125,11 @@ export function buildRemoveWithCollectMulticall(
     const token1IsWrappedNative = token1Address.toLowerCase() === wrappedNative.toLowerCase()
     const hasWrappedNative = token0IsWrappedNative || token1IsWrappedNative
 
-    if (hasWrappedNative) {
+    // Check if we should skip unwrapping for this chain (KUB Mainnet has KYC on unwrap)
+    const skipUnwrap = shouldSkipUnwrap(chainId)
+
+    if (hasWrappedNative && !skipUnwrap) {
+        // Standard behavior: unwrap to native token for most chains
         // Use address(0) as recipient for collect, then unwrap and sweep
         const collectParams: CollectCallParams = {
             tokenId: decreaseParams.tokenId,
@@ -147,7 +152,8 @@ export function buildRemoveWithCollectMulticall(
             : decreaseParams.amount0Min
         data.push(encodeSweepToken(sweepToken, sweepAmount, recipient))
     } else {
-        // No native token, just collect directly to recipient
+        // For KUB Mainnet (skipUnwrap=true) or non-native tokens:
+        // Collect wrapped tokens directly to recipient (no unwrapping)
         const collectParams: CollectCallParams = {
             tokenId: decreaseParams.tokenId,
             recipient,
@@ -247,7 +253,10 @@ export function buildRemoveAllAndBurnMulticall(
     const token1IsWrappedNative = token1Address.toLowerCase() === wrappedNative.toLowerCase()
     const hasWrappedNative = token0IsWrappedNative || token1IsWrappedNative
 
-    if (hasWrappedNative) {
+    // Check if we should skip unwrapping for this chain (KUB Mainnet has KYC on unwrap)
+    const skipUnwrap = shouldSkipUnwrap(chainId)
+
+    if (hasWrappedNative && !skipUnwrap) {
         const collectParams: CollectCallParams = {
             tokenId,
             recipient: '0x0000000000000000000000000000000000000000' as Address,
@@ -263,6 +272,8 @@ export function buildRemoveAllAndBurnMulticall(
         const sweepAmount = token0IsWrappedNative ? amount1Min : amount0Min
         data.push(encodeSweepToken(sweepToken, sweepAmount, recipient))
     } else {
+        // For KUB Mainnet (skipUnwrap=true) or non-native tokens:
+        // Collect wrapped tokens directly to recipient (no unwrapping)
         const collectParams: CollectCallParams = {
             tokenId,
             recipient,

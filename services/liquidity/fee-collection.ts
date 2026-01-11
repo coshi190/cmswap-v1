@@ -3,6 +3,7 @@ import type { CollectCallParams } from '@/types/earn'
 import { MAX_UINT128 } from '@/types/earn'
 import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
 import { getWrappedNativeAddress } from '@/services/tokens'
+import { shouldSkipUnwrap } from '@/lib/wagmi'
 
 /**
  * Build collect fees parameters
@@ -59,6 +60,8 @@ export function encodeSweepToken(token: Address, amountMinimum: bigint, recipien
  * 1. collect - to address(0) to keep tokens in position manager
  * 2. unwrapWETH9 - unwrap the wrapped native token
  * 3. sweepToken - send the other token to recipient
+ *
+ * Note: For KUB Mainnet, we skip unwrapping to avoid KYC requirements.
  */
 export function buildCollectWithUnwrapMulticall(
     tokenId: bigint,
@@ -72,8 +75,9 @@ export function buildCollectWithUnwrapMulticall(
     const token1IsWrappedNative = token1Address.toLowerCase() === wrappedNative.toLowerCase()
     const hasWrappedNative = token0IsWrappedNative || token1IsWrappedNative
 
-    // If neither token is wrapped native, just do a simple collect
-    if (!hasWrappedNative) {
+    // For KUB Mainnet, skip unwrapping and collect wrapped tokens directly
+    // This avoids KYC requirements on the unwrapWETH9 function
+    if (!hasWrappedNative || shouldSkipUnwrap(chainId)) {
         const collectParams = buildCollectFeesParams(tokenId, recipient)
         return [encodeCollect(collectParams)]
     }
