@@ -36,7 +36,7 @@ export function IncentiveCard({ incentive, onStake }: IncentiveCardProps) {
         incentive.rewardTokenInfo.decimals
     )
     return (
-        <Card className="hover:border-primary/50 transition-colors">
+        <Card>
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base font-medium">

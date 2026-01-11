@@ -16,7 +16,7 @@ import type { Token } from '@/types/tokens'
 function PoolCard({ pool }: { pool: V3PoolData }) {
     const { openAddLiquidity } = useEarnStore()
     return (
-        <Card className="hover:bg-accent/50 transition-colors">
+        <Card>
             <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
