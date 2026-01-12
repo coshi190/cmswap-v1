@@ -359,14 +359,12 @@ POST /api/quests/complete      # Complete quest
 ### Advanced Swap Features
 
 - [ ] Limit orders (1inch Limit Order API)
-- [ ] DCA (Dollar Cost Averaging)
 - [ ] Portfolio view
 - [ ] Transaction history
 
 ### Advanced Bridge Features
 
-- [ ] More bridge providers (Wormhole, Across)
-- [ ] Cross-chain limit orders
+- [ ] More bridge providers (LayerZero, Wormhole, Across)
 - [ ] Bridge comparison
 - [ ] Route optimization
 
@@ -482,7 +480,7 @@ types/
 | Phase 1 | ✅ Complete | - | ✅ Complete | Foundation |
 | Phase 2 | ✅ Complete | - | ✅ Complete | Swap & Multi-Chain |
 | Phase 3 | ✅ Complete | - | ✅ Complete | Earn Feature |
-| Phase 4 | 6-8 weeks | TBD | TBD | Custom Bridge (Foundation Complete) |
+| Phase 4 | 6-8 weeks | TBD | TBD | Bridge |
 | Phase 5 | 2 weeks | TBD | TBD | Launchpad Feature |
 | Phase 6 | 1-2 weeks | TBD | TBD | Points Feature |
 | Phase 7 | 1-2 weeks | TBD | TBD | Polish & Optimization |
