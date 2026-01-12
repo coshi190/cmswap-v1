@@ -119,9 +119,6 @@ export function UnstakeDialog() {
                     )}
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={closeUnstakeDialog}>
-                        Cancel
-                    </Button>
                     <Button
                         onClick={unstake}
                         disabled={isLoading}

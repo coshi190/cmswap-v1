@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
 import {
     useWriteContract,
     useWaitForTransactionReceipt,
@@ -70,6 +70,7 @@ export function useStakePosition(
     })
     const needsApproval =
         !isApprovedForAll && approvedAddress?.toLowerCase() !== stakerAddress?.toLowerCase()
+    const [justApproved, setJustApproved] = useState(false)
     const stakeCallData = useMemo(() => {
         if (!position || !incentiveKey || !stakerAddress || !positionManager || !owner) {
             return null
@@ -89,7 +90,7 @@ export function useStakePosition(
     } = useSimulateContract({
         ...stakeCallData!,
         query: {
-            enabled: isEnabled && !!stakeCallData && !needsApproval,
+            enabled: isEnabled && !!stakeCallData && (!needsApproval || justApproved),
         },
     })
     const {
@@ -103,6 +104,19 @@ export function useStakePosition(
         isSuccess,
         error: receiptError,
     } = useWaitForTransactionReceipt({ hash })
+    useEffect(() => {
+        if (isSuccess && hash && needsApproval) {
+            setJustApproved(true)
+        }
+    }, [isSuccess, hash, needsApproval])
+    useEffect(() => {
+        setJustApproved(false)
+    }, [position?.tokenId, incentiveKey?.rewardToken, owner])
+    useEffect(() => {
+        if (isSuccess && hash && !needsApproval) {
+            setJustApproved(false)
+        }
+    }, [isSuccess, hash, needsApproval])
     const stake = useCallback(() => {
         if (!stakeSimulation?.request) return
         writeContract(stakeSimulation.request)

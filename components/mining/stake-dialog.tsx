@@ -28,6 +28,10 @@ export function StakeDialog() {
     const { isStakeDialogOpen, closeStakeDialog } = useEarnStore()
     const selectedIncentive = useSelectedIncentive()
     const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null)
+    const [approvalCompleted, setApprovalCompleted] = useState(false)
+    type TxType = 'approval' | 'stake' | null
+    const [pendingTxType, setPendingTxType] = useState<TxType>(null)
+    const [processedTxHash, setProcessedTxHash] = useState<`0x${string}` | null>(null)
     const { positions, isLoading: isLoadingPositions } = useUserPositions(address, chainId)
     const eligiblePositions = useMemo(() => {
         if (!selectedIncentive) return []
@@ -54,14 +58,25 @@ export function StakeDialog() {
     useEffect(() => {
         if (isStakeDialogOpen) {
             setSelectedPositionId(null)
+            setApprovalCompleted(false)
+            setPendingTxType(null)
+            setProcessedTxHash(null)
         }
     }, [isStakeDialogOpen])
     useEffect(() => {
-        if (isSuccess && hash) {
-            toastSuccess('Position staked successfully!')
-            closeStakeDialog()
+        if (isSuccess && hash && pendingTxType && hash !== processedTxHash) {
+            if (pendingTxType === 'stake') {
+                toastSuccess('Position staked successfully!')
+                setProcessedTxHash(hash)
+                closeStakeDialog()
+            } else if (pendingTxType === 'approval') {
+                toastSuccess('Approval successful! Please click again to stake.')
+                setApprovalCompleted(true)
+                setProcessedTxHash(hash)
+            }
+            setPendingTxType(null)
         }
-    }, [isSuccess, hash, closeStakeDialog])
+    }, [isSuccess, hash, pendingTxType, processedTxHash, closeStakeDialog])
     useEffect(() => {
         if (error) {
             toastError(error)
@@ -75,14 +90,16 @@ export function StakeDialog() {
         if (isDeposited) return 'Position already staked'
         if (isPreparing) return 'Preparing...'
         if (isExecuting) return 'Confirm in wallet...'
-        if (isConfirming) return 'Staking...'
-        if (needsApproval) return 'Approve & Stake'
+        if (isConfirming) return pendingTxType === 'stake' ? 'Staking...' : 'Approving...'
+        if (needsApproval && !approvalCompleted) return 'Approve Position'
         return 'Stake Position'
     }
     const handleStake = () => {
-        if (needsApproval) {
+        if (needsApproval && !approvalCompleted) {
+            setPendingTxType('approval')
             approveAndStake()
         } else {
+            setPendingTxType('stake')
             stake()
         }
     }
@@ -145,9 +162,6 @@ export function StakeDialog() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={closeStakeDialog}>
-                        Cancel
-                    </Button>
                     <Button onClick={handleStake} disabled={!canStake}>
                         {getButtonText()}
                     </Button>

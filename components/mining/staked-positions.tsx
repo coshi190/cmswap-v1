@@ -97,12 +97,7 @@ export function StakedPositions() {
     if (enrichedPositions.length === 0) {
         return (
             <div className="space-y-4">
-                <div>
-                    <h2 className="text-lg font-semibold">My Staked Positions</h2>
-                    <p className="text-sm text-muted-foreground">
-                        Your staked LP positions and pending rewards
-                    </p>
-                </div>
+                <h2 className="text-lg font-semibold">My Staked Positions</h2>
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center space-y-2">
