@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useEarnStore } from '@/store/earn-store'
 import { useIncreaseLiquidity } from '@/hooks/useLiquidity'
@@ -22,6 +21,7 @@ import {
     calculateAmount1FromAmount0,
     calculateAmount0FromAmount1,
     tickToPrice,
+    isInRange,
 } from '@/lib/liquidity-helpers'
 import { toastError } from '@/lib/toast'
 import { toast } from 'sonner'
@@ -223,33 +223,39 @@ export function IncreaseLiquidityDialog() {
         selectedPosition.token0Info.decimals,
         selectedPosition.token1Info.decimals
     )
+    const inRange = pool
+        ? isInRange(pool.tick, selectedPosition.tickLower, selectedPosition.tickUpper)
+        : false
     return (
         <Dialog open={isIncreaseLiquidityOpen} onOpenChange={closeIncreaseLiquidity}>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <span>
-                            Add Liquidity: {selectedPosition.token0Info.symbol} /{' '}
-                            {selectedPosition.token1Info.symbol}
-                        </span>
-                        <Badge variant="outline">
-                            {(selectedPosition.fee / 10000).toFixed(2)}%
-                        </Badge>
-                    </DialogTitle>
+                    <DialogTitle>Add Liquidity</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6">
+                    <div className="text-center">
+                        <div className="text-lg font-medium">
+                            {selectedPosition.token0Info.symbol} /{' '}
+                            {selectedPosition.token1Info.symbol}
+                        </div>
+                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                            <span>Position #{selectedPosition.tokenId.toString()}</span>
+                            {inRange ? (
+                                <span className="text-green-600">• In Range</span>
+                            ) : (
+                                <span>• Out of Range</span>
+                            )}
+                        </div>
+                    </div>
                     <Card>
-                        <CardContent className="p-4">
-                            <div className="text-sm text-muted-foreground mb-2">
-                                Position #{selectedPosition.tokenId.toString()}
-                            </div>
-                            <div className="text-sm text-muted-foreground mb-2">Price Range</div>
+                        <CardContent className="p-4 space-y-3">
+                            <div className="text-sm text-muted-foreground">Price Range</div>
                             <div className="grid grid-cols-3 gap-4 text-center">
-                                <div>
+                                <div className="space-y-1">
                                     <div className="text-xs text-muted-foreground">Min</div>
                                     <div className="font-medium">{priceLower}</div>
                                 </div>
-                                <div>
+                                <div className="space-y-1">
                                     <div className="text-xs text-muted-foreground">Current</div>
                                     <div className="font-medium">
                                         {pool
@@ -261,14 +267,29 @@ export function IncreaseLiquidityDialog() {
                                             : '-'}
                                     </div>
                                 </div>
-                                <div>
+                                <div className="space-y-1">
                                     <div className="text-xs text-muted-foreground">Max</div>
                                     <div className="font-medium">{priceUpper}</div>
                                 </div>
                             </div>
-                            <div className="text-xs text-muted-foreground text-center mt-2">
+                            <div className="text-xs text-muted-foreground text-center">
                                 {selectedPosition.token1Info.symbol} per{' '}
                                 {selectedPosition.token0Info.symbol}
+                            </div>
+                            <div className="h-2 bg-muted rounded-full relative overflow-hidden">
+                                <div
+                                    className={`absolute h-full rounded-full transition-colors ${
+                                        inRange ? 'bg-green-600' : 'bg-muted-foreground/30'
+                                    }`}
+                                    style={{
+                                        left: '10%',
+                                        right: '10%',
+                                    }}
+                                />
+                                <div
+                                    className="absolute w-1 h-4 bg-foreground rounded -top-1 z-10"
+                                    style={{ left: '50%', transform: 'translateX(-50%)' }}
+                                />
                             </div>
                         </CardContent>
                     </Card>

@@ -6,6 +6,7 @@ import type { Address } from 'viem'
 import type { Incentive, IncentiveKey } from '@/types/earn'
 import type { Token } from '@/types/tokens'
 import { getV3StakerAddress } from '@/lib/dex-config'
+import { findTokenByAddress } from '@/lib/tokens'
 import { UNISWAP_V3_STAKER_ABI } from '@/lib/abis/uniswap-v3-staker'
 import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
 import { ERC20_ABI } from '@/lib/abis/erc20'
@@ -108,12 +109,14 @@ export function useIncentives(incentiveKeys: IncentiveKey[]): {
             const name = tokenData[index * 3 + 1]?.result as string | undefined
             const decimals = tokenData[index * 3 + 2]?.result as number | undefined
             if (symbol && decimals !== undefined) {
+                const tokenFromConfig = findTokenByAddress(chainId, address)
                 map.set(address.toLowerCase(), {
                     address,
                     symbol,
                     name: name ?? symbol,
                     decimals,
                     chainId,
+                    logo: tokenFromConfig?.logo,
                 })
             }
         })

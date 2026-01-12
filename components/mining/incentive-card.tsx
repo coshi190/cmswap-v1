@@ -4,6 +4,10 @@ import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Copy } from 'lucide-react'
+import { formatAddress } from '@/lib/utils'
+import { toastSuccess } from '@/lib/toast'
 import type { Incentive } from '@/types/earn'
 import { formatTokenAmount } from '@/services/tokens'
 import {
@@ -31,6 +35,11 @@ export function IncentiveCard({ incentive, onStake }: IncentiveCardProps) {
                 return 'bg-gray-500/10 text-gray-500 border-gray-500/20'
         }
     }, [status])
+    const handleCopyAddress = (e: React.MouseEvent, address: string) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(address)
+        toastSuccess('Address copied')
+    }
     const formattedReward = formatTokenAmount(
         incentive.totalRewardUnclaimed,
         incentive.rewardTokenInfo.decimals
@@ -39,9 +48,31 @@ export function IncentiveCard({ incentive, onStake }: IncentiveCardProps) {
         <Card>
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-medium">
-                        {incentive.poolToken0.symbol} / {incentive.poolToken1.symbol}
-                    </CardTitle>
+                    <div className="flex items-center gap-3">
+                        <div className="flex -space-x-2">
+                            <Avatar className="h-8 w-8 shrink-0 border-2 border-background">
+                                <AvatarImage
+                                    src={incentive.poolToken0.logo}
+                                    alt={incentive.poolToken0.symbol}
+                                />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                    {incentive.poolToken0.symbol.slice(0, 2)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <Avatar className="h-8 w-8 shrink-0 border-2 border-background">
+                                <AvatarImage
+                                    src={incentive.poolToken1.logo}
+                                    alt={incentive.poolToken1.symbol}
+                                />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                    {incentive.poolToken1.symbol.slice(0, 2)}
+                                </AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <CardTitle className="text-base font-medium">
+                            {incentive.poolToken0.symbol} / {incentive.poolToken1.symbol}
+                        </CardTitle>
+                    </div>
                     <Badge variant="outline" className={statusColor}>
                         {status === 'active'
                             ? 'Active'
@@ -58,7 +89,20 @@ export function IncentiveCard({ incentive, onStake }: IncentiveCardProps) {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <div className="text-xs text-muted-foreground">Reward Token</div>
-                        <div className="font-medium">{incentive.rewardTokenInfo.symbol}</div>
+                        <div className="font-medium flex items-center flex-wrap gap-1">
+                            <span>{incentive.rewardTokenInfo.name}</span>
+                            <span className="text-muted-foreground font-mono text-xs">
+                                {formatAddress(incentive.rewardTokenInfo.address)}
+                            </span>
+                            <button
+                                onClick={(e) =>
+                                    handleCopyAddress(e, incentive.rewardTokenInfo.address)
+                                }
+                                className="hover:text-foreground text-muted-foreground"
+                            >
+                                <Copy className="h-3 w-3" />
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <div className="text-xs text-muted-foreground">Remaining Rewards</div>
