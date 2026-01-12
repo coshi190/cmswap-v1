@@ -4,12 +4,12 @@ Implementation phases and TODO list for CMswap development.
 
 ## Project Status
 
-**Current Phase**: Phase 3 - Earn Feature ✅ COMPLETE (Ready for Testing)
+**Current Phase**: Phase 4 - Bridge Feature (In Progress - Foundation Complete)
 
 - [x] Phase 1: Foundation ✅
 - [x] Phase 2: Swap Feature & Multi-Chain Expansion ✅
 - [x] Phase 3: Earn Feature ✅
-- [ ] Phase 4: Bridge Feature
+- [ ] Phase 4: Bridge Feature 🚧
 - [ ] Phase 5: Launchpad Feature
 - [ ] Phase 6: Points Feature
 - [ ] Phase 7: Polish & Optimization
@@ -76,123 +76,55 @@ Implementation phases and TODO list for CMswap development.
 **Duration**: Completed
 **Goal**: Implement LP position management and LP mining (stake LP tokens to earn rewards)
 
-### Features
+### Completed ✅
 
-- [x] LP Position Management ✅
-  - [x] Add liquidity interface (create LP positions)
-  - [x] Remove liquidity interface
-  - [x] Range selection for concentrated liquidity (V3)
-  - [x] My LP positions list
-  - [x] Position details view
-  - [x] Collect fees button
-  - [x] Add/remove liquidity to existing position
-  - [x] Position value and P&L tracking
-
-- [x] LP Mining (Stake LP to Earn) ✅
-  - [x] Stake LP tokens interface
-  - [x] Unstake LP tokens interface
-  - [x] Mining pool list
-  - [x] Real-time rewards calculation
-  - [x] Claim rewards button
-  - [x] My staking positions tracker
-  - [x] Unclaimed rewards display
-
-- [x] Fee & Reward Collection ✅
-  - [x] Claim collected trading fees
-  - [x] Claim mining rewards
-
-### TODO
-
-**LP Mining** - Using Uniswap V3 Staker (Implementation Complete):
-- [x] Create V3 Staker contract integration (using deployed V3 Staker)
-- [x] Build mining-pools component (list + card)
-- [x] Build stake-dialog component
-- [x] Build unstake-dialog component
-- [x] Build claim-rewards-dialog component
-- [x] Build staked-positions component
-- [x] Integrate with wagmi hooks for contract calls
-- [x] Add transaction tracking (simulation, execution, confirmation)
-- [x] Extend earn-store for persisted settings
-- [x] Create mining services utilities
-- [x] Add incentive keys to KNOWN_INCENTIVES for each chain
-
-**Remaining TODO:**
-- [ ] Test full stake → earn → unstake → claim flow
-- [ ] Test on KUB testnet
-- [ ] Test on each supported chain
+- [x] Full LP Position Management: add/remove liquidity, range selection (V3), position tracking, fee collection
+- [x] Full LP Mining implementation: stake/unstake dialogs, mining pools list, real-time rewards calculation, staking positions tracker
+- [x] All components, hooks, services, and transaction handling complete using Uniswap V3 Staker
 
 ---
 
 ## Phase 4: Bridge Feature
 
-**Duration**: 1-2 weeks
-**Goal**: Implement cross-chain token bridging
+**Duration**: 6-8 weeks
+**Goal**: Implement custom cross-chain USDT bridging between KUB, JB Chain, and BSC
 
 ### Features
 
 - [ ] Bridge interface
   - [ ] Source chain selector
   - [ ] Destination chain selector
-  - [ ] Token input
+  - [ ] Token input (USDT)
   - [ ] Amount input
   - [ ] Bridge button
 - [ ] Bridge quotes
-  - [ ] Fetch quotes from LayerZero/Stargate
-  - [ ] Display bridge fee
+  - [ ] Calculate bridge fees (protocol + relayer)
+  - [ ] Display bridge fee breakdown
   - [ ] Display estimated time
-  - [ ] Display destination amount
+  - [ ] Display destination amount (after fees)
+  - [ ] Display slippage protection
 - [ ] Bridge execution
-  - [ ] Approve source transaction
+  - [ ] Approve USDT tokens
   - [ ] Execute bridge transaction
-  - [ ] Handle relayer process
+  - [ ] Handle cross-chain messaging
+  - [ ] Handle mint/burn operations
 - [ ] Transaction tracking
   - [ ] Source chain confirmation
-  - [ ] Bridge status
+  - [ ] Bridge status (pending/relaying/completed)
   - [ ] Destination chain confirmation
+  - [ ] Transfer history
 
-### API Integration
+**Supported Routes (All-to-All Mesh)**:
+| Route | Est. Time | Fee |
+|-------|-----------|-----|
+| KUB ↔ JBC | ~5 min | 1% |
+| KUB ↔ BSC | ~10 min | 1% |
+| JBC ↔ BSC | ~10 min | 1% |
 
-**LayerZero / Stargate**
-
-```typescript
-// Stargate SDK for token bridging
-// LayerZero for messaging
-```
-
-**Routes**: ETH↔BSC, ETH↔Polygon (initial)
-
-### Files to Create
-
-```
-components/bridge/
-├── bridge-panel.tsx          # Main bridge interface
-├── chain-select.tsx          # Chain selector
-└── bridge-status.tsx         # Bridge status tracker
-
-services/
-├── layerzero.ts              # LayerZero SDK
-├── stargate.ts               # Stargate integration
-└── wormhole.ts               # Wormhole fallback
-
-hooks/
-├── useBridge.ts              # Bridge logic
-└── useBridgeQuote.ts         # Quote fetching
-
-types/
-└── bridge.ts                 # Bridge types
-```
-
-### TODO
-
-- [ ] Create `services/layerzero.ts` SDK integration
-- [ ] Create `services/stargate.ts` for stablecoins
-- [ ] Build bridge-panel component
-- [ ] Build chain-select modal
-- [ ] Integrate Stargate quote API
-- [ ] Integrate Stargate swap API
-- [ ] Add cross-chain transaction tracking
-- [ ] Test on testnet
-- [ ] Test on mainnet (small amounts)
+**USDT Token Addresses**:
+- KUB Mainnet: `0x7d984C24d2499D840eB3b7016077164e15E5faA6` (KUSDT)
+- JB Chain: `0xFD8Ef75c1cB00A594D02df48ADdc27414Bd07F8a` (JUSDT)
+- BSC: `0x55d398326f99059fF775485246999027B3197955` (USDT)
 
 ---
 
@@ -545,17 +477,17 @@ types/
 
 ## Estimated Timeline
 
-| Phase | Duration | Start Date | Target Date |
-|-------|----------|------------|-------------|
-| Phase 1 | ✅ Complete | - | ✅ Complete |
-| Phase 2 | ✅ Complete | - | ✅ Complete |
-| Phase 3 | 2-3 weeks | TBD | TBD | 🆕 Earn
-| Phase 4 | 1-2 weeks | TBD | TBD |
-| Phase 5 | 2 weeks | TBD | TBD |
-| Phase 6 | 1-2 weeks | TBD | TBD | 🆕 Points
-| Phase 7 | 1-2 weeks | TBD | TBD | Polish & Optimization
-| **MVP Total** | **8-11 weeks** | **TBD** | **TBD** |
-| Phase 8 | Post-MVP | TBD | TBD | Advanced Features
+| Phase | Duration | Start Date | Target Date | Notes |
+|-------|----------|------------|-------------|-------|
+| Phase 1 | ✅ Complete | - | ✅ Complete | Foundation |
+| Phase 2 | ✅ Complete | - | ✅ Complete | Swap & Multi-Chain |
+| Phase 3 | ✅ Complete | - | ✅ Complete | Earn Feature |
+| Phase 4 | 6-8 weeks | TBD | TBD | Custom Bridge (Foundation Complete) |
+| Phase 5 | 2 weeks | TBD | TBD | Launchpad Feature |
+| Phase 6 | 1-2 weeks | TBD | TBD | Points Feature |
+| Phase 7 | 1-2 weeks | TBD | TBD | Polish & Optimization |
+| **MVP Total** | **13-17 weeks** | **TBD** | **TBD** | |
+| Phase 8 | Post-MVP | TBD | TBD | Advanced Features |
 | Phase 9 | 2-3 weeks | TBD | TBD | Subgraph & Analytics |
 
 ---

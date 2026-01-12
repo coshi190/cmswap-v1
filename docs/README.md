@@ -8,7 +8,7 @@
 
 Get the best prices across all DEXs with one click. No registration. No KYC. Just connect and swap.
 
-[Launch Swap →](/swap) · [Documentation →](./architecture.md) · [Discord →](https://discord.gg/k92ReT5EYy)
+[Swap →](/swap) · [Earn →](/earn) · [Documentation →](./architecture.md) · [Discord →](https://discord.gg/k92ReT5EYy)
 
 ---
 
@@ -36,7 +36,9 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 
 ✅ **Multi-DEX Swap** - Compare prices across 7 DEXs and auto-select the best rate
 
-✅ **Real-Time Quotes** - Instant price updates with transaction simulation before execution
+✅ **Liquidity Management** - Create and manage LP positions with concentrated liquidity (V3)
+
+✅ **LP Mining** - Stake LP positions to earn token rewards with real-time reward tracking
 
 ✅ **Multi-Hop Routing** - Find the best path even for indirect token pairs
 
@@ -45,19 +47,6 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 ✅ **Native Token Wrap** - Seamless KUB↔WKUB, BNB↔WBNB, JBC↔WJBC conversions
 
 ✅ **Shareable Links** - Share your swap configuration with a URL
-
-**Currently Live:**
-- 🟢 **KUB Chain** - CMswap V3, Udonswap, Ponder Finance, Diamon Finance
-- 🟢 **JB Chain** - CMswap V3, Jibswap V2
-- 🟢 **KUB Testnet** - CMswap V3
-- 🟢 **Worldchain** - Uniswap V3
-- 🟢 **Base** - Uniswap V3
-- 🟢 **BNB Chain** - PancakeSwap V3
-
-**Coming Soon:**
-- 🟡 Cross-chain bridging
-- 🟡 Memecoin launchpad
-- 🟡 Earn & staking
 
 ---
 
@@ -74,31 +63,15 @@ Built on Next.js 15 with modern Web3 libraries. Get instant quotes and execute t
 
 ---
 
-## Start Swapping in 3 Steps
+## Start Trading in 3 Steps
 
 1. **Connect Wallet** - MetaMask, Trust Wallet, WalletConnect, and more
 
 2. **Select Tokens** - Choose from hundreds of tokens across supported chains
 
-3. **Swap** - Get the best price instantly with one click
+3. **Swap or Earn** - Trade tokens or provide liquidity to earn rewards
 
-[Launch Swap →](/swap)
-
----
-
-## What's Next
-
-**Phase 3: Earn** - Stake tokens and earn rewards
-
-**Phase 4: Bridge** - Cross-chain token bridging via LayerZero
-
-**Phase 5: Launchpad** - Deploy your own memecoin in minutes
-
-**Phase 6: Points** - Rewards and referral system
-
-**Phase 7: Polish** - Performance optimization and testing
-
-[View Full Roadmap →](./roadmap.md)
+[Swap →](/swap) · [Earn →](/earn)
 
 ---
 
@@ -134,14 +107,18 @@ CMswap is built with modern Web3 technologies and follows best practices for sca
 cmswap/
 ├── app/                    # Next.js App Router
 │   ├── page.tsx           # Landing page
-│   ├── swap/              # Swap feature (implemented)
+│   ├── swap/              # Swap feature (live)
+│   ├── earn/              # Earn feature: LP positions + mining (live)
 │   ├── bridge/            # Bridge feature (coming)
-│   └── launchpad/         # Launchpad feature (coming)
+│   ├── launchpad/         # Launchpad feature (coming)
+│   └── points/            # Points feature (coming)
 ├── components/
 │   ├── ui/                # shadcn/ui components
 │   ├── landing/           # Landing page components
 │   ├── web3/              # Web3-specific components
-│   └── swap/              # Swap components
+│   ├── swap/              # Swap components
+│   ├── positions/         # LP position management
+│   └── mining/            # LP mining/staking components
 ├── lib/
 │   ├── abis/              # Contract ABIs (ERC20, Uniswap V3)
 │   ├── dex-config.ts      # Multi-DEX protocol configuration

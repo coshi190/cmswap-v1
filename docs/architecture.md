@@ -28,12 +28,16 @@ CMswap is a Web3 application built with Next.js featuring multi-DEX swap aggrega
 │  │              Multi-DEX Router (V2 + V3)              │   │
 │  │              Quote Aggregation                       │   │
 │  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              Earn Feature Layer                      │   │
+│  │              LP Position Management (V3)             │   │
+│  │              LP Mining (Uniswap V3 Staker)           │   │
+│  └──────────────────────────────────────────────────────┘   │
 └─────────┼───────────────────┼───────────────────┼───────────┘
           │                   │                   │
 ┌─────────────────────────────────────────────────────────────┐
 │  Chains: KUB Testnet, KUB Mainnet, JBC, BSC, Base, Worldchain│
 │  DEXs: CMswap (V3), Jibswap (V2), UdonSwap (V2), Ponder (V2), Diamon (V2), Uniswap (V3), PancakeSwap (V3)│
-│  Active: KUB Testnet, KUB Mainnet, JBC, Worldchain, Base, BSC│
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -79,6 +83,7 @@ CMswap is a Web3 application built with Next.js featuring multi-DEX swap aggrega
 ```
 /              # Landing page (SSG)
 /swap          # Swap feature (client-side)
+/earn          # Earn feature: LP positions + mining (client-side)
 ```
 
 ### Component Structure
@@ -109,6 +114,23 @@ components/
     ├── dex-select-card.tsx # DEX comparison
     ├── token-select.tsx   # Token selector
     └── settings-dialog.tsx # Slippage/deadline
+│
+├── positions/             # LP position management (7 components)
+│   ├── positions-list.tsx # User's LP positions
+│   ├── pools.tsx          # Available pools list
+│   ├── add-liquidity-dialog.tsx # Create LP position
+│   ├── remove-liquidity-dialog.tsx # Remove liquidity
+│   ├── increase-liquidity-dialog.tsx # Add to existing
+│   ├── collect-fees-dialog.tsx # Collect trading fees
+│   ├── position-details-modal.tsx # Position details
+│   └── range-selector.tsx # Price range for V3
+│
+└── mining/                # LP mining/staking (5 components)
+    ├── mining-pools.tsx   # Available mining pools
+    ├── incentive-card.tsx # Pool incentive card
+    ├── stake-dialog.tsx   # Stake LP position
+    ├── unstake-dialog.tsx # Unstake + claim rewards
+    └── staked-positions.tsx # User's staked positions
 ```
 
 ---
@@ -250,6 +272,59 @@ User inputs amount
 
 ---
 
+## Earn Feature Architecture
+
+### LP Position Management
+
+```
+User navigates to /earn
+  └─> Tab 1: Pools - Browse available liquidity pools
+  └─> Tab 2: My Positions - View owned LP positions
+  └─> User clicks "Add Liquidity"
+      └─> Select pool, enter amounts, set price range (V3)
+      └─> Approve tokens → Create position
+  └─> User clicks position → View details
+      └─> Collect fees, Add/Remove liquidity, View P&L
+```
+
+**Components**: `components/positions/`
+**Hooks**: `hooks/usePositions.ts`, `hooks/usePools.ts`
+
+### LP Mining (Stake to Earn)
+
+```
+User navigates to /earn → Mining tab
+  └─> MiningPools: List available incentives per chain
+  └─> User clicks "Stake" on pool
+      └─> StakeDialog: Select eligible LP position
+      └─> Two-step approval:
+          1. Approve NFT position (if needed)
+          2. Stake to incentive program
+      └─> StakedPositions: View staked positions + pending rewards
+  └─> User clicks "Unstake"
+      └─> UnstakeDialog: Shows pending rewards
+      └─> Unstake + Claim + Withdraw in one transaction
+```
+
+**Components**: `components/mining/`
+**Hooks**: `hooks/useIncentives.ts`, `hooks/useStakedPositions.ts`, `hooks/useStaking.ts`, `hooks/useRewards.ts`
+
+### Features
+
+- Create LP positions with concentrated liquidity (V3)
+- Add/remove liquidity from existing positions
+- Collect trading fees from LP positions
+- Real-time P&L tracking for positions
+- Stake LP positions to earn token rewards
+- Real-time reward calculation and tracking
+- Multi-chain incentive programs
+- Automatic reward claiming on unstake
+
+**Services**: `services/mining/incentives.ts`, `services/mining/staking.ts`, `services/mining/rewards.ts`
+**Store**: `store/earn-store.ts`
+
+---
+
 ## State Management
 
 ### Zustand Store
@@ -261,6 +336,15 @@ Manages swap state with:
 - Quote results with loading/error states
 - DEX selection and multi-DEX quotes
 - Settings (slippage, deadline, expert mode, auto-select)
+- LocalStorage persistence for settings
+
+**Location**: `store/earn-store.ts`
+
+Manages earn state with:
+- Tab navigation (Pools, My Positions, Mining)
+- Mining modal states (stake/unstake dialogs)
+- Selected incentive/staked position
+- Settings (hide ended incentives)
 - LocalStorage persistence for settings
 
 ### Caching (TanStack Query)
@@ -340,11 +424,15 @@ Vercel Edge
 - `types/tokens.ts` - Token types, balances, approvals
 - `types/routing.ts` - Route types, pool info
 - `types/web3.ts` - Wallet connection types
+- `types/earn.ts` - LP positions, incentives, staking, rewards
 
 ### Services
 - `services/tokens.ts` - Token balances, allowances, approvals
 - `services/dex/uniswap-v3.ts` - V3 quoting, routing, execution
 - `services/dex/uniswap-v2.ts` - V2 quoting, routing, execution
+- `services/mining/incentives.ts` - Incentive status utilities
+- `services/mining/staking.ts` - Staking transaction encoding
+- `services/mining/rewards.ts` - Reward calculation
 
 ### Hooks
 - `hooks/useMultiDexQuotes.ts` - Aggregate all DEX quotes
@@ -359,6 +447,12 @@ Vercel Edge
 - `hooks/useTokenApproval.ts` - Approval flow
 - `hooks/useSwapUrlSync.ts` - URL parameter sync
 - `hooks/useDebounce.ts` - Input debouncing
+- `hooks/usePositions.ts` - LP position management
+- `hooks/usePools.ts` - Pool data fetching
+- `hooks/useIncentives.ts` - Incentive programs
+- `hooks/useStakedPositions.ts` - Staked positions tracking
+- `hooks/usePendingRewards.ts` - Pending rewards calculation
+- `hooks/useStaking.ts` - Stake/unstake transactions
 
 ### ABIs
 - `lib/abis/erc20.ts` - ERC20 token standard
@@ -370,6 +464,9 @@ Vercel Edge
 - `lib/abis/uniswap-v3-quoter.ts` - V3 quoter
 - `lib/abis/uniswap-v3-pool.ts` - V3 pool
 - `lib/abis/uniswap-v3-swap-router.ts` - V3 router
+- `lib/abis/uniswap-v3-staker.ts` - V3 staker for LP mining
+- `lib/abis/nonfungible-position-manager.ts` - V3 NFT positions
+- `lib/abis/uniswap-v3-pool.ts` - V3 pool state
 
 ### Utilities
 - `lib/utils.ts` - `cn()` class merger, `formatAddress()`
