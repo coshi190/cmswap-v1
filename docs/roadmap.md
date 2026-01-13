@@ -114,18 +114,6 @@ Implementation phases and TODO list for CMswap development.
   - [ ] Destination chain confirmation
   - [ ] Transfer history
 
-**Supported Routes (All-to-All Mesh)**:
-| Route | Est. Time | Fee |
-|-------|-----------|-----|
-| KUB ↔ JBC | ~5 min | 1% |
-| KUB ↔ BSC | ~10 min | 1% |
-| JBC ↔ BSC | ~10 min | 1% |
-
-**USDT Token Addresses**:
-- KUB Mainnet: `0x7d984C24d2499D840eB3b7016077164e15E5faA6` (KUSDT)
-- JB Chain: `0xFD8Ef75c1cB00A594D02df48ADdc27414Bd07F8a` (JUSDT)
-- BSC: `0x55d398326f99059fF775485246999027B3197955` (USDT)
-
 ---
 
 ## Phase 5: Launchpad Feature

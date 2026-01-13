@@ -17,7 +17,7 @@ contract TBridgeTokenRegistryTest is Test {
     address public user = makeAddr("user");
 
     uint256 public constant KUB_CHAIN_ID = 96;
-    uint256 public constant JBC_CHAIN_ID = 8081;
+    uint256 public constant JBC_CHAIN_ID = 8899;
     uint256 public constant BSC_CHAIN_ID = 56;
 
     address public constant KUSDT = 0x7d984C24d2499D840eB3b7016077164e15E5faA6;

@@ -32,7 +32,7 @@ contract TBridgeV2Test is Test {
 
     // Chain IDs
     uint256 public constant KUB_CHAIN_ID = 96;
-    uint256 public constant JBC_CHAIN_ID = 8081;
+    uint256 public constant JBC_CHAIN_ID = 8899;
     uint256 public constant BSC_CHAIN_ID = 56;
 
     // Remote token addresses
