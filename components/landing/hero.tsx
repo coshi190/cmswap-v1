@@ -61,7 +61,7 @@ export function Hero() {
             {/* Eclipse-horizon fallback (approximates the WebGL canvas) shown during SSR / before it loads */}
             <div className="absolute inset-0 -z-10 overflow-hidden bg-[#04050B]">
                 <div className="absolute inset-x-0 bottom-0 h-[55%] bg-[radial-gradient(90%_100%_at_50%_100%,hsl(43_100%_55%_/_0.13),hsl(24_100%_59%_/_0.06)_45%,transparent_75%)]" />
-                <div className="absolute left-1/2 top-[85%] h-[130%] w-[240%] -translate-x-1/2 rounded-[50%] bg-[#020309] shadow-[0_-2px_28px_hsl(43_100%_60%_/_0.22)]" />
+                <div className="absolute left-1/2 top-[85%] h-[130%] w-[360%] -translate-x-1/2 rounded-[50%] bg-[#020309] shadow-[0_-2px_28px_hsl(43_100%_60%_/_0.22)] sm:w-[240%]" />
             </div>
             <HeroBackground />
             <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

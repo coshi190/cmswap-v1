@@ -86,8 +86,13 @@ void main() {
 
     const float CREST_Y = 0.16;   // crest height, fraction of viewport height
     const float EDGE_DROP = 0.10; // surface fall at the screen edges
+    // Cap the edge slope at the 16:9 value (~13°). Without it, portrait
+    // aspects squeeze the full EDGE_DROP into a narrow width and the limb
+    // reads as a tight egg-shaped dome instead of a planetary horizon.
+    const float MAX_EDGE_SLOPE = 0.225;
 
     float curv = EDGE_DROP / (halfW * halfW); // aspect-adaptive curvature
+    curv = min(curv, MAX_EDGE_SLOPE / (2.0 * halfW));
     float dx = q.x - halfW;
     float surfaceY = CREST_Y - curv * dx * dx;
 
