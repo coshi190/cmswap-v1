@@ -2,7 +2,7 @@ import { formatEther, decodeEventLog } from 'viem'
 import type { Address, Log } from 'viem'
 import { BONDING_CURVE_JUNOSWAP_ABI } from '@/lib/abis/bonding-curve-junoswap'
 
-const PUMP_FEE_BPS = 100n // 1%
+export const PUMP_FEE_BPS = 100n // 1%
 
 /** Initial token supply: 1 billion with 18 decimals */
 export const INITIAL_TOKEN_SUPPLY = 1000000000n * 10n ** 18n
