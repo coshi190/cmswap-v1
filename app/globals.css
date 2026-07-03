@@ -108,22 +108,6 @@
 }
 
 @layer utilities {
-    @keyframes transfer-dot {
-        0%,
-        100% {
-            left: 15%;
-            opacity: 0.3;
-        }
-        50% {
-            left: 80%;
-            opacity: 1;
-        }
-    }
-
-    .animate-transfer-dot {
-        animation: transfer-dot 3s ease-in-out infinite;
-    }
-
     /* Route-finding cycle — all four keyframes share one 6s timeline:
        0–55% pulses probe the routes, 55–85% winner glows + badge, 85–100% reset.
        Pulse paths use pathLength=1 with dasharray "0.15 1.15": the dash period (1.3)
@@ -209,6 +193,80 @@
 
     .animate-best-badge {
         animation: best-badge 6s ease-in-out infinite;
+    }
+
+    /* Bridge mesh — all packet legs share one 6s timeline. Each leg travels during
+       the first 18% (1.08s) of its element's cycle and hides for the rest; inline
+       animation-delay places legs on the global clock so an in-leg hands off to its
+       out-leg at the hub (handoffs at 18%, 40%, 80%). Same dash trick as
+       route-pulse; out-legs run the dash backwards (hub → node) on the same path.
+       Timing is linear overall so delays stay on schedule; the 0% frame's
+       ease-in-out applies only within each leg's travel segment. */
+    @keyframes bridge-pulse-in {
+        0% {
+            stroke-dashoffset: 0.15;
+            opacity: 1;
+            animation-timing-function: ease-in-out;
+        }
+        18% {
+            stroke-dashoffset: -1;
+            opacity: 1;
+        }
+        19%,
+        100% {
+            stroke-dashoffset: -1;
+            opacity: 0;
+        }
+    }
+
+    .animate-bridge-pulse-in {
+        opacity: 0;
+        animation: bridge-pulse-in 6s linear infinite;
+    }
+
+    @keyframes bridge-pulse-out {
+        0% {
+            stroke-dashoffset: -1;
+            opacity: 1;
+            animation-timing-function: ease-in-out;
+        }
+        18% {
+            stroke-dashoffset: 0.15;
+            opacity: 1;
+        }
+        19%,
+        100% {
+            stroke-dashoffset: 0.15;
+            opacity: 0;
+        }
+    }
+
+    .animate-bridge-pulse-out {
+        opacity: 0;
+        animation: bridge-pulse-out 6s linear infinite;
+    }
+
+    /* Hub bumps each time a packet arrives (global 18%, 40%, 80%) */
+    @keyframes bridge-hub {
+        0%,
+        15%,
+        21%,
+        37%,
+        43%,
+        77%,
+        83%,
+        100% {
+            transform: scale(1);
+        }
+        18%,
+        40%,
+        80% {
+            transform: scale(1.06);
+        }
+    }
+
+    .animate-bridge-hub {
+        animation: bridge-hub 6s ease-in-out infinite;
     }
 
     @keyframes gradient-shift {
@@ -319,11 +377,16 @@
     }
 
     /* Freeze the route-finding scene on its "best route found" state:
-       pulses stay hidden (base opacity 0), winner + badge stay visible */
+       pulses stay hidden (base opacity 0), winner + badge stay visible.
+       Bridge mesh freezes to a static network diagram the same way —
+       packets rest at base opacity 0, hub rests at scale 1 */
     .animate-route-pulse,
     .animate-route-best,
     .animate-route-dim,
-    .animate-best-badge {
+    .animate-best-badge,
+    .animate-bridge-pulse-in,
+    .animate-bridge-pulse-out,
+    .animate-bridge-hub {
         animation: none !important;
     }
 }

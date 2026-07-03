@@ -1,8 +1,7 @@
 'use client'
 
-import { type FC } from 'react'
-import { GitBranch, Repeat, Rocket } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { type ComponentType, type FC } from 'react'
+import { Repeat, Rocket } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
@@ -10,8 +9,32 @@ import { useScrollReveal } from '@/hooks/use-scroll-reveal'
 interface Feature {
     name: string
     description: string
-    icon: LucideIcon
+    icon: ComponentType<{ className?: string }>
     href: string
+}
+
+/* Suspension-bridge glyph in lucide style — lucide-react has no bridge icon */
+function BridgeIcon({ className }: { className?: string }) {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+            aria-hidden="true"
+        >
+            <path d="M2 15h20" />
+            <path d="M7 18V4" />
+            <path d="M17 18V4" />
+            <path d="M2 13 Q4.5 4 7 4 Q12 13 17 4 Q19.5 4 22 13" />
+            <path d="M9.5 7.5V15" />
+            <path d="M12 8.5V15" />
+            <path d="M14.5 7.5V15" />
+        </svg>
+    )
 }
 
 const features: Feature[] = [
@@ -26,7 +49,7 @@ const features: Feature[] = [
         name: 'Cross-Chain Bridge',
         description:
             'Seamlessly move assets between chains with one click. Fast, secure transfers powered by trusted bridge providers — no wrapping or manual steps required.',
-        icon: GitBranch,
+        icon: BridgeIcon,
         href: '/bridge',
     },
     {
@@ -240,30 +263,198 @@ function SwapVisual() {
     )
 }
 
+/* Orbit rail: quadratic arc from a node into the hub (200,125), control point
+   pushed perpendicular to the chord so all four arcs swirl the same rotational
+   direction. Symmetric node placement keeps all arc lengths equal. */
+function orbitPath(nx: number, ny: number): string {
+    const dx = 200 - nx
+    const dy = 125 - ny
+    const k = 0.28
+    return `M ${nx} ${ny} Q ${nx + dx / 2 - dy * k} ${ny + dy / 2 + dx * k} 200 125`
+}
+
+/* Nodes sit exactly on the outer orbit ring (ellipse rx=150 ry=80 at 200,125) */
+function onRing(deg: number): { x: number; y: number } {
+    const t = (deg * Math.PI) / 180
+    return { x: 200 + 150 * Math.cos(t), y: 125 + 80 * Math.sin(t) }
+}
+
+interface BridgeNode {
+    name: string
+    icon: string
+    x: number
+    y: number
+    warm: boolean
+    labelDy: number
+    invertInLight?: boolean
+}
+
+const bridgeNodes: BridgeNode[] = [
+    { name: 'BNB Chain', icon: '/chains/bnbchain.svg', ...onRing(215), warm: false, labelDy: -20 },
+    { name: 'Base', icon: '/chains/base.svg', ...onRing(325), warm: true, labelDy: -20 },
+    { name: 'KUB Chain', icon: '/chains/kubchain.png', ...onRing(145), warm: true, labelDy: 27 },
+    {
+        name: 'Worldchain',
+        icon: '/chains/worldchain.svg',
+        ...onRing(35),
+        warm: false,
+        labelDy: 27,
+        invertInLight: true,
+    },
+]
+
+/* Each transfer rides two orbit arcs: in-leg (source → hub), then out-leg
+   (hub → destination) starting exactly when the in-leg arrives
+   (outDelay = inDelay + 1.08s, one leg's travel time on the 6s clock) */
+const bridgeTransfers = [
+    { from: 0, to: 3, color: 'hsl(0 100% 60%)', inDelay: '0s', outDelay: '1.08s' },
+    { from: 2, to: 1, color: '#FF914D', inDelay: '1.32s', outDelay: '2.4s' },
+    { from: 1, to: 0, color: '#FFD700', inDelay: '3.72s', outDelay: '4.8s' },
+]
+
 function BridgeVisual() {
     return (
         <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute inset-y-[35%] left-0 right-0 h-[30%] bg-gradient-to-r from-primary/5 via-primary/10 to-[#FF914D]/5" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,hsl(0_100%_60%_/_0.12),transparent)]" />
 
-            <div className="absolute left-[10%] top-[25%] flex h-[50%] w-[18%] flex-col items-center justify-center gap-2 rounded-xl border border-border/30 bg-muted/30">
-                <div className="h-8 w-8 rounded-full border border-border/30 bg-muted-foreground/10" />
-                <div className="h-1.5 w-10 rounded bg-muted-foreground/10" />
-                <div className="h-1 w-8 rounded bg-muted-foreground/5" />
-            </div>
-            <div className="absolute right-[10%] top-[25%] flex h-[50%] w-[18%] flex-col items-center justify-center gap-2 rounded-xl border border-border/30 bg-muted/30">
-                <div className="h-8 w-8 rounded-full border border-border/30 bg-muted-foreground/10" />
-                <div className="h-1.5 w-10 rounded bg-muted-foreground/10" />
-                <div className="h-1 w-8 rounded bg-muted-foreground/5" />
-            </div>
+            <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-primary/5 blur-2xl" />
+            <div className="absolute -bottom-12 -left-8 h-48 w-48 rounded-full bg-primary/8 blur-3xl" />
+            <div className="absolute top-1/4 left-1/4 h-24 w-24 rounded-full bg-[#FF914D]/5 blur-xl" />
 
-            <div className="absolute top-[50%] left-[28%] h-0 w-[44%] -translate-y-1/2 border-t border-dashed border-primary/20" />
+            <svg
+                className="absolute inset-0 h-full w-full"
+                viewBox="0 0 400 250"
+                preserveAspectRatio="xMidYMid slice"
+                fill="none"
+                aria-hidden="true"
+            >
+                <defs>
+                    <pattern id="bridge-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="1.5" cy="1.5" r="1" className="fill-primary/15" />
+                    </pattern>
+                    <radialGradient id="bridge-grid-fade" cx="0.5" cy="0.5" r="0.65">
+                        <stop offset="0%" stopColor="white" stopOpacity="0.8" />
+                        <stop offset="65%" stopColor="white" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="white" stopOpacity="0" />
+                    </radialGradient>
+                    <mask id="bridge-grid-mask">
+                        <rect width="400" height="250" fill="url(#bridge-grid-fade)" />
+                    </mask>
+                    {bridgeNodes.map((node, i) => (
+                        <clipPath key={node.name} id={`bridge-node-${i}`}>
+                            <circle cx={node.x} cy={node.y} r="8.5" />
+                        </clipPath>
+                    ))}
+                </defs>
 
-            <div className="absolute top-[50%] h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-primary to-[#FF914D] animate-transfer-dot" />
+                <rect
+                    width="400"
+                    height="250"
+                    fill="url(#bridge-dots)"
+                    mask="url(#bridge-grid-mask)"
+                />
 
+                <ellipse
+                    cx="200"
+                    cy="125"
+                    rx="150"
+                    ry="80"
+                    className="stroke-primary/25"
+                    strokeWidth="1"
+                />
+                <ellipse
+                    cx="200"
+                    cy="125"
+                    rx="100"
+                    ry="53"
+                    className="stroke-primary/15"
+                    strokeWidth="1"
+                />
+
+                {bridgeNodes.map((node) => (
+                    <path
+                        key={node.name}
+                        d={orbitPath(node.x, node.y)}
+                        className="stroke-primary/15"
+                        strokeWidth="1"
+                    />
+                ))}
+
+                {bridgeTransfers.map((t) => {
+                    const from = bridgeNodes[t.from]!
+                    const to = bridgeNodes[t.to]!
+                    return (
+                        <g key={`${t.from}-${t.to}`}>
+                            <path
+                                d={orbitPath(from.x, from.y)}
+                                pathLength={1}
+                                stroke={t.color}
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeDasharray="0.15 1.15"
+                                className="animate-bridge-pulse-in"
+                                style={{ animationDelay: t.inDelay }}
+                            />
+                            <path
+                                d={orbitPath(to.x, to.y)}
+                                pathLength={1}
+                                stroke={t.color}
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeDasharray="0.15 1.15"
+                                className="animate-bridge-pulse-out"
+                                style={{ animationDelay: t.outDelay }}
+                            />
+                        </g>
+                    )
+                })}
+
+                {bridgeNodes.map((node, i) => (
+                    <g key={node.name}>
+                        <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r="16"
+                            className={node.warm ? 'fill-[#FF914D]/10' : 'fill-primary/10'}
+                        />
+                        <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r="11"
+                            className={cn(
+                                'fill-card',
+                                node.warm ? 'stroke-[#FF914D]/50' : 'stroke-primary/40'
+                            )}
+                            strokeWidth="1.5"
+                        />
+                        <image
+                            href={node.icon}
+                            x={node.x - 8.5}
+                            y={node.y - 8.5}
+                            width="17"
+                            height="17"
+                            clipPath={`url(#bridge-node-${i})`}
+                            className={cn(node.invertInLight && 'invert dark:invert-0')}
+                        />
+                        <text
+                            x={node.x}
+                            y={node.y + node.labelDy}
+                            textAnchor="middle"
+                            fontSize="8"
+                            fontWeight={500}
+                            className="fill-muted-foreground/80"
+                        >
+                            {node.name}
+                        </text>
+                    </g>
+                ))}
+            </svg>
+
+            {/* flex wrapper owns centering so the hub keyframe can own `transform` */}
             <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[#FF914D] p-0.5">
+                <div className="animate-bridge-hub flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[#FF914D] p-0.5">
                     <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-card">
-                        <GitBranch className="h-10 w-10 text-primary" />
+                        <BridgeIcon className="h-10 w-10 text-primary" />
                     </div>
                 </div>
             </div>
