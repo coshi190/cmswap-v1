@@ -124,6 +124,93 @@
         animation: transfer-dot 3s ease-in-out infinite;
     }
 
+    /* Route-finding cycle — all four keyframes share one 6s timeline:
+       0–55% pulses probe the routes, 55–85% winner glows + badge, 85–100% reset.
+       Pulse paths use pathLength=1 with dasharray "0.15 1.15": the dash period (1.3)
+       exceeds the path length so only one pulse is ever on the path; offset 0.15→-1
+       carries the dash from fully-before to fully-past the path. */
+    @keyframes route-pulse {
+        0% {
+            stroke-dashoffset: 0.15;
+            opacity: 1;
+        }
+        50% {
+            stroke-dashoffset: -1;
+            opacity: 1;
+        }
+        55%,
+        100% {
+            stroke-dashoffset: -1;
+            opacity: 0;
+        }
+    }
+
+    .animate-route-pulse {
+        opacity: 0;
+        animation: route-pulse 6s ease-in-out infinite;
+    }
+
+    @keyframes route-best {
+        0%,
+        55% {
+            opacity: 0;
+        }
+        62%,
+        85% {
+            opacity: 1;
+        }
+        95%,
+        100% {
+            opacity: 0;
+        }
+    }
+
+    .animate-route-best {
+        filter: drop-shadow(0 0 4px hsl(0 100% 60% / 0.5));
+        animation: route-best 6s ease-in-out infinite;
+    }
+
+    @keyframes route-dim {
+        0%,
+        55% {
+            opacity: 1;
+        }
+        62%,
+        85% {
+            opacity: 0.3;
+        }
+        95%,
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .animate-route-dim {
+        animation: route-dim 6s ease-in-out infinite;
+    }
+
+    @keyframes best-badge {
+        0%,
+        55% {
+            opacity: 0;
+            transform: scale(0.85) translateY(4px);
+        }
+        62%,
+        85% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        95%,
+        100% {
+            opacity: 0;
+            transform: scale(0.85) translateY(4px);
+        }
+    }
+
+    .animate-best-badge {
+        animation: best-badge 6s ease-in-out infinite;
+    }
+
     @keyframes gradient-shift {
         0%,
         100% {
@@ -228,6 +315,15 @@
         opacity: 1 !important;
         transform: none !important;
         filter: none !important;
+        animation: none !important;
+    }
+
+    /* Freeze the route-finding scene on its "best route found" state:
+       pulses stay hidden (base opacity 0), winner + badge stay visible */
+    .animate-route-pulse,
+    .animate-route-best,
+    .animate-route-dim,
+    .animate-best-badge {
         animation: none !important;
     }
 }
