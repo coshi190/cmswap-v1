@@ -5,6 +5,10 @@ const nextConfig = {
         remotePatterns: [
             { protocol: 'https', hostname: 'cmswap.mypinata.cloud' },
             { protocol: 'https', hostname: 'gateway.pinata.cloud' },
+            { protocol: 'https', hostname: 'coin-images.coingecko.com' },
+            { protocol: 'https', hostname: 'raw.githubusercontent.com' },
+            { protocol: 'https', hostname: 'dd.dexscreener.com' },
+            { protocol: 'https', hostname: 'daobuddy.xyz' },
         ],
         // logos are immutable per CID — cache aggressively
         minimumCacheTTL: 2592000,
