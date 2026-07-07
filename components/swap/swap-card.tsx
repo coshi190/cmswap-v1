@@ -2,7 +2,7 @@
 
 import { Fragment, useMemo, useEffect, useRef, useState } from 'react'
 import { useAccount, useChainId } from 'wagmi'
-import { parseUnits, type Address } from 'viem'
+import { parseUnits, zeroAddress, type Address } from 'viem'
 import type { Token } from '@/types/tokens'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -244,7 +244,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         tokenOut: tokenOut ?? tokens[1] ?? tokens[0]!,
         amountIn: amountInBigInt,
         amountOutMinimum,
-        recipient: address ?? '0x0',
+        recipient: address ?? zeroAddress,
         slippage: settings.slippage,
         deadlineMinutes: settings.deadlineMinutes,
         fee,
@@ -256,7 +256,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         tokenOut: tokenOut ?? tokens[1] ?? tokens[0]!,
         amountIn: amountInBigInt,
         amountOutMinimum,
-        recipient: address ?? '0x0',
+        recipient: address ?? zeroAddress,
         deadlineMinutes: settings.deadlineMinutes,
         route: selectedDexRoute?.route,
         skipSimulation: skipSwapSimulation,
