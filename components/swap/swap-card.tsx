@@ -84,6 +84,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         selectedDex,
         setSelectedDex,
         setAggRouteKind,
+        setAggPredictedOut,
     } = useSwapStore()
     const dexConfig = getDexConfig(chainId, selectedDex)
     const isV2Protocol = dexConfig && isV2Config(dexConfig)
@@ -215,8 +216,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         amountInBigInt,
     ])
     const isSameTokenSwap = isSameToken(tokenIn, tokenOut)
-    // The aggregator is the "best route" engine, so it only applies in Auto mode. A manually
-    // pinned DEX executes exactly that DEX — the split never silently overrides the user's choice.
     const aggEligible = isAggRouterChain(chainId) && !isWrapUnwrap && settings.autoSelectBestDex
     const splitRoute = useSplitRoute({
         tokenIn,
@@ -231,9 +230,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         amountIn: amountInBigInt,
         enabled: aggEligible,
     })
-    // The aggregator considers two candidate plans — a split across DEXes and a cross-DEX
-    // multi-hop leg — and takes whichever predicts more output. Either can beat every single-DEX
-    // route (a cross-DEX leg because no single router hops across DEXes).
     const aggPlan = useMemo(() => {
         const splitPlan = splitRoute.allocation ? splitToPlan(splitRoute.allocation, chainId) : null
         const crossPlan = crossDex.leg
@@ -241,15 +237,11 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
             : null
         return bestPlan(splitPlan, crossPlan)
     }, [splitRoute.allocation, splitRoute.aggFeeBps, crossDex.leg, amountInBigInt, chainId])
-    // Beat the best route the frontend would otherwise use (the top single-DEX route) by the margin.
     const bestSingleOut = allRoutes[0]?.quote.amountOut ?? null
     const liveUseAgg =
         aggEligible &&
         !!aggPlan &&
         splitClearsMargin(aggPlan.predictedNetOut, bestSingleOut, MIN_AGG_IMPROVEMENT_BPS)
-    // Pin the agg-vs-DEX choice once the user starts an approve→swap sequence, so a mid-flight
-    // quote refresh can't swap the approval spender out from under them. Cleared when the trade
-    // inputs change (below).
     const [pinnedUseAgg, setPinnedUseAgg] = useState<boolean | null>(null)
     const useAggPath = (pinnedUseAgg ?? liveUseAgg) && !!aggPlan
     useEffect(() => {
@@ -267,7 +259,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         const calcFn = isV2Protocol ? calculateMinOutputV2 : calculateMinOutput
         return calcFn(effectiveQuote.amountOut, Math.floor(settings.slippage * 100))
     }, [useAggPath, aggPlan, effectiveQuote, tokenOut, settings.slippage, isV2Protocol])
-    // A winning aggregator plan predicts more than the selected single-DEX quote, so show it.
     const displayAmountOut = useMemo(() => {
         if (isQuoteLoading) return '...'
         if (useAggPath && aggPlan && tokenOut) {
@@ -287,10 +278,13 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         () => (useAggPath && aggPlan ? describePlan(aggPlan, symbolOf) : null),
         [useAggPath, aggPlan, symbolOf]
     )
-    // Publish the winning aggregator route so the DEX selector can label its header.
     useEffect(() => {
-        setAggRouteKind(useAggPath && aggPlan ? aggPlan.kind : null)
-    }, [useAggPath, aggPlan, setAggRouteKind])
+        const nextKind = useAggPath && aggPlan ? aggPlan.kind : null
+        const nextOut = useAggPath && aggPlan ? aggPlan.predictedNetOut : null
+        const s = useSwapStore.getState()
+        if (s.aggRouteKind !== nextKind) setAggRouteKind(nextKind)
+        if (s.aggPredictedOut !== nextOut) setAggPredictedOut(nextOut)
+    }, [useAggPath, aggPlan, setAggRouteKind, setAggPredictedOut])
     const {
         needsApproval,
         isApproving,
@@ -659,14 +653,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                         )}
                                         {planLegs ? (
                                             <div className="flex justify-between items-start gap-2">
-                                                <span className="text-muted-foreground flex items-center gap-1">
-                                                    Route
-                                                    <span className="text-[10px] uppercase font-semibold text-primary">
-                                                        {aggPlan?.kind === 'cross-dex'
-                                                            ? 'Cross-DEX'
-                                                            : 'Split'}
-                                                    </span>
-                                                </span>
+                                                <span className="text-muted-foreground">Route</span>
                                                 <div className="flex flex-col items-end gap-0.5">
                                                     {planLegs.map((leg, i) => (
                                                         <span
@@ -780,7 +767,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                 return
                             }
                             if (needsApprovalCheck) {
-                                // Lock the router choice for the whole approve→swap sequence.
                                 if (pinnedUseAgg === null) setPinnedUseAgg(liveUseAgg)
                                 approve()
                             } else if (isKubUnwrapDirect) {

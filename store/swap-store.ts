@@ -9,8 +9,8 @@ interface SwapStore extends SwapState {
     selectedDex: DEXType
     dexQuotes: Record<DEXType, DexQuote>
     bestQuoteDex: DEXType | null
-    /** Kind of aggregator route currently winning (Auto mode), or null when a single DEX is used. */
     aggRouteKind: 'split' | 'cross-dex' | null
+    aggPredictedOut: bigint | null
     isUpdatingFromUrl: boolean
 
     setTokenIn: (token: Token | null) => void
@@ -30,6 +30,7 @@ interface SwapStore extends SwapState {
     setDexQuotes: (quotes: Record<DEXType, DexQuote>) => void
     setBestQuoteDex: (dexId: DEXType | null) => void
     setAggRouteKind: (kind: 'split' | 'cross-dex' | null) => void
+    setAggPredictedOut: (amount: bigint | null) => void
     clearDexQuotes: () => void
     swapTokens: () => void
     reset: () => void
@@ -64,6 +65,7 @@ export const useSwapStore = create<SwapStore>()(
                 dexQuotes: {},
                 bestQuoteDex: null,
                 aggRouteKind: null,
+                aggPredictedOut: null,
 
                 setTokenIn: (token) => set({ tokenIn: token }),
 
@@ -141,6 +143,7 @@ export const useSwapStore = create<SwapStore>()(
                 setBestQuoteDex: (dexId) => set({ bestQuoteDex: dexId }),
 
                 setAggRouteKind: (kind) => set({ aggRouteKind: kind }),
+                setAggPredictedOut: (amount) => set({ aggPredictedOut: amount }),
                 clearDexQuotes: () => set({ dexQuotes: {}, bestQuoteDex: null }),
 
                 reset: () => set(initialState),
@@ -150,7 +153,6 @@ export const useSwapStore = create<SwapStore>()(
                 partialize: (state) => ({
                     settings: state.settings,
                 }),
-                // Merge persisted settings over defaults so newly-added setting fields are populated
                 merge: (persistedState, currentState) => {
                     const persisted = persistedState as Partial<SwapStore>
                     return {
