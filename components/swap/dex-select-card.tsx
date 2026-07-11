@@ -23,6 +23,7 @@ export function DexSelectCard() {
         tokenOut,
         amountIn,
         settings,
+        aggRouteKind,
     } = useSwapStore()
     const chainId = useChainId()
     const supportedDexs = getSupportedDexs(chainId)
@@ -40,6 +41,13 @@ export function DexSelectCard() {
         amountIn: amountInBigInt,
         enabled: !!tokenIn && !!tokenOut && amountInBigInt > 0n,
     })
+    // Whether the swap card is routing through the aggregator (published from swap-card).
+    const aggLabel =
+        aggRouteKind === 'cross-dex'
+            ? 'Best route (cross-DEX)'
+            : aggRouteKind === 'split'
+              ? 'Best route (split)'
+              : null
     useEffect(() => {
         if (settings?.autoSelectBestDex && bestQuoteDex && bestQuoteDex !== selectedDex) {
             setSelectedDex(bestQuoteDex)
@@ -96,7 +104,9 @@ export function DexSelectCard() {
                 >
                     <div className="flex items-center gap-2">
                         <Label className="text-muted-foreground">Swap via:</Label>
-                        <span className="font-medium">{selectedDexInfo.displayName}</span>
+                        <span className="font-medium">
+                            {aggLabel ?? selectedDexInfo.displayName}
+                        </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div

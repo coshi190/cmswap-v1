@@ -2,19 +2,20 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
-import "../src/JunoswapAggregationRouter.sol";
+import "../src/AggRouterJunoswap.sol";
 import "./mocks/MockPools.sol";
 
-contract JunoswapAggregationRouterTest is Test {
-    JunoswapAggregationRouter router;
+contract AggRouterJunoswapTest is Test {
+    AggRouterJunoswap router;
     MockWETH9 weth;
     MintableERC20 tokenA; // input
     MintableERC20 tokenB; // output
     MintableERC20 tokenC; // intermediate
     FeeOnTransferERC20 fot;
 
-    MockV2Factory v2Factory; // 30 bps, ponder/diamon/jibswap-style
-    MockV2Factory v2FactoryLow; // 25 bps, udonswap-style
+    MockV2Factory v2Factory; // 30 bps, ponder/jibswap-style
+    MockV2Factory v2FactoryLow; // 25 bps
+    MockV2Factory v2FactoryND; // 30 bps, udonswap/diamon-style: swap() takes no data arg
     MockV3FactorySim v3Factory;
     MockV3FactorySim pcsFactory;
 
@@ -27,6 +28,10 @@ contract JunoswapAggregationRouterTest is Test {
     MockV2Pair pairAF; // A / FoT
     MockV2Pair pairFB; // FoT / B
 
+    MockV2PairNoData pairABND;
+    MockV2PairNoData pairACND;
+    MockV2PairNoData pairCBND;
+
     MockV3PoolSim poolAB;
     MockV3PoolSim poolAC;
     MockV3PoolSim poolCB;
@@ -38,6 +43,7 @@ contract JunoswapAggregationRouterTest is Test {
     address user = address(0xA11CE);
     address recipient = address(0xB0B);
     address referrer = address(0xCAFE);
+    address collector = address(0xFEE5);
 
     address constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 constant RESERVE = 100_000 ether;
@@ -47,7 +53,7 @@ contract JunoswapAggregationRouterTest is Test {
 
     function setUp() public {
         weth = new MockWETH9();
-        router = new JunoswapAggregationRouter(address(weth));
+        router = new AggRouterJunoswap(address(weth));
         tokenA = new MintableERC20("TokenA", "A", 18);
         tokenB = new MintableERC20("TokenB", "B", 18);
         tokenC = new MintableERC20("TokenC", "C", 18);
@@ -55,11 +61,13 @@ contract JunoswapAggregationRouterTest is Test {
 
         v2Factory = new MockV2Factory();
         v2FactoryLow = new MockV2Factory();
+        v2FactoryND = new MockV2Factory();
         v3Factory = new MockV3FactorySim();
         pcsFactory = new MockV3FactorySim();
 
         router.setFactory(address(v2Factory), router.KIND_V2(), 30);
         router.setFactory(address(v2FactoryLow), router.KIND_V2(), 25);
+        router.setFactory(address(v2FactoryND), router.KIND_V2_NODATA(), 30);
         router.setFactory(address(v3Factory), router.KIND_V3(), 0);
         router.setFactory(address(pcsFactory), router.KIND_V3(), 0);
 
@@ -73,6 +81,10 @@ contract JunoswapAggregationRouterTest is Test {
         pairAF = _newPair(v2Factory, address(tokenA), address(fot), 30);
         pairFB = _newPair(v2Factory, address(fot), address(tokenB), 30);
         pairABLow = _newPair(v2FactoryLow, address(tokenA), address(tokenB), 25);
+
+        pairABND = _newPairND(v2FactoryND, address(tokenA), address(tokenB), 30);
+        pairACND = _newPairND(v2FactoryND, address(tokenA), address(tokenC), 30);
+        pairCBND = _newPairND(v2FactoryND, address(tokenC), address(tokenB), 30);
 
         poolAB = _newPool(v3Factory, address(tokenA), address(tokenB), 3000);
         poolAC = _newPool(v3Factory, address(tokenA), address(tokenC), 3000);
@@ -114,6 +126,17 @@ contract JunoswapAggregationRouterTest is Test {
         p.sync();
     }
 
+    function _newPairND(MockV2Factory f, address t0, address t1, uint16 feeBps)
+        internal
+        returns (MockV2PairNoData p)
+    {
+        p = new MockV2PairNoData(t0, t1, feeBps);
+        f.register(address(p));
+        _fund(address(p), t0);
+        _fund(address(p), t1);
+        p.sync();
+    }
+
     function _newPool(MockV3FactorySim f, address t0, address t1, uint24 fee)
         internal
         returns (MockV3PoolSim p)
@@ -124,8 +147,21 @@ contract JunoswapAggregationRouterTest is Test {
         _fund(address(p), t1);
     }
 
-    /// Mirrors JunoswapAggregationRouter._getAmountOut against live reserves.
+    /// Mirrors AggRouterJunoswap._getAmountOut against live reserves.
     function _v2Out(MockV2Pair pair, address tin, uint256 amtIn)
+        internal
+        view
+        returns (uint256)
+    {
+        (uint112 r0, uint112 r1, ) = pair.getReserves();
+        (uint256 rIn, uint256 rOut) = tin == pair.token0()
+            ? (uint256(r0), uint256(r1))
+            : (uint256(r1), uint256(r0));
+        uint256 inWithFee = amtIn * (10000 - pair.feeBps());
+        return (inWithFee * rOut) / (rIn * 10000 + inWithFee);
+    }
+
+    function _v2OutND(MockV2PairNoData pair, address tin, uint256 amtIn)
         internal
         view
         returns (uint256)
@@ -158,44 +194,36 @@ contract JunoswapAggregationRouterTest is Test {
     function _v2Hop(address factory, address tout)
         internal
         pure
-        returns (JunoswapAggregationRouter.Hop memory)
+        returns (AggRouterJunoswap.Hop memory)
     {
-        return JunoswapAggregationRouter.Hop({
-            kind: JunoswapAggregationRouter.SwapKind.V2,
-            factory: factory,
-            swapData: abi.encode(tout)
-        });
+        return AggRouterJunoswap.Hop({factory: factory, swapData: abi.encode(tout)});
     }
 
     function _v3Hop(address factory, address tout, uint24 fee)
         internal
         pure
-        returns (JunoswapAggregationRouter.Hop memory)
+        returns (AggRouterJunoswap.Hop memory)
     {
-        return JunoswapAggregationRouter.Hop({
-            kind: JunoswapAggregationRouter.SwapKind.V3,
-            factory: factory,
-            swapData: abi.encode(tout, fee)
-        });
+        return AggRouterJunoswap.Hop({factory: factory, swapData: abi.encode(tout, fee)});
     }
 
-    function _oneHopLeg(uint256 amountIn, JunoswapAggregationRouter.Hop memory hop)
+    function _oneHopLeg(uint256 amountIn, AggRouterJunoswap.Hop memory hop)
         internal
         pure
-        returns (JunoswapAggregationRouter.Leg memory leg)
+        returns (AggRouterJunoswap.Leg memory leg)
     {
         leg.amountIn = amountIn;
-        leg.hops = new JunoswapAggregationRouter.Hop[](1);
+        leg.hops = new AggRouterJunoswap.Hop[](1);
         leg.hops[0] = hop;
     }
 
     function _twoHopLeg(
         uint256 amountIn,
-        JunoswapAggregationRouter.Hop memory h1,
-        JunoswapAggregationRouter.Hop memory h2
-    ) internal pure returns (JunoswapAggregationRouter.Leg memory leg) {
+        AggRouterJunoswap.Hop memory h1,
+        AggRouterJunoswap.Hop memory h2
+    ) internal pure returns (AggRouterJunoswap.Leg memory leg) {
         leg.amountIn = amountIn;
-        leg.hops = new JunoswapAggregationRouter.Hop[](2);
+        leg.hops = new AggRouterJunoswap.Hop[](2);
         leg.hops[0] = h1;
         leg.hops[1] = h2;
     }
@@ -203,9 +231,9 @@ contract JunoswapAggregationRouterTest is Test {
     function _params(address tin, address tout, uint256 amountIn, uint256 minOut, bool unwrapOut)
         internal
         view
-        returns (JunoswapAggregationRouter.AggregateParams memory)
+        returns (AggRouterJunoswap.AggregateParams memory)
     {
-        return JunoswapAggregationRouter.AggregateParams({
+        return AggRouterJunoswap.AggregateParams({
             tokenIn: tin,
             tokenOut: tout,
             amountIn: amountIn,
@@ -223,7 +251,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn,
         uint256 minOut,
         bool unwrapOut,
-        JunoswapAggregationRouter.Leg[] memory legs
+        AggRouterJunoswap.Leg[] memory legs
     ) internal returns (uint256 out) {
         vm.startPrank(user);
         if (tin != NATIVE) {
@@ -241,9 +269,9 @@ contract JunoswapAggregationRouterTest is Test {
     function _legs(uint256 n)
         internal
         pure
-        returns (JunoswapAggregationRouter.Leg[] memory)
+        returns (AggRouterJunoswap.Leg[] memory)
     {
-        return new JunoswapAggregationRouter.Leg[](n);
+        return new AggRouterJunoswap.Leg[](n);
     }
 
     /// Counts ERC20 Transfer events emitted by `token` whose `from` is the router.
@@ -277,7 +305,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 1000 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(2);
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
         legs[0] = _oneHopLeg(600 ether, _v2Hop(address(v2Factory), address(tokenB)));
         legs[1] = _oneHopLeg(400 ether, _v3Hop(address(v3Factory), address(tokenB), 3000));
 
@@ -299,7 +327,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 1000 ether;
         tokenA.mint(user, amountIn * 2);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
         uint256 out30 = _swap(address(tokenA), address(tokenB), amountIn, 0, false, legs);
 
@@ -312,7 +340,7 @@ contract JunoswapAggregationRouterTest is Test {
     function test_RevertWhenBelowMinOut() public {
         uint256 amountIn = 1000 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
 
         vm.startPrank(user);
@@ -325,7 +353,7 @@ contract JunoswapAggregationRouterTest is Test {
     function test_RevertOnSumMismatch() public {
         uint256 amountIn = 1000 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(2);
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
         legs[0] = _oneHopLeg(600 ether, _v2Hop(address(v2Factory), address(tokenB)));
         legs[1] = _oneHopLeg(300 ether, _v3Hop(address(v3Factory), address(tokenB), 3000));
 
@@ -339,7 +367,7 @@ contract JunoswapAggregationRouterTest is Test {
     function test_DustRefunded() public {
         uint256 amountIn = 500 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
 
         _swap(address(tokenA), address(tokenB), amountIn, 0, false, legs);
@@ -355,27 +383,28 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(rogue), address(tokenB)));
 
         vm.startPrank(user);
         tokenA.approve(address(router), amountIn);
-        vm.expectRevert("kind/factory mismatch");
+        vm.expectRevert("factory not registered");
         router.aggregate(_params(address(tokenA), address(tokenB), amountIn, 0, false), legs);
         vm.stopPrank();
     }
 
-    function test_RevertOnKindFactoryMismatch() public {
+    function test_RevertOnMisshapenSwapData() public {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        // V2-kind hop pointed at a factory registered as V3.
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        // V2-shaped swapData (no fee word) sent to a factory registered as V3: the
+        // decode dictated by the factory's kind fails.
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v3Factory), address(tokenB)));
 
         vm.startPrank(user);
         tokenA.approve(address(router), amountIn);
-        vm.expectRevert("kind/factory mismatch");
+        vm.expectRevert();
         router.aggregate(_params(address(tokenA), address(tokenB), amountIn, 0, false), legs);
         vm.stopPrank();
     }
@@ -385,7 +414,7 @@ contract JunoswapAggregationRouterTest is Test {
         tokenA.mint(user, amountIn);
 
         // No A/B pool exists at fee tier 500 on the V3 factory.
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v3Hop(address(v3Factory), address(tokenB), 500));
 
         vm.startPrank(user);
@@ -398,7 +427,7 @@ contract JunoswapAggregationRouterTest is Test {
     function test_RevertOnHopSameToken() public {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenA)));
 
         vm.startPrank(user);
@@ -412,7 +441,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
         // Leg ends at C but the declared tokenOut is B.
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenC)));
 
         vm.startPrank(user);
@@ -425,9 +454,9 @@ contract JunoswapAggregationRouterTest is Test {
     function test_RevertOnEmptyHops() public {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0].amountIn = amountIn;
-        legs[0].hops = new JunoswapAggregationRouter.Hop[](0);
+        legs[0].hops = new AggRouterJunoswap.Hop[](0);
 
         vm.startPrank(user);
         tokenA.approve(address(router), amountIn);
@@ -446,7 +475,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v2Hop(address(v2Factory), address(tokenC)),
@@ -473,7 +502,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v2Hop(address(v2Factory), address(tokenC)),
@@ -497,7 +526,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v3Hop(address(v3Factory), address(tokenC), 3000),
@@ -521,7 +550,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v3Hop(address(v3Factory), address(tokenC), 3000),
@@ -540,7 +569,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 1000 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(2);
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
         legs[0] = _oneHopLeg(600 ether, _v2Hop(address(v2Factory), address(tokenB)));
         legs[1] = _twoHopLeg(
             400 ether,
@@ -569,7 +598,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v3Hop(address(v3Factory), address(tokenB), 3000));
 
         vm.startPrank(user);
@@ -583,7 +612,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v3Hop(address(pcsFactory), address(tokenB), 2500));
 
         uint256 expected = _v3Out(pcsAB, address(tokenA), amountIn);
@@ -625,7 +654,7 @@ contract JunoswapAggregationRouterTest is Test {
 
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v3Hop(address(f), address(tokenB), 3000));
 
         uint256 out = _swap(address(tokenA), address(tokenB), amountIn, 0, false, legs);
@@ -642,7 +671,7 @@ contract JunoswapAggregationRouterTest is Test {
     function test_RevertOnFeeOnTransferInput() public {
         uint256 amountIn = 100 ether;
         fot.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
 
         vm.startPrank(user);
@@ -658,7 +687,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v2Hop(address(v2Factory), address(fot)),
@@ -691,7 +720,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v2Hop(address(v2Factory), address(fot)),
@@ -706,6 +735,84 @@ contract JunoswapAggregationRouterTest is Test {
     }
 
     // ------------------------------------------------------------------ //
+    // V2 forks without the flash-swap `data` argument                    //
+    // ------------------------------------------------------------------ //
+
+    function test_NoDataPairSwaps() public {
+        uint256 amountIn = 10 ether;
+        tokenA.mint(user, amountIn);
+
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2FactoryND), address(tokenB)));
+
+        uint256 expected = _v2OutND(pairABND, address(tokenA), amountIn);
+        uint256 out = _swap(address(tokenA), address(tokenB), amountIn, expected, false, legs);
+
+        assertEq(out, expected);
+        assertEq(tokenB.balanceOf(recipient), out);
+    }
+
+    /// Registering a no-data fork as KIND_V2 makes every swap through it revert at dispatch.
+    function test_NoDataFactoryRegisteredAsStandardKindReverts() public {
+        router.setFactory(address(v2FactoryND), router.KIND_V2(), 30);
+
+        uint256 amountIn = 10 ether;
+        tokenA.mint(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2FactoryND), address(tokenB)));
+
+        vm.startPrank(user);
+        tokenA.approve(address(router), amountIn);
+        vm.expectRevert();
+        router.aggregate(_params(address(tokenA), address(tokenB), amountIn, 0, false), legs);
+        vm.stopPrank();
+    }
+
+    /// The router must still hand a no-data pair its input directly, never taking custody.
+    function test_NoDataPairChainsToNoDataPair() public {
+        uint256 amountIn = 10 ether;
+        tokenA.mint(user, amountIn);
+
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _twoHopLeg(
+            amountIn,
+            _v2Hop(address(v2FactoryND), address(tokenC)),
+            _v2Hop(address(v2FactoryND), address(tokenB))
+        );
+
+        uint256 mid = _v2OutND(pairACND, address(tokenA), amountIn);
+        uint256 expected = _v2OutND(pairCBND, address(tokenC), mid);
+
+        uint256 out = _swap(address(tokenA), address(tokenB), amountIn, expected, false, legs);
+
+        assertEq(out, expected);
+        assertEq(tokenC.balanceOf(address(router)), 0, "router took custody of intermediate");
+    }
+
+    function test_SplitAcrossStandardAndNoDataPairs() public {
+        uint256 amountIn = 10 ether;
+        tokenA.mint(user, amountIn);
+
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
+        legs[0] = _oneHopLeg(6 ether, _v2Hop(address(v2Factory), address(tokenB)));
+        legs[1] = _oneHopLeg(4 ether, _v2Hop(address(v2FactoryND), address(tokenB)));
+
+        uint256 expected = _v2Out(pairAB, address(tokenA), 6 ether) +
+            _v2OutND(pairABND, address(tokenA), 4 ether);
+
+        uint256 out = _swap(address(tokenA), address(tokenB), amountIn, expected, false, legs);
+        assertEq(out, expected);
+    }
+
+    function test_SetFactoryNoDataRequiresNonZeroFee() public {
+        // Read the constant up front: vm.expectRevert binds to the next call.
+        uint8 kindND = router.KIND_V2_NODATA();
+
+        vm.expectRevert("bad fee");
+        router.setFactory(address(v2FactoryND), kindND, 0);
+    }
+
+    // ------------------------------------------------------------------ //
     // Native handling                                                    //
     // ------------------------------------------------------------------ //
 
@@ -713,7 +820,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 10 ether;
         vm.deal(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
 
         uint256 expected = _v2Out(pairBW, address(weth), amountIn);
@@ -723,10 +830,60 @@ contract JunoswapAggregationRouterTest is Test {
         assertEq(tokenB.balanceOf(recipient), out);
     }
 
+    /// A stranded balance is an unowned donation, not the swapper's money.
+    function test_DonatedInputTokenIsNotPaidToSwapper() public {
+        tokenA.mint(address(router), 5 ether);
+
+        uint256 amountIn = 10 ether;
+        tokenA.mint(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
+
+        _swap(address(tokenA), address(tokenB), amountIn, 0, false, legs);
+
+        assertEq(tokenA.balanceOf(user), 0, "swapper got a windfall");
+        assertEq(tokenA.balanceOf(address(router)), 5 ether, "donation moved");
+    }
+
+    /// On a KYC-gated wrapped native the router cannot `withdraw`, so refunding a donated
+    /// balance would let anyone brick every native-in swap with a 1 wei transfer.
+    function test_DonationDoesNotBrickKycGatedNativeInput() public {
+        KycWETH9 kkub = new KycWETH9();
+        AggRouterJunoswap r2 = new AggRouterJunoswap(address(kkub));
+        MockV2Factory f2 = new MockV2Factory();
+        r2.setFactory(address(f2), r2.KIND_V2(), 30);
+
+        MockV2Pair pair = new MockV2Pair(address(kkub), address(tokenB), 30);
+        f2.register(address(pair));
+        kkub.deposit{value: RESERVE}();
+        kkub.transfer(address(pair), RESERVE);
+        tokenB.mint(address(pair), RESERVE);
+        pair.sync();
+
+        kkub.deposit{value: 1}();
+        kkub.transfer(address(r2), 1);
+
+        uint256 amountIn = 10 ether;
+        vm.deal(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(f2), address(tokenB)));
+
+        vm.prank(user);
+        uint256 out = r2.aggregate{value: amountIn}(
+            _params(NATIVE, address(tokenB), amountIn, 0, false),
+            legs
+        );
+
+        assertGt(out, 0, "swap bricked by donation");
+        assertEq(tokenB.balanceOf(recipient), out);
+        assertEq(kkub.balanceOf(address(r2)), 1, "donation moved");
+        assertEq(user.balance, 0, "attempted a dust refund");
+    }
+
     function test_NativeOutputUnwraps() public {
         uint256 amountIn = 15 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(weth)));
 
         uint256 expected = _v2Out(pairAW, address(tokenA), amountIn);
@@ -741,7 +898,7 @@ contract JunoswapAggregationRouterTest is Test {
     function test_NativeOutputKkubStyleDeliversWrapped() public {
         uint256 amountIn = 15 ether;
         tokenA.mint(user, amountIn);
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(weth)));
 
         uint256 expected = _v2Out(pairAW, address(tokenA), amountIn);
@@ -755,7 +912,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 10 ether;
         vm.deal(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v2Hop(address(v2Factory), address(tokenA)),
@@ -774,7 +931,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 amountIn = 100 ether;
         tokenA.mint(user, amountIn);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(1);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
         legs[0] = _twoHopLeg(
             amountIn,
             _v3Hop(address(v3Factory), address(tokenB), 3000),
@@ -808,7 +965,7 @@ contract JunoswapAggregationRouterTest is Test {
         router.setFactory(address(0xDEAD), 0, 30);
 
         vm.expectRevert("bad kind");
-        router.setFactory(address(0xDEAD), 3, 30);
+        router.setFactory(address(0xDEAD), 4, 30);
 
         vm.expectRevert("bad fee");
         router.setFactory(address(0xDEAD), kindV2, 0);
@@ -842,7 +999,7 @@ contract JunoswapAggregationRouterTest is Test {
         uint256 total = a + b;
         tokenA.mint(user, total);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(2);
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
         legs[0] = _oneHopLeg(a, _v2Hop(address(v2Factory), address(tokenB)));
         legs[1] = _oneHopLeg(b, _v3Hop(address(v3Factory), address(tokenB), 3000));
 
@@ -864,7 +1021,7 @@ contract JunoswapAggregationRouterTest is Test {
         split = bound(split, 1 ether, total - 1 ether);
         tokenA.mint(user, total);
 
-        JunoswapAggregationRouter.Leg[] memory legs = _legs(2);
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
         legs[0] = _oneHopLeg(split, _v2Hop(address(v2Factory), address(tokenB)));
         legs[1] = _twoHopLeg(
             total - split,
@@ -874,5 +1031,158 @@ contract JunoswapAggregationRouterTest is Test {
 
         _swap(address(tokenA), address(tokenB), total, 0, false, legs);
         _assertNoCustody();
+    }
+
+    // ------------------------------------------------------------------ //
+    // Protocol fee                                                       //
+    // ------------------------------------------------------------------ //
+
+    function test_FeeSkimmedFromOutput() public {
+        router.setFee(collector, 30);
+
+        uint256 amountIn = 100 ether;
+        tokenA.mint(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
+
+        uint256 gross = _v2Out(pairAB, address(tokenA), amountIn);
+        uint256 fee = (gross * 30) / 10000;
+
+        vm.recordLogs();
+        uint256 out = _swap(address(tokenA), address(tokenB), amountIn, 0, false, legs);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(out, gross - fee, "returns net of fee");
+        assertEq(tokenB.balanceOf(collector), fee, "collector paid");
+        assertEq(tokenB.balanceOf(recipient), gross - fee, "recipient netted");
+        assertEq(_routerTransfersOf(logs, address(tokenB)), 2, "fee transfer + recipient transfer");
+        _assertNoCustody();
+    }
+
+    /// The bound must apply to what the recipient receives, not what the router received.
+    function test_MinAmountOutBindsNetOfFee() public {
+        router.setFee(collector, 30);
+
+        uint256 amountIn = 100 ether;
+        tokenA.mint(user, 2 * amountIn);
+        uint256 gross = _v2Out(pairAB, address(tokenA), amountIn);
+        uint256 net = gross - (gross * 30) / 10000;
+
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
+
+        // Asking for the gross amount must fail even though the router did receive it.
+        vm.startPrank(user);
+        tokenA.approve(address(router), amountIn);
+        vm.expectRevert("insufficient output");
+        router.aggregate(_params(address(tokenA), address(tokenB), amountIn, gross, false), legs);
+        vm.stopPrank();
+
+        // The revert changed no state, so the net amount is still the exact boundary.
+        uint256 out = _swap(address(tokenA), address(tokenB), amountIn, net, false, legs);
+        assertEq(out, net, "net is the tight bound");
+    }
+
+    function test_ZeroFeeSkipsTransfer() public {
+        uint256 amountIn = 100 ether;
+        tokenA.mint(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(tokenB)));
+
+        uint256 gross = _v2Out(pairAB, address(tokenA), amountIn);
+
+        vm.recordLogs();
+        uint256 out = _swap(address(tokenA), address(tokenB), amountIn, gross, false, legs);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(out, gross, "unfeed output untouched");
+        assertEq(tokenB.balanceOf(collector), 0, "nothing skimmed");
+        assertEq(_routerTransfersOf(logs, address(tokenB)), 1, "recipient transfer only");
+    }
+
+    function test_FeeOnNativeOutput() public {
+        router.setFee(collector, 30);
+
+        uint256 amountIn = 15 ether;
+        tokenA.mint(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(weth)));
+
+        uint256 gross = _v2Out(pairAW, address(tokenA), amountIn);
+        uint256 fee = (gross * 30) / 10000;
+        uint256 balBefore = recipient.balance;
+
+        uint256 out = _swap(address(tokenA), NATIVE, amountIn, 0, true, legs);
+
+        assertEq(out, gross - fee);
+        assertEq(recipient.balance - balBefore, gross - fee, "recipient unwrapped, net");
+        assertEq(weth.balanceOf(collector), fee, "collector holds wrapped, not native");
+        assertEq(collector.balance, 0, "collector never receives native");
+    }
+
+    function test_FeeOnWrappedNativeOutput() public {
+        router.setFee(collector, 30);
+
+        uint256 amountIn = 15 ether;
+        tokenA.mint(user, amountIn);
+        AggRouterJunoswap.Leg[] memory legs = _legs(1);
+        legs[0] = _oneHopLeg(amountIn, _v2Hop(address(v2Factory), address(weth)));
+
+        uint256 gross = _v2Out(pairAW, address(tokenA), amountIn);
+        uint256 fee = (gross * 30) / 10000;
+
+        uint256 out = _swap(address(tokenA), NATIVE, amountIn, 0, false, legs);
+
+        assertEq(out, gross - fee);
+        assertEq(weth.balanceOf(recipient), gross - fee, "kkub-style delivery, net");
+        assertEq(weth.balanceOf(collector), fee);
+    }
+
+    /// One skim on the summed output, not one per leg.
+    function test_FeeAcrossSplitLegs() public {
+        router.setFee(collector, 30);
+
+        uint256 half = 50 ether;
+        tokenA.mint(user, 2 * half);
+
+        AggRouterJunoswap.Leg[] memory legs = _legs(2);
+        legs[0] = _oneHopLeg(half, _v2Hop(address(v2Factory), address(tokenB)));
+        legs[1] = _oneHopLeg(half, _v2Hop(address(v2FactoryLow), address(tokenB)));
+
+        uint256 gross = _v2Out(pairAB, address(tokenA), half) +
+            _v2Out(pairABLow, address(tokenA), half);
+        uint256 fee = (gross * 30) / 10000;
+
+        uint256 out = _swap(address(tokenA), address(tokenB), 2 * half, 0, false, legs);
+
+        assertEq(out, gross - fee, "fee taken once on the sum");
+        assertEq(tokenB.balanceOf(collector), fee);
+        _assertNoCustody();
+    }
+
+    function test_SetFeeOnlyOwner() public {
+        vm.prank(user);
+        vm.expectRevert("Ownable: caller is not the owner");
+        router.setFee(collector, 30);
+    }
+
+    function test_SetFeeRejectsAboveCap() public {
+        uint16 max = router.MAX_FEE_BPS();
+
+        vm.expectRevert("fee too high");
+        router.setFee(collector, max + 1);
+
+        router.setFee(collector, max);
+        assertEq(router.feeBps(), max, "cap itself is allowed");
+    }
+
+    function test_SetFeeRejectsZeroCollector() public {
+        vm.expectRevert("bad collector");
+        router.setFee(address(0), 1);
+
+        // A zero fee may clear the collector.
+        router.setFee(address(0), 0);
+        assertEq(router.feeCollector(), address(0));
+        assertEq(router.feeBps(), 0);
     }
 }

@@ -2,13 +2,18 @@
 pragma solidity 0.8.19;
 
 import "forge-std/Script.sol";
-import "../src/JunoswapAggregationRouter.sol";
+import "../src/AggRouterJunoswap.sol";
 
 /// @dev Registers the DEX factories the router may swap through. V2 fees were measured
 /// on-chain against each fork's own router (solve `getAmountsOut` against `getReserves`);
 /// they are constant per fork, not per pair. A wrong fee here does not revert — it silently
 /// under-quotes and leaks value to LPs — so re-verify before deploying to a new chain.
-contract DeployJunoswapAggregationRouter is Script {
+///
+/// Kind matters too: forks predating flash swaps expose `swap(uint,uint,address)` and must
+/// register as KIND_V2_NODATA. Check for selector 0x022c0d9f in a pair's bytecode — if it is
+/// absent and 0x6d9a640a is present, the fork is no-data. Registering the wrong kind reverts
+/// every swap through that factory.
+contract DeployAggRouterJunoswap is Script {
     uint256 constant CHAIN_BITKUB = 96;
     uint256 constant CHAIN_KUB_TESTNET = 25925;
     uint256 constant CHAIN_JBC = 8899;
@@ -38,14 +43,21 @@ contract DeployJunoswapAggregationRouter is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        JunoswapAggregationRouter router = new JunoswapAggregationRouter(wrappedNative);
+        AggRouterJunoswap router = new AggRouterJunoswap(wrappedNative);
         _registerFactories(router);
+
+        // Fee stays off unless explicitly opted in, so no chain silently starts charging.
+        address feeCollector = vm.envOr("FEE_COLLECTOR", address(0));
+        uint16 feeBps = uint16(vm.envOr("FEE_BPS", uint256(0)));
+        if (feeCollector != address(0)) router.setFee(feeCollector, feeBps);
 
         vm.stopBroadcast();
 
-        console.log("JunoswapAggregationRouter deployed at:", address(router));
+        console.log("AggRouterJunoswap deployed at:", address(router));
         console.log("chainId:", block.chainid);
         console.log("wrappedNative:", wrappedNative);
+        console.log("feeCollector:", feeCollector);
+        console.log("feeBps:", feeBps);
     }
 
     function _defaultWrappedNative() internal view returns (address) {
@@ -55,16 +67,17 @@ contract DeployJunoswapAggregationRouter is Script {
         return address(0);
     }
 
-    function _registerFactories(JunoswapAggregationRouter router) internal {
+    function _registerFactories(AggRouterJunoswap router) internal {
         uint8 v2 = router.KIND_V2();
         uint8 v3 = router.KIND_V3();
+        uint8 v2nd = router.KIND_V2_NODATA();
 
         if (block.chainid == CHAIN_BITKUB) {
             router.setFactory(JUNOSWAP_V3_BITKUB, v3, 0);
             router.setFactory(KUBLERX_V3_BITKUB, v3, 0);
-            router.setFactory(UDONSWAP_V2_BITKUB, v2, 25);
+            router.setFactory(UDONSWAP_V2_BITKUB, v2nd, 25);
             router.setFactory(PONDER_V2_BITKUB, v2, 30);
-            router.setFactory(DIAMON_V2_BITKUB, v2, 30);
+            router.setFactory(DIAMON_V2_BITKUB, v2nd, 30);
         } else if (block.chainid == CHAIN_KUB_TESTNET) {
             router.setFactory(JUNOSWAP_V3_TESTNET, v3, 0);
         } else if (block.chainid == CHAIN_JBC) {

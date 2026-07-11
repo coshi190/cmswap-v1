@@ -55,6 +55,20 @@ contract MockWETH9 is ERC20 {
     }
 }
 
+/// @dev KKUB-style wrapped native: anyone may wrap, but `withdraw` is KYC-gated and
+/// reverts for callers holding no KYC level — which includes the router.
+contract KycWETH9 is ERC20 {
+    constructor() ERC20("KYC Wrapped Native", "KWNATIVE") {}
+
+    function deposit() external payable {
+        _mint(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256) external pure {
+        revert("kyc required");
+    }
+}
+
 /// @dev Faithful UniswapV2 pair: input must be transferred in before `swap`, output is
 /// whatever the caller requests, and the fee-adjusted K invariant is the only guard.
 contract MockV2Pair is IUniswapV2Pair {
@@ -86,6 +100,53 @@ contract MockV2Pair is IUniswapV2Pair {
         address to,
         bytes calldata
     ) external override {
+        require(amount0Out > 0 || amount1Out > 0, "V2: IOA");
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, "V2: IL");
+
+        if (amount0Out > 0) IERC20(token0).transfer(to, amount0Out);
+        if (amount1Out > 0) IERC20(token1).transfer(to, amount1Out);
+
+        uint256 bal0 = IERC20(token0).balanceOf(address(this));
+        uint256 bal1 = IERC20(token1).balanceOf(address(this));
+        uint256 in0 = bal0 > _reserve0 - amount0Out ? bal0 - (_reserve0 - amount0Out) : 0;
+        uint256 in1 = bal1 > _reserve1 - amount1Out ? bal1 - (_reserve1 - amount1Out) : 0;
+        require(in0 > 0 || in1 > 0, "V2: IIA");
+
+        uint256 adj0 = bal0 * 10000 - in0 * feeBps;
+        uint256 adj1 = bal1 * 10000 - in1 * feeBps;
+        require(adj0 * adj1 >= uint256(_reserve0) * uint256(_reserve1) * (10000 ** 2), "V2: K");
+
+        _reserve0 = uint112(bal0);
+        _reserve1 = uint112(bal1);
+    }
+}
+
+/// @dev udonswap/diamon-style pair: identical curve, but `swap` predates flash swaps and
+/// takes no `data` argument. It deliberately does NOT expose the 4-arg selector, so a router
+/// that assumes the standard ABI reverts at dispatch here — exactly as it does on-chain.
+contract MockV2PairNoData is IUniswapV2PairNoData {
+    address public token0;
+    address public token1;
+    uint16 public immutable feeBps;
+
+    uint112 private _reserve0;
+    uint112 private _reserve1;
+
+    constructor(address tokenA, address tokenB, uint16 _feeBps) {
+        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        feeBps = _feeBps;
+    }
+
+    function getReserves() external view returns (uint112, uint112, uint32) {
+        return (_reserve0, _reserve1, 0);
+    }
+
+    function sync() public {
+        _reserve0 = uint112(IERC20(token0).balanceOf(address(this)));
+        _reserve1 = uint112(IERC20(token1).balanceOf(address(this)));
+    }
+
+    function swap(uint256 amount0Out, uint256 amount1Out, address to) external override {
         require(amount0Out > 0 || amount1Out > 0, "V2: IOA");
         require(amount0Out < _reserve0 && amount1Out < _reserve1, "V2: IL");
 

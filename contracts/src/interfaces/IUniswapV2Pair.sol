@@ -19,3 +19,10 @@ interface IUniswapV2Pair {
         bytes calldata data
     ) external;
 }
+
+/// @dev Some V2 forks (udonswap, diamon on chain 96) predate flash swaps and expose
+/// `swap` without the trailing `data` argument — a different selector entirely, so the
+/// pair must be called through this interface instead.
+interface IUniswapV2PairNoData {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to) external;
+}

@@ -9,6 +9,8 @@ interface SwapStore extends SwapState {
     selectedDex: DEXType
     dexQuotes: Record<DEXType, DexQuote>
     bestQuoteDex: DEXType | null
+    /** Kind of aggregator route currently winning (Auto mode), or null when a single DEX is used. */
+    aggRouteKind: 'split' | 'cross-dex' | null
     isUpdatingFromUrl: boolean
 
     setTokenIn: (token: Token | null) => void
@@ -27,6 +29,7 @@ interface SwapStore extends SwapState {
     setIsUpdatingFromUrl: (updating: boolean) => void
     setDexQuotes: (quotes: Record<DEXType, DexQuote>) => void
     setBestQuoteDex: (dexId: DEXType | null) => void
+    setAggRouteKind: (kind: 'split' | 'cross-dex' | null) => void
     clearDexQuotes: () => void
     swapTokens: () => void
     reset: () => void
@@ -60,6 +63,7 @@ export const useSwapStore = create<SwapStore>()(
                 selectedDex: 'junoswap',
                 dexQuotes: {},
                 bestQuoteDex: null,
+                aggRouteKind: null,
 
                 setTokenIn: (token) => set({ tokenIn: token }),
 
@@ -135,6 +139,8 @@ export const useSwapStore = create<SwapStore>()(
 
                 setDexQuotes: (quotes) => set({ dexQuotes: quotes }),
                 setBestQuoteDex: (dexId) => set({ bestQuoteDex: dexId }),
+
+                setAggRouteKind: (kind) => set({ aggRouteKind: kind }),
                 clearDexQuotes: () => set({ dexQuotes: {}, bestQuoteDex: null }),
 
                 reset: () => set(initialState),

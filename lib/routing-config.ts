@@ -97,6 +97,15 @@ export function getIntermediaryTokens(chainId: number): Address[] {
 export const MIN_MULTIHOP_IMPROVEMENT_BPS = 50
 
 /**
+ * Minimum improvement (in basis points) a split across DEXes must beat the single best route by
+ * before the swap is routed through the aggregation router. Like MIN_MULTIHOP_IMPROVEMENT_BPS,
+ * this flat threshold covers the aggregator's extra gas and keeps the choice from flapping on
+ * ordinary quote refreshes — no gas-price oracle. The aggregator's protocol fee is handled
+ * separately, inside the predicted output.
+ */
+export const MIN_AGG_IMPROVEMENT_BPS = 50
+
+/**
  * Maximum hops considered when routing (tokenIn + intermediaries + tokenOut).
  * 3 = up to two intermediaries. Deeper hops only ever go through the curated
  * connector list, never an arbitrary token graph, to keep on-chain quote calls
