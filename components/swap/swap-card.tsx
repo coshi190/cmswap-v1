@@ -44,7 +44,7 @@ import {
 } from '@/lib/dex-config'
 import type { RouteQuote } from '@/types/routing'
 import { TokenSelect } from './token-select'
-import { SettingsDialog } from './settings-dialog'
+import { SettingsMenu } from './settings-menu'
 import { ArrowDownUp, ArrowRightLeft, CandlestickChart } from 'lucide-react'
 import { toast } from 'sonner'
 import { isSameToken, getWrapOperation } from '@/services/tokens'
@@ -461,30 +461,36 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
             setAmountIn(formatTokenAmount(balanceInValue, tokenIn.decimals))
         }
     }
-    const handleSettingsSave = (slippage: number, deadlineMinutes: number) => {
-        setSlippage(slippage)
-        setDeadlineMinutes(deadlineMinutes)
-    }
     return (
         <Card>
             <CardContent className="p-0">
                 <div className="flex items-center justify-between px-6 pt-4">
                     <h2 className="text-base font-semibold">Swap</h2>
-                    {onToggleChart && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Toggle price chart"
-                            title="Toggle price chart"
-                            className={cn(
-                                'h-8 w-8',
-                                showChart ? 'text-primary' : 'text-muted-foreground'
-                            )}
-                            onClick={onToggleChart}
-                        >
-                            <CandlestickChart className="h-4 w-4" />
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-1">
+                        {onToggleChart && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Toggle price chart"
+                                title="Toggle price chart"
+                                className={cn(
+                                    'h-8 w-8',
+                                    showChart
+                                        ? 'bg-accent text-accent-foreground'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                )}
+                                onClick={onToggleChart}
+                            >
+                                <CandlestickChart className="h-4 w-4" />
+                            </Button>
+                        )}
+                        <SettingsMenu
+                            slippage={settings.slippage}
+                            deadlineMinutes={settings.deadlineMinutes}
+                            onSlippageChange={setSlippage}
+                            onDeadlineChange={setDeadlineMinutes}
+                        />
+                    </div>
                 </div>
                 <div className="space-y-2 px-6 pb-6 pt-3">
                     <div className="flex items-center justify-between">
@@ -734,16 +740,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                 </CardContent>
                             </Card>
                         )}
-                    <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                            <SettingsDialog
-                                currentSlippage={settings.slippage}
-                                currentDeadlineMinutes={settings.deadlineMinutes}
-                                onSave={handleSettingsSave}
-                            />
-                            <span>Slippage: {settings.slippage}%</span>
-                        </div>
-                    </div>
                     <Button
                         className="w-full"
                         size="lg"
