@@ -345,7 +345,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         isError: swapIsError,
         error: swapError,
         hash: swapHash,
-        simulationError,
     } = useAggPath ? aggSwap : isV2Protocol ? v2Swap : v3Swap
     const isNativeOutput = !!tokenOut && isNativeToken(tokenOut.address as Address)
     const skipUnwrap = (!!isNativeOutput || isKubUnwrapDirect) && shouldSkipUnwrap(chainId)
@@ -370,11 +369,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
             startUnwrap()
         }
     }, [isSuccess, skipUnwrap, isUnwrapping, isUnwrapSuccess, isUnwrapError, startUnwrap])
-    useEffect(() => {
-        if (simulationError) {
-            toastError(simulationError, 'Simulation failed')
-        }
-    }, [simulationError])
     useEffect(() => {
         const finalSuccess = skipUnwrap ? isUnwrapSuccess : isSuccess
         const finalHash = skipUnwrap ? unwrapHash : swapHash
@@ -525,7 +519,12 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                 }
                             }}
                         />
-                        <TokenSelect token={tokenIn} tokens={tokens} onSelect={setTokenIn} />
+                        <TokenSelect
+                            token={tokenIn}
+                            tokens={tokens}
+                            disabledToken={tokenOut}
+                            onSelect={setTokenIn}
+                        />
                     </div>
                 </div>
                 <div className="relative flex items-center justify-center py-1">
@@ -562,7 +561,12 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                             autoComplete="off"
                             value={displayAmountOut}
                         />
-                        <TokenSelect token={tokenOut} tokens={tokens} onSelect={setTokenOut} />
+                        <TokenSelect
+                            token={tokenOut}
+                            tokens={tokens}
+                            disabledToken={tokenIn}
+                            onSelect={setTokenOut}
+                        />
                     </div>
                 </div>
                 <div className="space-y-4 p-6 pt-0">
