@@ -696,7 +696,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                                         Route
                                                     </span>
                                                     <span className="font-medium flex items-center gap-1 flex-wrap justify-end">
-                                                        <span className="text-xs uppercase">
+                                                        <span className="text-[10px] uppercase text-muted-foreground">
                                                             {displayRoute.dexId}
                                                         </span>
                                                         <span className="text-muted-foreground">
