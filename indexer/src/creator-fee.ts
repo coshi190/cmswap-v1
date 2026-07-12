@@ -12,17 +12,12 @@ export function pumpFeeFromNetAmountIn(netAmountIn: bigint): bigint {
     return (netAmountIn * PUMP_FEE_BPS) / (10000n - PUMP_FEE_BPS)
 }
 
-export function creatorFeeNativeForSwap(
-    isBuy: boolean,
-    netAmountIn: bigint,
-    reserveIn: bigint,
-    reserveOut: bigint,
-    virtualAmount: bigint = VIRTUAL_AMOUNT
-): bigint {
+// Creator's 50% share of the on-chain pump fee, in whatever asset netAmountIn is
+// denominated in. buy() takes its fee from native KUB, sell() from the launch token
+// itself — no on-chain conversion between them, so this performs none either. Callers
+// must route the result to the matching ledger column.
+export function creatorFeeShareForSwap(netAmountIn: bigint): bigint {
     const fee = pumpFeeFromNetAmountIn(netAmountIn)
     if (fee === 0n) return 0n
-    if (isBuy) return (fee * CREATOR_FEE_SHARE_BPS) / 10000n
-    if (reserveIn <= 0n) return 0n
-    const feeNative = (fee * (virtualAmount + reserveOut)) / reserveIn
-    return (feeNative * CREATOR_FEE_SHARE_BPS) / 10000n
+    return (fee * CREATOR_FEE_SHARE_BPS) / 10000n
 }
