@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { formatEther } from 'viem'
 import type { Address } from 'viem'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Button } from '@/components/ui/button'
 import { TokenIcon } from '@/components/ui/token-icon'
 import {
     Table,
@@ -16,6 +18,8 @@ import {
 } from '@/components/ui/table'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useNativeUsdPriceContext } from '@/components/launchpad/native-usd-price-provider'
+import { CreateTokenDialog } from '@/components/launchpad/create-token-dialog'
+import { Plus } from 'lucide-react'
 import { useCreatedTokens } from '@/hooks/useCreatedTokens'
 import { formatCompact, formatKub, formatTokenAmount } from '@/services/launchpad'
 import type { CreatedToken } from '@/types/portfolio'
@@ -77,10 +81,6 @@ function CreatedTokenRow({
     nativeUsdPrice: number | null
 }) {
     const { token } = row
-    const availableNative = row.creatorFeeNative - row.creatorFeeClaimedNative
-    const availableNativeClamped = availableNative > 0n ? availableNative : 0n
-    const availableToken = row.creatorFeeToken - row.creatorFeeClaimedToken
-    const availableTokenClamped = availableToken > 0n ? availableToken : 0n
     const symbol = token.symbol || 'tokens'
 
     return (
@@ -118,22 +118,15 @@ function CreatedTokenRow({
                     tokenUsdPrice={row.tokenUsdPrice}
                 />
             </TableCell>
-            <TableCell>
-                <FeeAmount
-                    nativeWei={availableNativeClamped}
-                    tokenWei={availableTokenClamped}
-                    symbol={symbol}
-                    nativeUsdPrice={nativeUsdPrice}
-                    tokenUsdPrice={row.tokenUsdPrice}
-                />
-            </TableCell>
+            <TableCell className="text-right tabular-nums text-muted-foreground">TBD</TableCell>
         </TableRow>
     )
 }
 
-export function CreatedTokensTab({ address }: { address: Address }) {
+export function CreatedTokensTab({ address, canManage }: { address: Address; canManage: boolean }) {
     const { createdTokens, isLoading } = useCreatedTokens(address)
     const { nativeUsdPrice } = useNativeUsdPriceContext()
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
     if (isLoading) {
         return (
@@ -157,10 +150,26 @@ export function CreatedTokensTab({ address }: { address: Address }) {
 
     if (createdTokens.length === 0) {
         return (
-            <EmptyState
-                title="No Created Tokens"
-                description="This wallet hasn't created any launchpad tokens yet."
-            />
+            <>
+                <EmptyState
+                    title="No Created Tokens"
+                    description="This wallet hasn't created any launchpad tokens yet."
+                    action={
+                        canManage ? (
+                            <Button onClick={() => setIsCreateDialogOpen(true)}>
+                                <Plus className="mr-1.5 h-4 w-4" />
+                                Create Token
+                            </Button>
+                        ) : undefined
+                    }
+                />
+                {canManage && (
+                    <CreateTokenDialog
+                        open={isCreateDialogOpen}
+                        onOpenChange={setIsCreateDialogOpen}
+                    />
+                )}
+            </>
         )
     }
 
@@ -173,19 +182,7 @@ export function CreatedTokensTab({ address }: { address: Address }) {
                             <TableHead>Token</TableHead>
                             <TableHead className="text-right">Market Cap</TableHead>
                             <TableHead className="text-right">Creator Fee Earned</TableHead>
-                            <TableHead className="text-right">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span className="cursor-default underline decoration-dotted underline-offset-4">
-                                            Available to Claim
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        Estimated — paid out manually (in KUB and/or tokens), not
-                                        withdrawable on-chain yet
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TableHead>
+                            <TableHead className="text-right">Available to Claim</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

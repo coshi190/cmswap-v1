@@ -239,7 +239,7 @@ export function PortfolioContent() {
                     </TabsContent>
 
                     <TabsContent value="created">
-                        <CreatedTokensTab address={address} />
+                        <CreatedTokensTab address={address} canManage={canManagePositions} />
                     </TabsContent>
 
                     <TabsContent value="activity">
