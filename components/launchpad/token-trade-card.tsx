@@ -19,7 +19,12 @@ import { ERC20_ABI } from '@/lib/abis/erc20'
 import { getBondingCurveAddress } from '@/lib/abis/bonding-curve-junoswap'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { isValidNumberInput } from '@/lib/utils'
-import { formatKub, formatTokenAmount, isReadyToGraduate } from '@/services/launchpad'
+import {
+    formatKub,
+    formatTokenAmount,
+    isReadyToGraduate,
+    calculateGraduationTarget,
+} from '@/services/launchpad'
 import { toastSuccess, toastError } from '@/lib/toast'
 import { getChainMetadata } from '@/lib/wagmi'
 import { ConnectModal } from '@/components/web3/connect-modal'
@@ -474,7 +479,7 @@ export function TokenTradeCard({
         !isGraduated &&
         !readyToGraduate &&
         graduationAmount > 0n &&
-        nativeReserve >= (graduationAmount * 90n) / 100n
+        nativeReserve >= (calculateGraduationTarget(tokenReserve, graduationAmount) * 90n) / 100n
 
     if (readyToGraduate) {
         return (

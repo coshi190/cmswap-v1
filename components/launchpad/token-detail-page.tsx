@@ -301,6 +301,7 @@ export function TokenDetailPage({ tokenAddr }: TokenDetailPageProps) {
                                         nativeReserve={nativeReserve}
                                         tokenReserve={tokenReserve}
                                         graduationAmount={graduationAmount}
+                                        virtualAmount={virtualAmount}
                                         isGraduated={!!isGraduated}
                                     />
                                 </CardContent>
