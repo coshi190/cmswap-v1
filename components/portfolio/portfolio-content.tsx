@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAccount, useChainId } from 'wagmi'
 import { useQueryClient } from '@tanstack/react-query'
@@ -22,12 +22,19 @@ import { UnstakeDialog } from '@/components/mining'
 import { usePortfolioTokens } from '@/hooks/usePortfolioTokens'
 import { usePortfolioBalances } from '@/hooks/usePortfolioBalances'
 import { usePortfolioPrices } from '@/hooks/usePortfolioPrices'
+import { useNetWorthHistory } from '@/hooks/useNetWorthHistory'
 import { useUserSwapEvents } from '@/hooks/useUserSwapEvents'
 import { useNativeUsdPriceHistory } from '@/hooks/useNativeUsdPriceHistory'
 import { usePortfolioPnl } from '@/hooks/usePortfolioPnl'
 import { ConnectModal } from '@/components/web3/connect-modal'
 import type { PortfolioToken, PortfolioSummary as Summary } from '@/types/portfolio'
 import type { PositionWithTokens, StakedPosition } from '@/types/earn'
+
+function useFirstPaintLoading(isSettling: boolean, scope: string): boolean {
+    const settledScope = useRef<string | null>(null)
+    if (!isSettling) settledScope.current = scope
+    return settledScope.current !== scope
+}
 
 export function PortfolioContent() {
     const { address: connectedAddress } = useAccount()
@@ -77,15 +84,28 @@ export function PortfolioContent() {
         setIsUnstakeDialogOpen(true)
     }
 
-    const { tokens, getTokenType } = usePortfolioTokens(chainId, address)
-    const { holdings, isLoading: isBalancesLoading } = usePortfolioBalances(
+    const {
         tokens,
+        getTokenType,
+        isSettled: isTokensSettled,
+    } = usePortfolioTokens(chainId, address)
+    const {
+        holdings,
+        isFetching: isBalancesFetching,
+        isSettled: isBalancesSettled,
+    } = usePortfolioBalances(tokens, chainId, address)
+    const { prices, isSettled: isPricesSettled } = usePortfolioPrices(
+        holdings,
+        nativeUsdPrice,
         chainId,
-        address
+        getTokenType
     )
-    const prices = usePortfolioPrices(holdings, nativeUsdPrice, chainId, getTokenType)
     const { data: swapEvents } = useUserSwapEvents(address, chainId)
-    const { priceAt } = useNativeUsdPriceHistory(chainId, nativeUsdPrice)
+    const {
+        points: nativeUsdHistory,
+        priceAt,
+        isSettled: isNativeUsdHistorySettled,
+    } = useNativeUsdPriceHistory(chainId, nativeUsdPrice)
     const { pnlByToken, totals: pnlTotals } = usePortfolioPnl(swapEvents, holdings, prices, priceAt)
 
     const portfolioTokens = useMemo<PortfolioToken[]>(() => {
@@ -122,7 +142,29 @@ export function PortfolioContent() {
         return { netWorth, totalPnl, totalPnlPercent }
     }, [portfolioTokens, pnlTotals])
 
-    const isLoading = isBalancesLoading || isPriceLoading
+    const isHoldingsSettling =
+        !isTokensSettled ||
+        !isBalancesSettled ||
+        isBalancesFetching ||
+        !isPricesSettled ||
+        isPriceLoading
+    const isHistorySettling =
+        isHoldingsSettling || swapEvents === undefined || !isNativeUsdHistorySettled
+
+    const scope = `${chainId}:${address ?? ''}`
+    const isLoading = useFirstPaintLoading(isHoldingsSettling, scope)
+    const isHistoryLoading = useFirstPaintLoading(isHistorySettling, scope)
+
+    const netWorthHistory = useNetWorthHistory({
+        address,
+        chainId,
+        portfolioTokens,
+        swapEvents,
+        nativeUsdPoints: nativeUsdHistory,
+        nativeUsdPrice,
+        netWorthNow: summary.netWorth,
+        isInputLoading: isHistorySettling,
+    })
 
     if (!address) {
         return (
@@ -156,7 +198,12 @@ export function PortfolioContent() {
                     </h1>
                 </div>
 
-                <PortfolioSummary summary={summary} isLoading={isLoading} />
+                <PortfolioSummary
+                    summary={summary}
+                    history={netWorthHistory}
+                    isLoading={isLoading}
+                    isHistoryLoading={isHistoryLoading}
+                />
 
                 <Tabs
                     value={activeTab}
