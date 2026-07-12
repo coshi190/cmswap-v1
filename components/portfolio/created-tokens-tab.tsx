@@ -17,16 +17,53 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useNativeUsdPriceContext } from '@/components/launchpad/native-usd-price-provider'
 import { useCreatedTokens } from '@/hooks/useCreatedTokens'
-import { formatCompact, formatKub } from '@/services/launchpad'
+import { formatCompact, formatKub, formatTokenAmount } from '@/services/launchpad'
 import type { CreatedToken } from '@/types/portfolio'
 
-function FeeAmount({ wei, nativeUsdPrice }: { wei: bigint; nativeUsdPrice: number | null }) {
-    const usd = nativeUsdPrice !== null ? parseFloat(formatEther(wei)) * nativeUsdPrice : null
+function FeeAmount({
+    nativeWei,
+    tokenWei,
+    symbol,
+    nativeUsdPrice,
+    tokenUsdPrice,
+}: {
+    nativeWei: bigint
+    tokenWei: bigint
+    symbol: string
+    nativeUsdPrice: number | null
+    tokenUsdPrice: number
+}) {
+    const nativeUsd =
+        nativeUsdPrice !== null ? parseFloat(formatEther(nativeWei)) * nativeUsdPrice : null
+    const tokenUsd = tokenUsdPrice > 0 ? parseFloat(formatEther(tokenWei)) * tokenUsdPrice : null
+    const headline = `${formatKub(nativeWei)} KUB`
+
     return (
         <div className="text-right">
-            <p className="font-medium tabular-nums">{formatKub(wei)} KUB</p>
-            {usd !== null && (
-                <p className="text-xs text-muted-foreground tabular-nums">${formatCompact(usd)}</p>
+            <p className="font-medium tabular-nums">
+                {tokenWei > 0n ? (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="cursor-default underline decoration-dotted underline-offset-4">
+                                {headline}
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <div>{formatKub(nativeWei)} KUB from buys</div>
+                            <div>
+                                {formatTokenAmount(tokenWei)} {symbol} from sells
+                                {tokenUsd !== null && ` (~$${formatCompact(tokenUsd)})`}
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                ) : (
+                    headline
+                )}
+            </p>
+            {nativeUsd !== null && (
+                <p className="text-xs text-muted-foreground tabular-nums">
+                    ${formatCompact(nativeUsd)}
+                </p>
             )}
         </div>
     )
@@ -40,8 +77,11 @@ function CreatedTokenRow({
     nativeUsdPrice: number | null
 }) {
     const { token } = row
-    const available = row.creatorFeeNative - row.creatorFeeClaimedNative
-    const availableClamped = available > 0n ? available : 0n
+    const availableNative = row.creatorFeeNative - row.creatorFeeClaimedNative
+    const availableNativeClamped = availableNative > 0n ? availableNative : 0n
+    const availableToken = row.creatorFeeToken - row.creatorFeeClaimedToken
+    const availableTokenClamped = availableToken > 0n ? availableToken : 0n
+    const symbol = token.symbol || 'tokens'
 
     return (
         <TableRow>
@@ -70,10 +110,22 @@ function CreatedTokenRow({
                     : `${formatCompact(row.marketCapNative)} KUB`}
             </TableCell>
             <TableCell>
-                <FeeAmount wei={row.creatorFeeNative} nativeUsdPrice={nativeUsdPrice} />
+                <FeeAmount
+                    nativeWei={row.creatorFeeNative}
+                    tokenWei={row.creatorFeeToken}
+                    symbol={symbol}
+                    nativeUsdPrice={nativeUsdPrice}
+                    tokenUsdPrice={row.tokenUsdPrice}
+                />
             </TableCell>
             <TableCell>
-                <FeeAmount wei={availableClamped} nativeUsdPrice={nativeUsdPrice} />
+                <FeeAmount
+                    nativeWei={availableNativeClamped}
+                    tokenWei={availableTokenClamped}
+                    symbol={symbol}
+                    nativeUsdPrice={nativeUsdPrice}
+                    tokenUsdPrice={row.tokenUsdPrice}
+                />
             </TableCell>
         </TableRow>
     )
@@ -129,7 +181,8 @@ export function CreatedTokensTab({ address }: { address: Address }) {
                                         </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        Estimated — paid out manually, not withdrawable on-chain yet
+                                        Estimated — paid out manually (in KUB and/or tokens), not
+                                        withdrawable on-chain yet
                                     </TooltipContent>
                                 </Tooltip>
                             </TableHead>

@@ -42,6 +42,9 @@ const SNAPSHOTS_QUERY = `
         marketCapNative
         creatorFeeNative
         creatorFeeClaimedNative
+        creatorFeeToken
+        creatorFeeClaimedToken
+        lastPriceUsd
       }
     }
   }
@@ -73,6 +76,9 @@ interface SnapshotsResponse {
             marketCapNative: string
             creatorFeeNative: string | null
             creatorFeeClaimedNative: string | null
+            creatorFeeToken: string | null
+            creatorFeeClaimedToken: string | null
+            lastPriceUsd: string | null
         }>
     }
 }
@@ -114,6 +120,9 @@ export function useCreatedTokens(address: Address | undefined): UseCreatedTokens
                     marketCapNative: snap ? parseFloat(snap.marketCapNative) : 0,
                     creatorFeeNative: BigInt(snap?.creatorFeeNative ?? '0'),
                     creatorFeeClaimedNative: BigInt(snap?.creatorFeeClaimedNative ?? '0'),
+                    creatorFeeToken: BigInt(snap?.creatorFeeToken ?? '0'),
+                    creatorFeeClaimedToken: BigInt(snap?.creatorFeeClaimedToken ?? '0'),
+                    tokenUsdPrice: parseFloat(snap?.lastPriceUsd ?? '0'),
                 }
             })
         },
