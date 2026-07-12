@@ -28,7 +28,7 @@ import {
 import { toastSuccess, toastError } from '@/lib/toast'
 import { getChainMetadata } from '@/lib/wagmi'
 import { ConnectModal } from '@/components/web3/connect-modal'
-import { SettingsDialog } from '@/components/swap/settings-dialog'
+import { SettingsMenu } from '@/components/swap/settings-menu'
 import { useSwapStore } from '@/store/swap-store'
 import { getV3Config, getDefaultDexForChain } from '@/lib/dex-config'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
@@ -96,7 +96,7 @@ export function TokenTradeCard({
     const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
     const [buyAmount, setBuyAmount] = useState('')
     const [sellAmount, setSellAmount] = useState('')
-    const { settings, setSlippage } = useSwapStore()
+    const { settings, setSlippage, setDeadlineMinutes } = useSwapStore()
 
     const chainId = useLaunchpadChainId()
     const bondingCurveAddress = getBondingCurveAddress(chainId)
@@ -248,7 +248,7 @@ export function TokenTradeCard({
         amountOutMinimum: v3MinTokenOut,
         recipient: address ?? zeroAddress,
         slippage: settings.slippage,
-        deadlineMinutes: 20,
+        deadlineMinutes: settings.deadlineMinutes,
         fee: poolFee ?? 10000,
         dexId: launchpadDex,
         skipSimulation: !v3BuyEnabled,
@@ -329,7 +329,7 @@ export function TokenTradeCard({
         amountOutMinimum: v3MinNativeOut,
         recipient: address ?? zeroAddress,
         slippage: settings.slippage,
-        deadlineMinutes: 20,
+        deadlineMinutes: settings.deadlineMinutes,
         fee: poolFee ?? 10000,
         dexId: launchpadDex,
         forceUnwrapNative: true,
@@ -562,27 +562,26 @@ export function TokenTradeCard({
                         value={activeTab}
                         onValueChange={(v) => setActiveTab(v as 'buy' | 'sell')}
                     >
-                        <TabsList className="relative grid w-full grid-cols-2 rounded-lg bg-muted/40 p-1">
-                            <TabsTrigger
-                                value="buy"
-                                className="relative z-10 flex items-center justify-center rounded-md py-2 text-sm font-medium tracking-wide uppercase transition-all duration-200 data-[state=active]:bg-positive data-[state=active]:text-positive-foreground data-[state=active]:shadow-sm data-[state=active]:shadow-positive/20"
-                            >
-                                Buy
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="sell"
-                                className="relative z-10 flex items-center justify-center rounded-md py-2 text-sm font-medium tracking-wide uppercase transition-all duration-200 data-[state=active]:bg-negative data-[state=active]:text-negative-foreground data-[state=active]:shadow-sm data-[state=active]:shadow-negative/20"
-                            >
-                                Sell
-                            </TabsTrigger>
-                        </TabsList>
-
-                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Slippage: {settings.slippage.toFixed(1)}%</span>
-                            <SettingsDialog
-                                currentSlippage={settings.slippage}
-                                currentDeadlineMinutes={20}
-                                onSave={(slippage) => setSlippage(slippage)}
+                        <div className="flex items-center gap-2">
+                            <TabsList className="relative grid flex-1 grid-cols-2 rounded-lg bg-muted/40 p-1">
+                                <TabsTrigger
+                                    value="buy"
+                                    className="relative z-10 flex items-center justify-center rounded-md py-2 text-sm font-medium tracking-wide uppercase transition-all duration-200 data-[state=active]:bg-positive data-[state=active]:text-positive-foreground data-[state=active]:shadow-sm data-[state=active]:shadow-positive/20"
+                                >
+                                    Buy
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="sell"
+                                    className="relative z-10 flex items-center justify-center rounded-md py-2 text-sm font-medium tracking-wide uppercase transition-all duration-200 data-[state=active]:bg-negative data-[state=active]:text-negative-foreground data-[state=active]:shadow-sm data-[state=active]:shadow-negative/20"
+                                >
+                                    Sell
+                                </TabsTrigger>
+                            </TabsList>
+                            <SettingsMenu
+                                slippage={settings.slippage}
+                                deadlineMinutes={settings.deadlineMinutes}
+                                onSlippageChange={setSlippage}
+                                onDeadlineChange={setDeadlineMinutes}
                             />
                         </div>
 
@@ -617,32 +616,36 @@ export function TokenTradeCard({
                             </div>
 
                             {buyAmountWei > 0n && (
-                                <div className="space-y-2 rounded-lg bg-muted p-3 sm:p-4 text-sm">
-                                    <div className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground shrink-0">
-                                            You receive (est.)
-                                        </span>
-                                        <span className="font-medium text-right min-w-0">
-                                            {formatTokenAmount(buyExpectedOut)} {tokenSymbol}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground shrink-0">
-                                            Min received
-                                        </span>
-                                        <span className="font-medium text-right min-w-0">
-                                            {formatTokenAmount(minTokenOut)} {tokenSymbol}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground shrink-0">Fee</span>
-                                        <span className="font-medium">
-                                            {isGraduated
-                                                ? `${((poolFee ?? 10000) / 10000).toFixed(2)}%`
-                                                : '2%'}
-                                        </span>
-                                    </div>
-                                </div>
+                                <Card className="bg-muted/50 p-1">
+                                    <CardContent className="space-y-1 p-3 text-xs">
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-muted-foreground shrink-0">
+                                                You receive (est.)
+                                            </span>
+                                            <span className="font-medium text-right min-w-0">
+                                                {formatTokenAmount(buyExpectedOut)} {tokenSymbol}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-muted-foreground shrink-0">
+                                                Min received
+                                            </span>
+                                            <span className="font-medium text-right min-w-0">
+                                                {formatTokenAmount(minTokenOut)} {tokenSymbol}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-muted-foreground shrink-0">
+                                                Fee
+                                            </span>
+                                            <span className="font-medium">
+                                                {isGraduated
+                                                    ? `${((poolFee ?? 10000) / 10000).toFixed(2)}%`
+                                                    : '2%'}
+                                            </span>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             <Button
@@ -708,32 +711,36 @@ export function TokenTradeCard({
                             </div>
 
                             {sellAmountWei > 0n && (
-                                <div className="space-y-2 rounded-lg bg-muted p-3 sm:p-4 text-sm">
-                                    <div className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground shrink-0">
-                                            You receive (est.)
-                                        </span>
-                                        <span className="font-medium text-right min-w-0">
-                                            {formatKub(sellExpectedOut)} KUB
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground shrink-0">
-                                            Min received
-                                        </span>
-                                        <span className="font-medium text-right min-w-0">
-                                            {formatKub(minNativeOut)} KUB
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground shrink-0">Fee</span>
-                                        <span className="font-medium">
-                                            {isGraduated
-                                                ? `${((poolFee ?? 10000) / 10000).toFixed(2)}%`
-                                                : '2%'}
-                                        </span>
-                                    </div>
-                                </div>
+                                <Card className="bg-muted/50 p-1">
+                                    <CardContent className="space-y-1 p-3 text-xs">
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-muted-foreground shrink-0">
+                                                You receive (est.)
+                                            </span>
+                                            <span className="font-medium text-right min-w-0">
+                                                {formatKub(sellExpectedOut)} KUB
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-muted-foreground shrink-0">
+                                                Min received
+                                            </span>
+                                            <span className="font-medium text-right min-w-0">
+                                                {formatKub(minNativeOut)} KUB
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-muted-foreground shrink-0">
+                                                Fee
+                                            </span>
+                                            <span className="font-medium">
+                                                {isGraduated
+                                                    ? `${((poolFee ?? 10000) / 10000).toFixed(2)}%`
+                                                    : '2%'}
+                                            </span>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {nearThreshold && (
