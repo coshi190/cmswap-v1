@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { creatorFeeNativeForSwap, pumpFeeFromNetAmountIn, VIRTUAL_AMOUNT } from '../creator-fee'
+import { creatorFeeNativeForSwap, pumpFeeFromNetAmountIn, VIRTUAL_AMOUNT } from '../src/creator-fee'
 
 const E18 = 10n ** 18n
 
