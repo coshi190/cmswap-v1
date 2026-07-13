@@ -20,8 +20,8 @@ import {
     getBondingCurveAddress,
     getV3Config,
     getDefaultDexForChain,
-    type Token,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { isValidNumberInput } from '@/lib/utils'
 import {

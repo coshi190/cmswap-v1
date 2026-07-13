@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { type Token } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 const mockNativeToken: Token = {
     address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as `0x${string}`,
     symbol: 'KUB',

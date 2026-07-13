@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { type Token, getV3Config, FEE_TIERS } from '@coshi190/junoswap-sdk'
+import { getV3Config, FEE_TIERS } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { useAccount, useChainId } from 'wagmi'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'

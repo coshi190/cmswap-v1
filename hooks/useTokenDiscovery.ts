@@ -12,8 +12,8 @@ import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import {
     isLaunchpadChain as isLaunchpadChainFn,
     fetchBondingCurveTokens,
-    type Token,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { hasSettled } from '@/lib/query-status'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { useV3Tokens } from '@/hooks/useV3Tokens'

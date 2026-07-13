@@ -5,12 +5,12 @@ import { useReadContracts, useChainId } from 'wagmi'
 import type { Address } from 'viem'
 import type { Incentive, IncentiveKey } from '@/types/earn'
 import {
-    type Token,
     getV3StakerAddress,
     UNISWAP_V3_STAKER_ABI,
     UNISWAP_V3_POOL_ABI,
     ERC20_ABI,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { findTokenByAddress } from '@/lib/tokens'
 import { computeIncentiveId } from '@/services/mining/staking'
 import { isIncentiveActive, isIncentiveEnded } from '@/services/mining/incentives'

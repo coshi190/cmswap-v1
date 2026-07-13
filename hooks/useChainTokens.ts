@@ -1,12 +1,12 @@
 'use client'
 
 import { useMemo } from 'react'
+import type { Token } from '@/types/token'
 import type { Address } from 'viem'
 import { getTokensForChain } from '@/lib/tokens'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { useV3Tokens } from '@/hooks/useV3Tokens'
 import { useCustomTokensStore } from '@/store/custom-tokens-store'
-import { type Token } from '@coshi190/junoswap-sdk'
 
 export function useChainTokens(chainId: number): { tokens: Token[]; isLoading: boolean } {
     const staticTokens = useMemo(() => getTokensForChain(chainId), [chainId])

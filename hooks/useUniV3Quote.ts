@@ -4,8 +4,6 @@ import { useMemo } from 'react'
 import { useReadContract } from 'wagmi'
 import type { Address } from 'viem'
 import {
-    type Token,
-    type DEXType,
     getV3Config,
     FEE_TIERS,
     getDexsByProtocol,
@@ -16,6 +14,8 @@ import {
     UNISWAP_V3_POOL_ABI,
     ProtocolType,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
+import type { DEXType } from '@/lib/dex-meta'
 import type { QuoteResult } from '@/types/swap'
 import { buildQuoteParams } from '@/services/dex/uniswap-v3'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'

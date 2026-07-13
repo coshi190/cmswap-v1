@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { type Token } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 export interface V3Position {
     tokenId: bigint
     nonce: bigint

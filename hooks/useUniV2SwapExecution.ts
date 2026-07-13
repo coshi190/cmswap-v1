@@ -8,7 +8,8 @@ import {
     useSendTransaction,
 } from 'wagmi'
 import { encodeFunctionData, type Address } from 'viem'
-import { type Token, getV2Config, UNISWAP_V2_ROUTER_ABI, WETH9_ABI } from '@coshi190/junoswap-sdk'
+import { getV2Config, UNISWAP_V2_ROUTER_ABI, WETH9_ABI } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import type { SwapResult } from '@/types/swap'
 import { useSwapStore } from '@/store/swap-store'
 import { buildV2SwapParams, buildV2MultiHopSwapParams } from '@/services/dex/uniswap-v2'

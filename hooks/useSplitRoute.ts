@@ -4,7 +4,6 @@ import { useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import {
-    type Token,
     ProtocolType,
     getV2Config,
     getV3Config,
@@ -13,6 +12,7 @@ import {
     AGG_ROUTER_JUNOSWAP_ABI,
     getAggRouterAddress,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { getSwapAddress } from '@/services/tokens'

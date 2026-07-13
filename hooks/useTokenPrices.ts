@@ -10,8 +10,8 @@ import {
     isLaunchpadChain as isLaunchpadChainFn,
     fetchTokenSnapshotsByAddresses,
     fetchV3TokenSnapshots,
-    type Token,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import type { TokenType } from '@/types/portfolio'
 
 const STABLECOIN_SYMBOLS = new Set(['USDT', 'USDC', 'KUSDT', 'JUSDT', 'DAI', 'BUSD'])

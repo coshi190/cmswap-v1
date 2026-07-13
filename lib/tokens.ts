@@ -1,5 +1,5 @@
-import { type Token } from '@coshi190/junoswap-sdk'
 import type { Address } from 'viem'
+import type { Token } from '@/types/token'
 import { kubTestnet, jbc, bitkub, worldchain, base, bsc, isNativeToken } from './wagmi'
 import { resolveLaunchpadLogo } from './logo'
 import tokenData from './tokens.json'

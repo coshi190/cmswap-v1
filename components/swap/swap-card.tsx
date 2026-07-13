@@ -4,7 +4,6 @@ import { Fragment, useMemo, useEffect, useRef, useState } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { parseUnits, zeroAddress, type Address } from 'viem'
 import {
-    type Token,
     getDexConfig,
     isV2Config,
     getDefaultDexForChain,
@@ -13,6 +12,7 @@ import {
     getAggRouterAddress,
     isAggRouterChain,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'

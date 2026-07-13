@@ -1,5 +1,5 @@
-import { type Token } from '@coshi190/junoswap-sdk'
 import type { SwapUrlParams, ParsedSwapUrlParams } from '@/types/swap'
+import type { Token } from '@/types/token'
 import type { Address } from 'viem'
 import { findTokenByAddress } from './tokens'
 import { isNativeToken } from './wagmi'

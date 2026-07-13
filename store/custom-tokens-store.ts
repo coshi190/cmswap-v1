@@ -1,6 +1,6 @@
 import { create } from 'zustand'
+import type { Token } from '@/types/token'
 import { createJSONStorage, devtools, persist } from 'zustand/middleware'
-import { type Token } from '@coshi190/junoswap-sdk'
 interface CustomTokensStore {
     customTokens: Token[]
     addCustomToken: (token: Token) => void

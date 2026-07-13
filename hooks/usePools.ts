@@ -4,12 +4,8 @@ import { useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import { TOKEN_LISTS } from '@/lib/tokens'
-import {
-    type Token,
-    getV3Config,
-    UNISWAP_V3_FACTORY_ABI,
-    UNISWAP_V3_POOL_ABI,
-} from '@coshi190/junoswap-sdk'
+import { getV3Config, UNISWAP_V3_FACTORY_ABI, UNISWAP_V3_POOL_ABI } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import type { V3PoolData } from '@/types/earn'
 import { getTickSpacing } from '@/lib/liquidity-helpers'
 import { sortTokens } from '@/lib/liquidity-helpers'

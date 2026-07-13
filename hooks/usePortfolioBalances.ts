@@ -1,12 +1,12 @@
 'use client'
 
 import { useMemo } from 'react'
+import type { Token } from '@/types/token'
 import { useBalance } from 'wagmi'
 import type { Address } from 'viem'
 import { isNativeToken } from '@/lib/wagmi'
 import { hasSettled } from '@/lib/query-status'
 import { formatTokenAmount } from '@/services/tokens'
-import { type Token } from '@coshi190/junoswap-sdk'
 import { useMultiBalances, type TokenHolding } from '@/hooks/useMultiBalances'
 
 export type { TokenHolding }

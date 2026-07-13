@@ -1,5 +1,6 @@
 import type { Address } from 'viem'
-import { type Token, ERC20_ABI } from '@coshi190/junoswap-sdk'
+import { ERC20_ABI } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { isNativeToken } from '@/lib/wagmi'
 import { TOKEN_LISTS } from '@/lib/tokens'
 

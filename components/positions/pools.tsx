@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { Token } from '@/types/token'
 import { cn } from '@/lib/utils'
 import { useAccount, useChainId } from 'wagmi'
 import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-react'
@@ -29,7 +30,6 @@ import { usePoolVolume } from '@/hooks/usePoolVolume'
 import { formatFeeTier } from '@/lib/liquidity-helpers'
 import { formatTvl, formatApr, calculateApr } from '@/lib/format'
 import type { V3PoolData } from '@/types/earn'
-import { type Token } from '@coshi190/junoswap-sdk'
 type SortKey = 'tvl' | 'apr' | 'vol1d' | 'vol30d'
 type SortDir = 'asc' | 'desc'
 

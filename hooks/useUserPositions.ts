@@ -5,13 +5,13 @@ import { useReadContract, useReadContracts, useChainId } from 'wagmi'
 import type { Address } from 'viem'
 import type { V3Position, PositionWithTokens, PositionDetails } from '@/types/earn'
 import {
-    type Token,
     getV3Config,
     getV3StakerAddress,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { usePositionFees } from '@/hooks/usePositionFees'

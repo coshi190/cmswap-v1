@@ -4,11 +4,11 @@ import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import {
-    type Token,
     ProtocolType,
     UNISWAP_V2_ROUTER_ABI,
     UNISWAP_V3_QUOTER_V2_ABI,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { getIntermediaryTokens } from '@/lib/routing-config'
 import { getSwapAddress } from '@/services/tokens'
 import {

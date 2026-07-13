@@ -8,8 +8,8 @@ import {
     isLaunchpadChain as isLaunchpadChainFn,
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
-    type Token,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import { sortTokens, getTickSpacing } from '@/lib/liquidity-helpers'

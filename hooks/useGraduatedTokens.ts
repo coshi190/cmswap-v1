@@ -2,7 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { isLaunchpadChain, fetchGraduatedTokens, type Token } from '@coshi190/junoswap-sdk'
+import { isLaunchpadChain, fetchGraduatedTokens } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'

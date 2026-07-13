@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import type { Token } from '@/types/token'
 import { useChainId } from 'wagmi'
-import { type Token } from '@coshi190/junoswap-sdk'
 import { useTokenBalances } from '@/hooks/useTokenBalance'
 import { useTokenMetadata } from '@/hooks/useTokenMetadata'
 import { useCustomTokensStore } from '@/store/custom-tokens-store'

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import type { Token } from '@/types/token'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useChainId, useSwitchChain } from 'wagmi'
 import { useDebounce } from './useDebounce'
@@ -13,7 +14,6 @@ import {
 } from '@/lib/swap-params'
 import { toast } from 'sonner'
 import { getChainMetadata } from '@/lib/wagmi'
-import { type Token } from '@coshi190/junoswap-sdk'
 const URL_UPDATE_DEBOUNCE_MS = 500
 
 function matchesUrlAddress(token: Token | null, address: string | undefined): boolean {

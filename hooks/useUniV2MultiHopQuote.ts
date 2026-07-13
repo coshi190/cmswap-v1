@@ -4,13 +4,13 @@ import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import {
-    type Token,
-    type DEXType,
     getV2Config,
     getDexsByProtocol,
     ProtocolType,
     UNISWAP_V2_ROUTER_ABI,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
+import type { DEXType } from '@/lib/dex-meta'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
 import { buildMultiHopSwapPath } from '@/services/dex/uniswap-v2'

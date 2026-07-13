@@ -3,14 +3,14 @@
 import { useMemo } from 'react'
 import { useChainId } from 'wagmi'
 import {
-    type Token,
-    type DEXType,
     getSupportedDexs,
     getDexConfig,
     isV2Config,
     isV3Config,
     ProtocolType,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
+import type { DEXType } from '@/lib/dex-meta'
 import type { DexQuote } from '@/types/swap'
 import type { RouteQuote } from '@/types/routing'
 import { percentDiff } from '@/lib/routing-config'

@@ -8,13 +8,9 @@ import {
     useSendTransaction,
 } from 'wagmi'
 import { encodeFunctionData, type Address, type Hex } from 'viem'
-import {
-    type Token,
-    getV3Config,
-    UNISWAP_V3_SWAP_ROUTER_ABI,
-    type DEXType,
-    WETH9_ABI,
-} from '@coshi190/junoswap-sdk'
+import { getV3Config, UNISWAP_V3_SWAP_ROUTER_ABI, WETH9_ABI } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
+import type { DEXType } from '@/lib/dex-meta'
 import type { SwapParams, SwapResult } from '@/types/swap'
 import { useSwapStore } from '@/store/swap-store'
 import {

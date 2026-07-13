@@ -3,13 +3,13 @@
 import { useMemo } from 'react'
 import { useReadContract } from 'wagmi'
 import {
-    type Token,
     getV2Config,
     getV3Config,
     ProtocolType,
     UNISWAP_V3_QUOTER_V2_ABI,
     UNISWAP_V2_ROUTER_ABI,
 } from '@coshi190/junoswap-sdk'
+import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
 import { encodeV3Path } from '@/services/dex/uniswap-v3'
 import { getSwapAddress, getWrapOperation } from '@/services/tokens'
