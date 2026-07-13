@@ -8,11 +8,15 @@ import {
     useSendTransaction,
 } from 'wagmi'
 import { encodeFunctionData, type Address, type Hex } from 'viem'
-import type { Token } from '@/types/tokens'
+import {
+    type Token,
+    getV3Config,
+    UNISWAP_V3_SWAP_ROUTER_ABI,
+    type DEXType,
+    WETH9_ABI,
+} from '@junoswap/sdk'
 import type { SwapParams, SwapResult } from '@/types/swap'
-import { getV3Config } from '@/lib/dex-config'
 import { useSwapStore } from '@/store/swap-store'
-import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
 import {
     buildSwapParams,
     buildMulticallSwapToNative,
@@ -20,13 +24,11 @@ import {
     buildMulticallMultiHopSwapToNative,
 } from '@/services/dex/uniswap-v3'
 import type { SwapRoute } from '@/types/routing'
-import type { DEXType } from '@/types/dex'
 import { toastError } from '@/lib/toast'
 import { isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
 import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
-import { WETH9_ABI } from '@/lib/abis/weth9'
 import { useReferrer } from '@/hooks/useReferrer'
-import { appendTrackingTag } from '@/lib/swap-tracking'
+import { appendTrackingTag } from '@junoswap/sdk'
 
 interface UseUniV3SwapExecutionParams {
     tokenIn: Token

@@ -13,8 +13,7 @@ import {
 } from '@/lib/swap-params'
 import { toast } from 'sonner'
 import { getChainMetadata } from '@/lib/wagmi'
-import type { Token } from '@/types/tokens'
-
+import { type Token } from '@junoswap/sdk'
 const URL_UPDATE_DEBOUNCE_MS = 500
 
 /** True when the store token's address matches the URL address (or the URL has no such param). */

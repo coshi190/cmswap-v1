@@ -3,23 +3,22 @@
 import { useMemo } from 'react'
 import { useReadContract } from 'wagmi'
 import type { Address } from 'viem'
-import type { Token } from '@/types/tokens'
-import type { QuoteResult } from '@/types/swap'
-import type { DEXType } from '@/types/dex'
 import {
+    type Token,
+    type DEXType,
     getV3Config,
     FEE_TIERS,
     getDexsByProtocol,
     isV3Config,
     getDexConfig,
-} from '@/lib/dex-config'
-import { UNISWAP_V3_QUOTER_V2_ABI } from '@/lib/abis/uniswap-v3-quoter'
-import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
-import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
+    UNISWAP_V3_QUOTER_V2_ABI,
+    UNISWAP_V3_FACTORY_ABI,
+    UNISWAP_V3_POOL_ABI,
+    ProtocolType,
+} from '@junoswap/sdk'
+import type { QuoteResult } from '@/types/swap'
 import { buildQuoteParams } from '@/services/dex/uniswap-v3'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'
-import { ProtocolType } from '@/lib/dex-config'
-
 interface UseUniV3QuoteParams {
     tokenIn: Token | null
     tokenOut: Token | null

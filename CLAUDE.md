@@ -13,7 +13,18 @@ services/       Pure business logic (no React)
 store/          Zustand stores
 lib/            Config & utilities
 types/          TypeScript type definitions by domain
-contracts/      Foundry Solidity project (BondingCurveJunoswap bonding curve) — git submodule
+
+## Related repos
+
+This repo is the frontend only. The contracts, the indexer, and the shared chain layer live in
+[junoswap-core](https://github.com/coshi190/junoswap-core).
+
+- **`@junoswap/sdk`** (npm) — contract ABIs, deployed addresses, DEX/chain config, Ponder client.
+  Import chain primitives from here, never redefine them. ABIs there are **generated from the
+  Solidity**; a new deploy means: update the SDK's `addresses/deployments.ts` → publish → bump
+  the dep here.
+- **Indexer** — reached over HTTP only, via `PONDER_URL` and the `app/api/ponder/graphql` proxy.
+  `lib/ponder-client.ts` is a thin wrapper over the SDK's client.
 
 ## Key conventions
 

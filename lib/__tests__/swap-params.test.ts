@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { Token } from '@/types/tokens'
-
+import { type Token } from '@junoswap/sdk'
 const mockToken: Token = {
     address: '0x1234567890abcdef1234567890abcdef12345678' as `0x${string}`,
     symbol: 'TKN',

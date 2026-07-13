@@ -3,8 +3,7 @@
 import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
-
+import { UNISWAP_V3_FACTORY_ABI } from '@junoswap/sdk'
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 export interface PoolQuery {

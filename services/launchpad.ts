@@ -1,24 +1,16 @@
 import { formatEther, parseEther, decodeEventLog } from 'viem'
 import type { Address, Log } from 'viem'
-import { BONDING_CURVE_JUNOSWAP_ABI } from '@/lib/abis/bonding-curve-junoswap'
+import { BONDING_CURVE_JUNOSWAP_ABI, type LaunchTokenDetail } from '@junoswap/sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import type { LaunchToken } from '@/types/launchpad'
 
-export interface RawLaunchTokenItem {
-    tokenAddr: string
-    creator: string
-    name: string
-    symbol: string
-    logo: string
-    description: string
-    link1: string
-    link2: string
-    link3: string
-    createdTime: number
-    isGraduated: number
-    graduatedAt: number | null
-}
+/**
+ * The indexer's row shape. Most of these columns are nullable in the schema (they carry a SQL
+ * default rather than NOT NULL), which the old hand-written interface claimed otherwise — hence
+ * the `?? ''` fallbacks below, which were previously unreachable as far as tsc knew.
+ */
+export type RawLaunchTokenItem = LaunchTokenDetail
 
 export function mapLaunchTokenItem(raw: RawLaunchTokenItem, chainId: number): LaunchToken {
     const item = applyLaunchpadTokenOverride(raw, chainId)

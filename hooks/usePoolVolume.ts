@@ -3,46 +3,14 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { formatEther } from 'viem'
-import { ponderRequest, isPonderError } from '@/lib/ponder-client'
+import { fetchV3PoolDayVolumes, type V3PoolDayVolumeRow } from '@junoswap/sdk'
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { useTokenPriceMap } from '@/hooks/useTokenPriceMap'
 import type { V3PoolData } from '@/types/earn'
 
 const SECONDS_PER_DAY = 86400
 const Q96 = 2n ** 96n
-
-const POOL_VOLUMES_QUERY = `
-  query V3PoolVolumes($chainId: Int!, $poolAddresses: [String!]!, $sinceTimestamp: Int!) {
-    v3PoolDayVolumes(
-      where: { chainId: $chainId, poolAddress_in: $poolAddresses, dayTimestamp_gte: $sinceTimestamp }
-      orderBy: "dayTimestamp"
-      orderDirection: "desc"
-      limit: 1000
-    ) {
-      items {
-        poolAddress
-        dayTimestamp
-        volumeToken0
-        volumeToken1
-        swapCount
-      }
-    }
-  }
-`
-
-interface DayVolumeRow {
-    poolAddress: string
-    dayTimestamp: number
-    volumeToken0: string
-    volumeToken1: string
-    swapCount: number
-}
-
-interface VolumeResponse {
-    v3PoolDayVolumes: {
-        items: DayVolumeRow[]
-    }
-}
 
 function isAddr(a: string, b: string | undefined): boolean {
     return !!b && a.toLowerCase() === b.toLowerCase()
@@ -132,17 +100,15 @@ export function usePoolVolume(
 
     const { data, isLoading } = useQuery({
         queryKey: ['pool-volume', poolAddresses, sinceTimestamp],
-        queryFn: async (): Promise<VolumeResponse> => {
-            if (poolAddresses.length === 0) return { v3PoolDayVolumes: { items: [] } }
-
+        queryFn: async (): Promise<V3PoolDayVolumeRow[]> => {
             try {
-                return await ponderRequest<VolumeResponse>(POOL_VOLUMES_QUERY, {
+                return await fetchV3PoolDayVolumes(ponderClient, {
                     chainId,
                     poolAddresses,
-                    sinceTimestamp,
+                    since: sinceTimestamp,
                 })
             } catch (e) {
-                if (isPonderError(e)) return { v3PoolDayVolumes: { items: [] } }
+                if (isPonderError(e)) return []
                 throw e
             }
         },
@@ -159,8 +125,8 @@ export function usePoolVolume(
         const poolMap = new Map<string, V3PoolData>()
         pools.forEach((p) => poolMap.set(p.address.toLowerCase(), p))
 
-        const byPool = new Map<string, DayVolumeRow[]>()
-        for (const item of data.v3PoolDayVolumes.items) {
+        const byPool = new Map<string, V3PoolDayVolumeRow[]>()
+        for (const item of data) {
             const list = byPool.get(item.poolAddress) ?? []
             list.push(item)
             byPool.set(item.poolAddress, list)

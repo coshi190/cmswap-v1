@@ -5,7 +5,7 @@ import { useWriteContract, useReadContract, usePublicClient } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { parseEther } from 'viem'
 import type { Address } from 'viem'
-import { BONDING_CURVE_JUNOSWAP_ABI } from '@/lib/abis/bonding-curve-junoswap'
+import { BONDING_CURVE_JUNOSWAP_ABI } from '@junoswap/sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
 import {
     calculateBuyOutput,

@@ -2,53 +2,25 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { fetchV3TokenSnapshots, fetchNativeUsdPrice } from '@junoswap/sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
-import { ponderRequest, isPonderError } from '@/lib/ponder-client'
-
-interface V3TokenSnapshotResponse {
-    v3TokenSnapshots: {
-        items: Array<{ tokenAddr: string; lastPriceUsd: string }>
-    }
-}
-
-interface NativeUsdPriceResponse {
-    nativeUsdPrices: {
-        items: Array<{ chainId: number; price: string }>
-    }
-}
-
-const V3_TOKEN_SNAPSHOTS_QUERY = `
-  query V3TokenSnapshots($chainId: Int!) {
-    v3TokenSnapshots(where: { chainId: $chainId }, limit: 500) {
-      items { tokenAddr lastPriceUsd }
-    }
-  }
-`
-
-const NATIVE_USD_PRICE_QUERY = `
-  query NativeUsdPrice($chainId: Int!) {
-    nativeUsdPrices(where: { chainId: $chainId }, limit: 1) {
-      items { chainId price }
-    }
-  }
-`
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 
 /**
  * Fetches a token-address → USD-price map from Ponder for use by TVL and volume hooks.
  * Includes overrides for wrapped native (nativeUsdPrice) and stablecoins ($1.00).
+ *
+ * The query keys are shared with useNativeUsdPrice/useTokenPrices deliberately: these used to
+ * carry `-tvl` suffixes, which fetched byte-identical queries a second time.
  */
 export function useTokenPriceMap(chainId: number) {
     const config = INTERMEDIARY_TOKENS[chainId]
 
     const { data: snapshots, isLoading: isLoadingSnapshots } = useQuery({
-        queryKey: ['v3-token-snapshots-tvl', chainId],
+        queryKey: ['v3-token-snapshots', chainId],
         queryFn: async () => {
             try {
-                const data = await ponderRequest<V3TokenSnapshotResponse>(
-                    V3_TOKEN_SNAPSHOTS_QUERY,
-                    { chainId }
-                )
-                return data.v3TokenSnapshots.items
+                return await fetchV3TokenSnapshots(ponderClient, { chainId })
             } catch (e) {
                 if (isPonderError(e)) return []
                 throw e
@@ -58,14 +30,10 @@ export function useTokenPriceMap(chainId: number) {
     })
 
     const { data: nativeUsdPrice, isLoading: isLoadingNative } = useQuery({
-        queryKey: ['native-usd-price-tvl', chainId],
+        queryKey: ['native-usd-price', chainId],
         queryFn: async () => {
             try {
-                const result = await ponderRequest<NativeUsdPriceResponse>(NATIVE_USD_PRICE_QUERY, {
-                    chainId,
-                })
-                const item = result.nativeUsdPrices.items[0]
-                return item ? parseFloat(item.price) : null
+                return await fetchNativeUsdPrice(ponderClient, { chainId })
             } catch (e) {
                 if (isPonderError(e)) return null
                 throw e
@@ -85,7 +53,7 @@ export function useTokenPriceMap(chainId: number) {
 
         // 2. Tokens → lastPriceUsd from v3TokenSnapshots
         for (const s of snapshots ?? []) {
-            const price = parseFloat(s.lastPriceUsd)
+            const price = parseFloat(s.lastPriceUsd ?? '0')
             if (price > 0) {
                 map.set(s.tokenAddr.toLowerCase(), price)
             }

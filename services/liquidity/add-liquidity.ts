@@ -5,7 +5,7 @@ import type {
     MintCallParams,
     IncreaseLiquidityCallParams,
 } from '@/types/earn'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
+import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@junoswap/sdk'
 import {
     calculateMinAmounts,
     calculateDeadline,

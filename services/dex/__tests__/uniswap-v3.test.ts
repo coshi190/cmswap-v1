@@ -13,11 +13,9 @@ vi.mock('@/services/tokens', () => ({
     }),
 }))
 
-vi.mock('@/lib/dex-config', () => ({
-    DEFAULT_FEE_TIER: 3000,
-}))
-
-vi.mock('@/lib/abis/uniswap-v3-swap-router', () => ({
+// DEFAULT_FEE_TIER is no longer mocked — the real SDK value is already 3000 (FEE_TIERS.MEDIUM).
+vi.mock('@junoswap/sdk', async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
     UNISWAP_V3_SWAP_ROUTER_ABI: [
         {
             name: 'exactInputSingle',

@@ -1,6 +1,5 @@
 import type { Address } from 'viem'
-import type { Token } from './tokens'
-
+import { type Token } from '@junoswap/sdk'
 /**
  * Raw V3 position data straight from the NonfungiblePositionManager contract.
  * Enriched into PositionWithTokens, then PositionDetails (adds live pool state).

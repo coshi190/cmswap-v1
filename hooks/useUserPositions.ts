@@ -4,11 +4,14 @@ import { useMemo } from 'react'
 import { useReadContract, useReadContracts, useChainId } from 'wagmi'
 import type { Address } from 'viem'
 import type { V3Position, PositionWithTokens, PositionDetails } from '@/types/earn'
-import type { Token } from '@/types/tokens'
-import { getV3Config, getV3StakerAddress } from '@/lib/dex-config'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
-import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
-import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
+import {
+    type Token,
+    getV3Config,
+    getV3StakerAddress,
+    NONFUNGIBLE_POSITION_MANAGER_ABI,
+    UNISWAP_V3_FACTORY_ABI,
+    UNISWAP_V3_POOL_ABI,
+} from '@junoswap/sdk'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { usePositionFees } from '@/hooks/usePositionFees'

@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react'
 import { useChainId } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import type { Token } from '@/types/tokens'
+import { fetchNativeUsdPriceSnapshots, fetchV3History, type Token } from '@junoswap/sdk'
 import type { Timeframe, CandlestickData } from '@/types/chart'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { isNativeToken } from '@/lib/wagmi'
-import { fetchAllPages } from '@/lib/ponder-client'
+import { ponderClient } from '@/lib/ponder-client'
 import { classifySwapPair } from '@/lib/swap-chart'
 import {
     aggregatePricePoints,
@@ -19,44 +19,8 @@ import {
 } from '@/services/chart'
 import type { V3SwapEvent } from '@/services/chart'
 
-const PAGE_SIZE = 1000
 // Wrapped native (KKUB/WJBC/WETH/WBNB/…) is 18 decimals on every supported chain.
 const NATIVE_DECIMALS = 18
-
-// native↔stable: the indexed native→USD price history is exactly the native/stable
-// (e.g. KKUB/KUSDT) price. Populated per native/stable V3 swap, so it avoids the
-// historical eth_call reads that fail on kub's non-archive RPC.
-const NATIVE_USD_SNAPSHOTS_QUERY = `
-  query SwapPairNativeUsd($chainId: Int!, $after: String) {
-    nativeUsdPriceSnapshots(where: { chainId: $chainId }, orderBy: "timestamp", orderDirection: "asc", limit: ${PAGE_SIZE}, after: $after) {
-      pageInfo { hasNextPage endCursor }
-      items { timestamp price }
-    }
-  }
-`
-
-// Per-token native price from its Junoswap V3 swaps (token↔native pool).
-const V3_SWAP_EVENTS_QUERY = `
-  query SwapPairV3Events($tokenAddr: String!, $chainId: Int!, $after: String) {
-    v3SwapEvents(where: { tokenAddr: $tokenAddr, chainId: $chainId }, orderBy: "timestamp", orderDirection: "asc", limit: ${PAGE_SIZE}, after: $after) {
-      pageInfo { hasNextPage endCursor }
-      items { timestamp amount0 amount1 sqrtPriceX96 tick }
-    }
-  }
-`
-
-interface PonderPage<TItem> {
-    pageInfo: { hasNextPage: boolean; endCursor: string | null }
-    items: TItem[]
-}
-
-interface SnapshotsResponse {
-    nativeUsdPriceSnapshots: PonderPage<{ timestamp: number; price: string }>
-}
-
-interface V3EventsResponse {
-    v3SwapEvents: PonderPage<V3SwapEvent>
-}
 
 export interface SwapPairChart {
     candles: CandlestickData[]
@@ -84,12 +48,12 @@ function resolveToken(
     return null
 }
 
-function fetchV3Events(tokenAddr: string, chainId: number) {
-    return fetchAllPages<V3EventsResponse, V3SwapEvent>(
-        V3_SWAP_EVENTS_QUERY,
-        { tokenAddr: tokenAddr.toLowerCase(), chainId },
-        (r) => r.v3SwapEvents
-    ).catch(() => [] as V3SwapEvent[])
+// Per-token native price from its Junoswap V3 swaps (token↔native pool).
+function fetchV3Events(tokenAddr: string, chainId: number): Promise<V3SwapEvent[]> {
+    return fetchV3History(ponderClient, {
+        tokenAddr: tokenAddr.toLowerCase(),
+        chainId,
+    }).catch(() => [] as V3SwapEvent[])
 }
 
 export function useSwapPairChart(
@@ -122,14 +86,12 @@ export function useSwapPairChart(
         [quoteAddr, tokenIn, tokenOut]
     )
 
+    // native↔stable: the indexed native→USD price history is exactly the native/stable
+    // (e.g. KKUB/KUSDT) price. Populated per native/stable V3 swap, so it avoids the
+    // historical eth_call reads that fail on kub's non-archive RPC.
     const { data: snapshotRows, isLoading: loadingSnap } = useQuery({
         queryKey: ['swap-pair-native-usd', chainId],
-        queryFn: () =>
-            fetchAllPages<SnapshotsResponse, { timestamp: number; price: string }>(
-                NATIVE_USD_SNAPSHOTS_QUERY,
-                { chainId },
-                (r) => r.nativeUsdPriceSnapshots
-            ).catch(() => []),
+        queryFn: () => fetchNativeUsdPriceSnapshots(ponderClient, { chainId }).catch(() => []),
         enabled: isNativeStable,
         staleTime: 30_000,
         refetchInterval: 30_000,

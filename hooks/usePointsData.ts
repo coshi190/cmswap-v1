@@ -13,7 +13,7 @@ import {
     isLeaderboardSupportedChain,
 } from '@/lib/leaderboard-utils'
 import { fetchAllReferralBindings } from '@/lib/swap-events'
-import { isLaunchpadChain } from '@/lib/abis/bonding-curve-junoswap'
+import { isLaunchpadChain } from '@junoswap/sdk'
 import type { PointsTrader, PointsTimePeriod, PointsSortKey, SortDirection } from '@/types/points'
 
 export interface UserPointsSummary {

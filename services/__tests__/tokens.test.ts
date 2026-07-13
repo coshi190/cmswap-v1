@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { Token } from '@/types/tokens'
-
+import { type Token } from '@junoswap/sdk'
 const mockNativeToken: Token = {
     address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as `0x${string}`,
     symbol: 'KUB',
@@ -35,7 +34,8 @@ vi.mock('@/lib/tokens', () => ({
     },
 }))
 
-vi.mock('@/lib/abis/erc20', () => ({
+vi.mock('@junoswap/sdk', async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
     ERC20_ABI: [],
 }))
 

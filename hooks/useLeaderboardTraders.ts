@@ -5,9 +5,9 @@ import { useQuery } from '@tanstack/react-query'
 import { usePublicClient, useChainId } from 'wagmi'
 import { formatEther, type Address } from 'viem'
 import { isNativeToken } from '@/lib/wagmi'
-import { ponderRequest, isPonderError } from '@/lib/ponder-client'
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { isLaunchpadChain } from '@/lib/abis/bonding-curve-junoswap'
+import { isLaunchpadChain, fetchAllTokenHolders, type LeaderboardHolder } from '@junoswap/sdk'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
 import { useMultiBalances } from '@/hooks/useMultiBalances'
 import { useTokenPrices } from '@/hooks/useTokenPrices'
@@ -36,27 +36,11 @@ export interface TraderAgg {
     sellCount: number
 }
 
-interface HolderRow {
-    address: string
-    tokenAddr: string
-    balance: string
-}
-
-interface HoldersResponse {
-    tokenHolders: { items: HolderRow[] }
-}
-
 const PAGE_SIZE = 20
 
-async function fetchTokenHolders(): Promise<HolderRow[]> {
-    const query = `{
-        tokenHolders(limit: 5000) {
-            items { address tokenAddr balance }
-        }
-    }`
+async function fetchHolders(): Promise<LeaderboardHolder[]> {
     try {
-        const data = await ponderRequest<HoldersResponse>(query)
-        return data.tokenHolders.items
+        return await fetchAllTokenHolders(ponderClient)
     } catch (e) {
         if (isPonderError(e)) return []
         throw e
@@ -89,7 +73,7 @@ export function useLeaderboardTraders(
                 includeLaunchpad ? fetchSwapEvents(chainId, since) : Promise.resolve([]),
                 fetchV3SwapEvents(chainId, since),
                 fetchV2SwapEvents(chainId, since),
-                includeLaunchpad ? fetchTokenHolders() : Promise.resolve([]),
+                includeLaunchpad ? fetchHolders() : Promise.resolve([]),
             ])
             return {
                 swapEvents: [...swapEvents, ...v3SwapEvents, ...v2SwapEvents],

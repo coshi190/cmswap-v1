@@ -36,7 +36,7 @@ import {
     computeDailyMetrics,
 } from '@/services/chart'
 import type { DailyMetrics } from '@/services/chart'
-import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
+import { UNISWAP_V3_POOL_ABI } from '@junoswap/sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { useNativeUsdPriceContext } from './native-usd-price-provider'

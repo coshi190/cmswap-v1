@@ -2,7 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { ponderRequest } from '@/lib/ponder-client'
+import { fetchTokenBondingCurveSwaps, fetchTokenV3Swaps } from '@junoswap/sdk'
+import { ponderClient } from '@/lib/ponder-client'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import type { SwapEventData } from '@/lib/rpc/launchpad-queries'
 
@@ -13,101 +14,13 @@ interface SwapEventFilters {
     sender?: string // lowercase hex address to filter by
 }
 
-function buildBondingCurveQuery(hasIsBuy: boolean, hasSender: boolean) {
-    const whereParts = ['tokenAddr: $tokenAddr']
-    if (hasIsBuy) whereParts.push('isBuy: $isBuy')
-    if (hasSender) whereParts.push('sender: $sender')
-    const where = whereParts.join(', ')
-
-    const varParts = ['$tokenAddr: String!', '$limit: Int!', '$offset: Int!']
-    if (hasIsBuy) varParts.push('$isBuy: Int!')
-    if (hasSender) varParts.push('$sender: String!')
-
-    return `
-      query TokenSwapEvents(${varParts.join(', ')}) {
-        swapEvents(
-          where: { ${where} },
-          orderBy: "timestamp",
-          orderDirection: "desc",
-          limit: $limit,
-          offset: $offset
-        ) {
-          items {
-            sender
-            isBuy
-            amountIn
-            amountOut
-            reserveIn
-            reserveOut
-            timestamp
-            transactionHash
-            blockNumber
-          }
-          totalCount
-        }
-      }
-    `
-}
-
-const V3_SWAP_EVENTS_QUERY = `
-  query V3SwapEvents($tokenAddr: String!, $limit: Int!, $offset: Int!, $txFrom: String, $chainId: Int!) {
-    v3SwapEvents(
-      where: { tokenAddr: $tokenAddr, txFrom: $txFrom, chainId: $chainId },
-      orderBy: "timestamp",
-      orderDirection: "desc",
-      limit: $limit,
-      offset: $offset
-    ) {
-      items {
-        txFrom
-        tokenIsToken0
-        amount0
-        amount1
-        sqrtPriceX96
-        timestamp
-        transactionHash
-        blockNumber
-      }
-      totalCount
-    }
-  }
-`
-
-interface BondingCurveSwapEventsResponse {
-    swapEvents: {
-        items: Array<{
-            sender: string
-            isBuy: number
-            amountIn: string
-            amountOut: string
-            reserveIn: string
-            reserveOut: string
-            timestamp: number
-            transactionHash: string
-            blockNumber: number
-        }>
-        totalCount: number
-    }
-}
-
-interface V3SwapEventsResponse {
-    v3SwapEvents: {
-        items: Array<{
-            txFrom: string
-            tokenIsToken0: number
-            amount0: string
-            amount1: string
-            sqrtPriceX96: string
-            timestamp: number
-            transactionHash: string
-            blockNumber: number
-        }>
-        totalCount: number
-    }
-}
-
 function absBigInt(n: bigint): bigint {
     return n < 0n ? -n : n
+}
+
+/** isBuy is an integer column in the indexer, not a boolean. */
+function toIsBuy(isBuy: boolean | undefined): number | undefined {
+    return isBuy === undefined ? undefined : isBuy ? 1 : 0
 }
 
 export function useTokenSwapEvents(
@@ -138,38 +51,27 @@ export function useTokenSwapEvents(
 
             // For graduated tokens, merge V3 + bonding curve events
             if (isGraduated) {
-                // Bonding curve events (historical, finite)
-                const hasBcIsBuy = filters?.isBuy !== undefined
-                const hasBcSender = !!filters?.sender
-                const bcQuery = buildBondingCurveQuery(hasBcIsBuy, hasBcSender)
-                const bcVariables: Record<string, unknown> = {
-                    tokenAddr: tokenAddr.toLowerCase(),
-                    limit: 1000, // BC events are finite after graduation
-                    offset: 0,
-                }
-                if (hasBcIsBuy) bcVariables.isBuy = filters!.isBuy! ? 1 : 0
-                if (hasBcSender) bcVariables.sender = filters!.sender!.toLowerCase()
-
-                // V3 events (server-side pagination, txFrom filter). totalCount tells
-                // us where the BC tail begins in the global sequence.
-                const v3Variables: Record<string, unknown> = {
-                    tokenAddr: tokenAddr.toLowerCase(),
-                    limit: pageSize,
-                    offset,
-                    chainId,
-                }
-                if (filters?.sender) {
-                    v3Variables.txFrom = filters.sender.toLowerCase()
-                }
-
-                // Fetch both in parallel
+                // V3 events are server-paginated; totalCount tells us where the BC tail begins
+                // in the global sequence. BC events are finite after graduation, so pull them all.
                 const [bcResult, v3Result] = await Promise.all([
-                    ponderRequest<BondingCurveSwapEventsResponse>(bcQuery, bcVariables),
-                    ponderRequest<V3SwapEventsResponse>(V3_SWAP_EVENTS_QUERY, v3Variables),
+                    fetchTokenBondingCurveSwaps(ponderClient, {
+                        tokenAddr: tokenAddr.toLowerCase(),
+                        limit: 1000,
+                        offset: 0,
+                        isBuy: toIsBuy(filters?.isBuy),
+                        sender: filters?.sender?.toLowerCase(),
+                    }),
+                    fetchTokenV3Swaps(ponderClient, {
+                        tokenAddr: tokenAddr.toLowerCase(),
+                        chainId,
+                        limit: pageSize,
+                        offset,
+                        txFrom: filters?.sender?.toLowerCase(),
+                    }),
                 ])
 
                 // Normalize bonding curve events
-                const bcItems = bcResult.swapEvents.items.map((e) => ({
+                const bcItems = bcResult.items.map((e) => ({
                     blockNumber: BigInt(e.blockNumber),
                     timestamp: e.timestamp,
                     sender: e.sender as Address,
@@ -183,7 +85,7 @@ export function useTokenSwapEvents(
                 }))
 
                 // Normalize V3 events
-                let v3Items = v3Result.v3SwapEvents.items.map((e) => {
+                let v3Items = v3Result.items.map((e) => {
                     const amount0 = BigInt(e.amount0)
                     const amount1 = BigInt(e.amount1)
 
@@ -221,7 +123,7 @@ export function useTokenSwapEvents(
                 // covers [offset, offset+pageSize); the BC tail must be sliced by the
                 // *global* offset (offset - nv3), not always from 0, or earlier BC rows
                 // re-appear on every page once V3 is exhausted.
-                const nv3 = v3Result.v3SwapEvents.totalCount
+                const nv3 = v3Result.totalCount
                 const bcStart = Math.max(0, offset - nv3)
                 const bcNeeded = pageSize - v3Items.length
                 const bcInWindow = bcNeeded > 0 ? bcItems.slice(bcStart, bcStart + bcNeeded) : []
@@ -232,21 +134,15 @@ export function useTokenSwapEvents(
             }
 
             // Non-graduated: bonding curve events from Ponder
-            const hasIsBuy = filters?.isBuy !== undefined
-            const hasSender = !!filters?.sender
-            const query = buildBondingCurveQuery(hasIsBuy, hasSender)
-
-            const variables: Record<string, unknown> = {
+            const result = await fetchTokenBondingCurveSwaps(ponderClient, {
                 tokenAddr: tokenAddr.toLowerCase(),
                 limit: pageSize,
                 offset,
-            }
-            if (hasIsBuy) variables.isBuy = filters!.isBuy! ? 1 : 0
-            if (hasSender) variables.sender = filters!.sender!.toLowerCase()
+                isBuy: toIsBuy(filters?.isBuy),
+                sender: filters?.sender?.toLowerCase(),
+            })
 
-            const result = await ponderRequest<BondingCurveSwapEventsResponse>(query, variables)
-
-            const data = result.swapEvents.items.map((e) => ({
+            const data = result.items.map((e) => ({
                 blockNumber: BigInt(e.blockNumber),
                 timestamp: e.timestamp,
                 sender: e.sender as Address,
@@ -259,7 +155,7 @@ export function useTokenSwapEvents(
                 transactionHash: e.transactionHash as `0x${string}`,
             }))
 
-            return { data, totalCount: result.swapEvents.totalCount }
+            return { data, totalCount: result.totalCount }
         },
         enabled: !!tokenAddr,
         staleTime: 30_000,
