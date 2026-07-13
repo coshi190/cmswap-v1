@@ -14,15 +14,8 @@ interface LaunchTokenMeta {
     nativeUsdPrice: number | null
 }
 
-/**
- * Server-side only: talks to PONDER_URL directly rather than through the browser proxy route.
- *
- * This used to hand-roll a raw fetch and query launchTokens/tokenSnapshots/nativeUsdPrices with
- * *no filters at all*, then `.find()` the one address it wanted out of every token on every
- * chain. The SDK filters by address in the query.
- */
 export async function fetchLaunchTokenMeta(address: string): Promise<LaunchTokenMeta | null> {
-    const ponderUrl = process.env.PONDER_URL
+    const ponderUrl = process.env.NEXT_PUBLIC_PONDER_URL
     if (!ponderUrl) return null
 
     try {
