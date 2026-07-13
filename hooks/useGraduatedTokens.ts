@@ -2,36 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { isLaunchpadChain, type Token } from '@junoswap/sdk'
-import { ponderRequest, isPonderError } from '@/lib/ponder-client'
+import { isLaunchpadChain, fetchGraduatedTokens, type Token } from '@junoswap/sdk'
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import { hasSettled } from '@/lib/query-status'
-const GRADUATED_TOKENS_QUERY = `
-  query GraduatedTokens($chainId: Int!) {
-    launchTokens(where: { chainId: $chainId }, orderBy: "graduatedAt", orderDirection: "desc") {
-      items {
-        tokenAddr
-        name
-        symbol
-        logo
-        isGraduated
-      }
-    }
-  }
-`
-
-interface GraduatedTokensResponse {
-    launchTokens: {
-        items: Array<{
-            tokenAddr: string
-            name: string
-            symbol: string
-            logo: string
-            isGraduated: number
-        }>
-    }
-}
 
 export function useGraduatedTokens(chainId: number): {
     tokens: Token[]
@@ -44,11 +19,10 @@ export function useGraduatedTokens(chainId: number): {
         queryKey: ['graduated-tokens', chainId],
         queryFn: async () => {
             try {
-                const data = await ponderRequest<GraduatedTokensResponse>(GRADUATED_TOKENS_QUERY, {
-                    chainId,
-                })
-                return data.launchTokens.items
-                    .filter((t) => t.isGraduated === 1)
+                // isGraduated is filtered server-side now — this used to fetch every launch
+                // token and drop the non-graduated ones here.
+                const items = await fetchGraduatedTokens(ponderClient, { chainId })
+                return items
                     .map((raw) => applyLaunchpadTokenOverride(raw, chainId))
                     .map(
                         (t): Token => ({

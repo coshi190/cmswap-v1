@@ -1,14 +1,25 @@
-import { ponderRequest, isPonderError } from '@/lib/ponder-client'
+import {
+    fetchBondingCurveSwaps as sdkFetchBondingCurveSwaps,
+    fetchV3Swaps as sdkFetchV3Swaps,
+    fetchV2Swaps as sdkFetchV2Swaps,
+    fetchAllReferralBindings as sdkFetchAllReferralBindings,
+    fetchReferralBindings as sdkFetchReferralBindings,
+    type SwapScanFilter,
+    type V2Swap,
+    type V3Swap,
+} from '@junoswap/sdk'
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 
 /**
  * Shared swap-event fetching + parsing for the portfolio, leaderboard and points
  * views. All three feed the same weighted-average-cost PnL/volume math, so they must
- * see the *same* event set and parse each swap identically — fetching here (full
- * cursor pagination, one native-leg parser) keeps them in lockstep.
+ * see the *same* event set and parse each swap identically — one native-leg parser
+ * here keeps them in lockstep.
+ *
+ * The queries and cursor pagination live in the SDK; what stays here is the parsing,
+ * which needs INTERMEDIARY_TOKENS (app config the SDK has no business knowing about).
  */
-
-const PAGE_SIZE = 1000
 
 /** Lowercased wrapped-native address for a chain, or null if unknown. */
 function wrappedNativeFor(chainId: number): string | null {
@@ -32,55 +43,7 @@ export interface ParsedSwap {
     protocol: string
 }
 
-interface PageInfo {
-    hasNextPage: boolean
-    endCursor: string | null
-}
-
-interface Connection<TRow> {
-    items: TRow[]
-    pageInfo?: PageInfo
-}
-
-/**
- * Walk a Ponder list field to completion via opaque cursor pagination. The cursor is
- * the base64 `pageInfo.endCursor` — passing a raw row id instead fails server-side.
- * A response without `pageInfo` (e.g. a test mock) terminates after the first page.
- */
-async function paginate<TRow>(
-    field: string,
-    whereClause: string,
-    selection: string,
-    orderBy = 'timestamp'
-): Promise<TRow[]> {
-    const rows: TRow[] = []
-    let after: string | null = null
-    for (;;) {
-        const query = `
-          query Page($after: String) {
-            ${field}(
-              ${whereClause}
-              orderBy: "${orderBy}",
-              orderDirection: "asc",
-              limit: ${PAGE_SIZE},
-              after: $after
-            ) {
-              pageInfo { hasNextPage endCursor }
-              items { ${selection} }
-            }
-          }
-        `
-        const data: Record<string, Connection<TRow>> = await ponderRequest(query, { after })
-        const conn = data[field]
-        if (!conn) break
-        rows.push(...conn.items)
-        if (!conn.pageInfo?.hasNextPage || !conn.pageInfo.endCursor) break
-        after = conn.pageInfo.endCursor
-    }
-    return rows
-}
-
-interface SwapFilter {
+export interface SwapFilter {
     /** Lowercased trader address; omit to fetch across all traders. */
     sender?: string
     /** Lowercased trader addresses; fetch swaps from any of them in one query. */
@@ -89,41 +52,13 @@ interface SwapFilter {
     since?: number
 }
 
-/** Serialize an address list as a GraphQL string array for an `_in` filter. */
-function gqlList(addrs: string[]): string {
-    return `[${addrs.map((a) => `"${a}"`).join(', ')}]`
-}
-
-interface RawBondingCurveSwap {
-    tokenAddr: string
-    sender: string
-    isBuy: number
-    amountIn: string
-    amountOut: string
-    timestamp: number
-}
-
-interface RawV3Swap {
-    tokenAddr: string
-    txFrom: string
-    amount0: string
-    amount1: string
-    token0Addr: string | null
-    token1Addr: string | null
-    timestamp: number
-    protocol: string
-}
-
-interface RawV2Swap {
-    txFrom: string
-    token0Addr: string
-    token1Addr: string
-    amount0In: string
-    amount1In: string
-    amount0Out: string
-    amount1Out: string
-    timestamp: number
-    protocol: string
+function toScanFilter(chainId: number, filter: SwapFilter): SwapScanFilter {
+    return {
+        chainId,
+        sender: filter.sender,
+        senders: filter.senderIn,
+        since: filter.since && filter.since > 0 ? filter.since : undefined,
+    }
 }
 
 const abs = (x: bigint) => (x < 0n ? -x : x)
@@ -135,7 +70,7 @@ const abs = (x: bigint) => (x < 0n ? -x : x)
  * the stored tokenIsToken0, which defaults to token0 for external token/token pools
  * and would mis-read the amount. Token/token swaps (no native leg) return null.
  */
-export function parseV3Swap(e: RawV3Swap, wrappedNative: string): ParsedSwap | null {
+export function parseV3Swap(e: V3Swap, wrappedNative: string): ParsedSwap | null {
     const token0 = e.token0Addr?.toLowerCase()
     const token1 = e.token1Addr?.toLowerCase()
     let nativeIsToken0: boolean
@@ -162,7 +97,7 @@ export function parseV3Swap(e: RawV3Swap, wrappedNative: string): ParsedSwap | n
  * null. Maps to buy/sell semantics: buy = native paid in / tokens out, sell = tokens
  * in / native out.
  */
-export function parseV2Swap(e: RawV2Swap, wrappedNative: string): ParsedSwap | null {
+export function parseV2Swap(e: V2Swap, wrappedNative: string): ParsedSwap | null {
     const token0 = e.token0Addr.toLowerCase()
     const token1 = e.token1Addr.toLowerCase()
     let nativeIn: bigint, nativeOut: bigint, tokenIn: bigint, tokenOut: bigint
@@ -194,25 +129,13 @@ export function parseV2Swap(e: RawV2Swap, wrappedNative: string): ParsedSwap | n
     }
 }
 
-function buildWhere(filters: string[]): string {
-    return filters.length ? `where: { ${filters.join(', ')} },` : ''
-}
-
 /** Bonding-curve swaps (launchpad chain only). Already buy/sell-normalized by the indexer. */
 export async function fetchBondingCurveSwaps(
     chainId: number,
     filter: SwapFilter
 ): Promise<ParsedSwap[]> {
-    const filters = [`chainId: ${chainId}`]
-    if (filter.sender) filters.push(`sender: "${filter.sender}"`)
-    if (filter.senderIn) filters.push(`sender_in: ${gqlList(filter.senderIn)}`)
-    if (filter.since && filter.since > 0) filters.push(`timestamp_gte: ${filter.since}`)
     try {
-        const rows = await paginate<RawBondingCurveSwap>(
-            'swapEvents',
-            buildWhere(filters),
-            'tokenAddr sender isBuy amountIn amountOut timestamp'
-        )
+        const rows = await sdkFetchBondingCurveSwaps(ponderClient, toScanFilter(chainId, filter))
         return rows.map((e) => ({
             tokenAddr: e.tokenAddr.toLowerCase(),
             sender: e.sender,
@@ -232,16 +155,8 @@ export async function fetchBondingCurveSwaps(
 export async function fetchV3Swaps(chainId: number, filter: SwapFilter): Promise<ParsedSwap[]> {
     const wn = wrappedNativeFor(chainId)
     if (!wn) return []
-    const filters = [`chainId: ${chainId}`]
-    if (filter.sender) filters.push(`txFrom: "${filter.sender}"`)
-    if (filter.senderIn) filters.push(`txFrom_in: ${gqlList(filter.senderIn)}`)
-    if (filter.since && filter.since > 0) filters.push(`timestamp_gte: ${filter.since}`)
     try {
-        const rows = await paginate<RawV3Swap>(
-            'v3SwapEvents',
-            buildWhere(filters),
-            'tokenAddr txFrom amount0 amount1 token0Addr token1Addr timestamp protocol'
-        )
+        const rows = await sdkFetchV3Swaps(ponderClient, toScanFilter(chainId, filter))
         const out: ParsedSwap[] = []
         for (const r of rows) {
             const p = parseV3Swap(r, wn)
@@ -258,16 +173,8 @@ export async function fetchV3Swaps(chainId: number, filter: SwapFilter): Promise
 export async function fetchV2Swaps(chainId: number, filter: SwapFilter): Promise<ParsedSwap[]> {
     const wn = wrappedNativeFor(chainId)
     if (!wn) return []
-    const filters = [`chainId: ${chainId}`]
-    if (filter.sender) filters.push(`txFrom: "${filter.sender}"`)
-    if (filter.senderIn) filters.push(`txFrom_in: ${gqlList(filter.senderIn)}`)
-    if (filter.since && filter.since > 0) filters.push(`timestamp_gte: ${filter.since}`)
     try {
-        const rows = await paginate<RawV2Swap>(
-            'v2SwapEvents',
-            buildWhere(filters),
-            'txFrom token0Addr token1Addr amount0In amount1In amount0Out amount1Out timestamp protocol'
-        )
+        const rows = await sdkFetchV2Swaps(ponderClient, toScanFilter(chainId, filter))
         const out: ParsedSwap[] = []
         for (const r of rows) {
             const p = parseV2Swap(r, wn)
@@ -280,25 +187,11 @@ export async function fetchV2Swaps(chainId: number, filter: SwapFilter): Promise
     }
 }
 
-interface RawReferralBinding {
-    referee: string
-}
-
-interface RawReferralBindingPair {
-    referrer: string
-    referee: string
-}
-
 /** Every referral binding (sticky first-touch), grouped by referrer. Cross-chain
  *  (bindings are global). Returns lowercased referrer → lowercased referee addresses. */
 export async function fetchAllReferralBindings(): Promise<Map<string, string[]>> {
     try {
-        const rows = await paginate<RawReferralBindingPair>(
-            'referralBindings',
-            '',
-            'referrer referee',
-            'boundAtTimestamp'
-        )
+        const rows = await sdkFetchAllReferralBindings(ponderClient)
         const map = new Map<string, string[]>()
         for (const r of rows) {
             const referrer = r.referrer.toLowerCase()
@@ -317,12 +210,9 @@ export async function fetchAllReferralBindings(): Promise<Map<string, string[]>>
  *  keyed by referee globally). Returns lowercased referee addresses. */
 export async function fetchReferralBindings(referrer: string): Promise<string[]> {
     try {
-        const rows = await paginate<RawReferralBinding>(
-            'referralBindings',
-            buildWhere([`referrer: "${referrer.toLowerCase()}"`]),
-            'referee',
-            'boundAtTimestamp'
-        )
+        const rows = await sdkFetchReferralBindings(ponderClient, {
+            referrer: referrer.toLowerCase(),
+        })
         return rows.map((r) => r.referee.toLowerCase())
     } catch (e) {
         if (isPonderError(e)) return []

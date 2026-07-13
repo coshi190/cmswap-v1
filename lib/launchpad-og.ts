@@ -1,3 +1,4 @@
+import { createPonderClient, fetchLaunchTokenOg } from '@junoswap/sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 
@@ -13,96 +14,40 @@ interface LaunchTokenMeta {
     nativeUsdPrice: number | null
 }
 
-const TOKEN_META_QUERY = `
-  query TokenMeta {
-    launchTokens {
-      items {
-        tokenAddr
-        chainId
-        name
-        symbol
-        logo
-        description
-        isGraduated
-      }
-    }
-    tokenSnapshots {
-      items {
-        tokenAddr
-        marketCapNative
-        priceChange1dPct
-      }
-    }
-    nativeUsdPrices(limit: 100) {
-      items {
-        chainId
-        price
-      }
-    }
-  }
-`
-
-interface TokenMetaResponse {
-    data?: {
-        launchTokens: {
-            items: Array<{
-                tokenAddr: string
-                chainId: number
-                name: string
-                symbol: string
-                logo: string
-                description: string
-                isGraduated: number
-            }>
-        }
-        tokenSnapshots: {
-            items: Array<{
-                tokenAddr: string
-                marketCapNative: string
-                priceChange1dPct: string | null
-            }>
-        }
-        nativeUsdPrices: {
-            items: Array<{ chainId: number; price: string }>
-        }
-    }
-}
-
+/**
+ * Server-side only: talks to PONDER_URL directly rather than through the browser proxy route.
+ *
+ * This used to hand-roll a raw fetch and query launchTokens/tokenSnapshots/nativeUsdPrices with
+ * *no filters at all*, then `.find()` the one address it wanted out of every token on every
+ * chain. The SDK filters by address in the query.
+ */
 export async function fetchLaunchTokenMeta(address: string): Promise<LaunchTokenMeta | null> {
     const ponderUrl = process.env.PONDER_URL
     if (!ponderUrl) return null
 
     try {
-        const response = await fetch(`${ponderUrl}/graphql`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: TOKEN_META_QUERY }),
-            signal: AbortSignal.timeout(5_000),
-            next: { revalidate: 60 },
+        const client = createPonderClient(`${ponderUrl}/graphql`)
+        const {
+            token,
+            snapshot,
+            nativeUsdPrice: rawUsd,
+        } = await fetchLaunchTokenOg(client, {
+            tokenAddr: address.toLowerCase(),
         })
-        if (!response.ok) return null
+        if (!token) return null
 
-        const { data } = (await response.json()) as TokenMetaResponse
-        if (!data) return null
+        const meta = applyLaunchpadTokenOverride(token, token.chainId)
 
-        const addr = address.toLowerCase()
-        const raw = data.launchTokens.items.find((t) => t.tokenAddr.toLowerCase() === addr)
-        if (!raw) return null
-        const token = applyLaunchpadTokenOverride(raw, raw.chainId)
-
-        const snapshot = data.tokenSnapshots.items.find((s) => s.tokenAddr.toLowerCase() === addr)
-        const marketCap = snapshot ? parseFloat(snapshot.marketCapNative) : NaN
-
-        const rawUsd = data.nativeUsdPrices.items.find((p) => p.chainId === token.chainId)?.price
-        const nativeUsdPrice = rawUsd ? parseFloat(rawUsd) : NaN
+        const marketCap = parseFloat(snapshot?.marketCapNative ?? '')
+        const nativeUsdPrice = parseFloat(rawUsd?.price ?? '')
 
         return {
             address,
-            name: token.name ?? '',
-            symbol: token.symbol ?? '',
-            logo: resolveLaunchpadLogo(token.logo),
-            description: token.description ?? '',
-            isGraduated: token.isGraduated === 1,
+            name: meta.name ?? '',
+            symbol: meta.symbol ?? '',
+            logo: resolveLaunchpadLogo(meta.logo),
+            description: meta.description ?? '',
+            isGraduated: meta.isGraduated === 1,
             marketCapNative: Number.isFinite(marketCap) && marketCap > 0 ? marketCap : null,
             priceChange1dPct: snapshot?.priceChange1dPct
                 ? parseFloat(snapshot.priceChange1dPct)
