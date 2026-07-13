@@ -70,10 +70,8 @@ const STEP_LABELS: Record<GraduationStep, string> = {
     error: 'Error',
 }
 
-// Contract hardcodes 5% slippage. We allow 4% price deviation.
 const PRICE_TOLERANCE_BPS = 400n
 
-// Mirrors INITIALTOKEN in BondingCurveJunoswap.sol (1B tokens, 18 decimals)
 const INITIAL_TOKEN = 1_000_000_000n * 10n ** 18n
 
 export function useGraduate({
@@ -162,7 +160,6 @@ export function useGraduate({
             const tokenReserve = (freshReserves as [bigint, bigint])[1]
             const cap = onChainCap as bigint
 
-            // Same ratio check as the contract: token * cap <= INITIALTOKEN * native
             if (tokenReserve * cap > INITIAL_TOKEN * nativeReserve) {
                 throw new Error('Not ready to graduate — bonding curve has not reached the cap')
             }
@@ -174,7 +171,6 @@ export function useGraduate({
                 tokenReserve
             )
 
-            // Sort tokens (same as contract)
             const tokenIsToken0 = tokenAddr.toLowerCase() < wrappedNative.toLowerCase()
             const token0: Address = tokenIsToken0 ? tokenAddr : wrappedNative
             const token1: Address = tokenIsToken0 ? wrappedNative : tokenAddr
@@ -214,7 +210,6 @@ export function useGraduate({
             const rescue = poolStatus === 'wrong'
             setNeedsRescue(rescue)
 
-            // 3a. No pool or not initialized → create & init
             if (poolStatus === 'no_pool' || poolStatus === 'not_initialized') {
                 setStep('initializing-pool')
                 await sendTx({
@@ -225,12 +220,9 @@ export function useGraduate({
                 })
             }
 
-            // 3b. Wrong price → rescue
             if (rescue) {
-                // Determine swap direction early (needed for approvals)
                 const priceTooHigh = currentSqrtPrice > correctSqrtPrice
 
-                // 3b.1 Buy tokens (skip if already have some)
                 const tokenBalBefore = (await publicClient.readContract({
                     address: tokenAddr,
                     abi: ERC20_ABI,
@@ -249,7 +241,6 @@ export function useGraduate({
                     })
                 }
 
-                // 3b.2 Wrap KUB (skip or wrap deficit)
                 const kubToWrap = (nativeReserve * 85n) / 1000n
                 const wkubBalBefore = (await publicClient.readContract({
                     address: wrappedNative,
@@ -268,7 +259,6 @@ export function useGraduate({
                     })
                 }
 
-                // 3b.3 Approve tokens (skip each if allowance sufficient)
                 const readAllowance = async (token: Address, spender: Address) =>
                     (await publicClient.readContract({
                         address: token,
@@ -347,7 +337,6 @@ export function useGraduate({
                     }
                 }
 
-                // 3b.4 Add liquidity (skip if existing rescue position found)
                 const findRescuePosition = async (): Promise<bigint | null> => {
                     const count = (await publicClient.readContract({
                         address: positionManager,
@@ -418,7 +407,6 @@ export function useGraduate({
                         ],
                     })
 
-                    // Get tokenId from IncreaseLiquidity event
                     const mintReceipt = await publicClient.getTransactionReceipt({
                         hash: mintHash,
                     })
@@ -443,7 +431,6 @@ export function useGraduate({
                     if (!tokenId) throw new Error('Failed to get position tokenId from mint')
                 }
 
-                // 3b.5 Swap to correct price (skip if already correct)
                 const latestSlot0 = (await publicClient.readContract({
                     address: poolAddress,
                     abi: UNISWAP_V3_POOL_ABI,
@@ -513,7 +500,6 @@ export function useGraduate({
                     }
                 }
 
-                // 3b.6 Remove liquidity (skip if already removed)
                 const position = (await publicClient.readContract({
                     address: positionManager,
                     abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
@@ -553,7 +539,6 @@ export function useGraduate({
                     })
                 }
 
-                // Collect all tokens from position
                 await sendTx({
                     address: positionManager,
                     abi: NONFUNGIBLE_POSITION_MANAGER_ABI,

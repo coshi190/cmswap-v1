@@ -34,7 +34,6 @@ export function useAllPools(chainId: number): { pools: V3PoolData[]; isLoading: 
         staleTime: 60_000,
     })
 
-    // Build token lookup: static > graduated > v3Tokens > minimal placeholder
     const tokenLookup = useMemo(() => {
         const map = new Map<string, Token>()
         const add = (t: Token) => {
@@ -72,9 +71,6 @@ export function useAllPools(chainId: number): { pools: V3PoolData[]; isLoading: 
         [tokenLookup, chainId]
     )
 
-    // Batch slot0 + liquidity for all discovered pools. The v3_pool table is shared
-    // across DEXes, but the V3_POOLS_QUERY already filters to protocol: "junoswap",
-    // so external pools (e.g. kublerx) never reach here.
     const poolList = useMemo(() => ponderPools ?? [], [ponderPools])
     const { data: poolStateResults, isLoading: isLoadingState } = useReadContracts({
         contracts: poolList.flatMap((pool) => [

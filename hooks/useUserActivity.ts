@@ -30,11 +30,6 @@ interface TokenMeta {
     decimals: number
 }
 
-/**
- * Each of these used to fire a second "count" query alongside the page — with `limit: 0`, so it
- * always returned zero rows, and the caller threw the number away and recomputed totalCount from
- * the merged list anyway. That was 5 wasted round trips per render; they're gone.
- */
 function fetchBondingCurveEvents(sender: string, chainId: number, limit: number) {
     return fetchUserBondingCurveSwaps(ponderClient, { sender, chainId, limit })
 }
@@ -56,8 +51,6 @@ function fetchAggEvents(sender: string, chainId: number, limit: number) {
 }
 
 async function fetchTokenMeta(chainId: number): Promise<Map<string, TokenMeta>> {
-    // Now scoped to the chain — this used to pull launch tokens from every chain and label
-    // this chain's events with them.
     const rows = await fetchLaunchTokenMeta(ponderClient, { chainId })
     const map = new Map<string, TokenMeta>()
     for (const raw of rows) {

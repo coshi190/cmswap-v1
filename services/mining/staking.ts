@@ -16,10 +16,6 @@ export function computeIncentiveId(key: IncentiveKey): `0x${string}` {
     )
 }
 
-/**
- * Passed as the safeTransferFrom `data` arg: transferring the NFT to the staker with this
- * payload makes it deposit and stake in a single transaction.
- */
 export function encodeIncentiveKeyData(key: IncentiveKey): Hex {
     return encodeAbiParameters(
         [

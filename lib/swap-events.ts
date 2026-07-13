@@ -11,28 +11,10 @@ import {
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 
-/**
- * Shared swap-event fetching + parsing for the portfolio, leaderboard and points
- * views. All three feed the same weighted-average-cost PnL/volume math, so they must
- * see the *same* event set and parse each swap identically — one native-leg parser
- * here keeps them in lockstep.
- *
- * The queries and cursor pagination live in the SDK; what stays here is the parsing,
- * which needs INTERMEDIARY_TOKENS (app config the SDK has no business knowing about).
- */
-
-/** Lowercased wrapped-native address for a chain, or null if unknown. */
 function wrappedNativeFor(chainId: number): string | null {
     return INTERMEDIARY_TOKENS[chainId]?.wrappedNative.toLowerCase() ?? null
 }
 
-/**
- * One normalized swap. Semantics match the indexer/PnL convention:
- * - buy:  amountIn = native paid, amountOut = tokens received
- * - sell: amountIn = tokens sold, amountOut = native received
- * `sender` is the raw trader address (callers lowercase as needed); `protocol` is the
- * liquidity source ('junoswap' for our pools + bonding curve, or an external DEX id).
- */
 export interface ParsedSwap {
     tokenAddr: string
     sender: string
@@ -44,11 +26,8 @@ export interface ParsedSwap {
 }
 
 export interface SwapFilter {
-    /** Lowercased trader address; omit to fetch across all traders. */
     sender?: string
-    /** Lowercased trader addresses; fetch swaps from any of them in one query. */
     senderIn?: string[]
-    /** Unix seconds lower bound; omit or 0 for all-time. */
     since?: number
 }
 
@@ -63,13 +42,6 @@ function toScanFilter(chainId: number, filter: SwapFilter): SwapScanFilter {
 
 const abs = (x: bigint) => (x < 0n ? -x : x)
 
-/**
- * Parse a V3 swap row. amount0/amount1 are pool-perspective deltas: positive = token
- * into the pool (user pays), negative = out of the pool (user receives). Resolve the
- * native leg against the chain's wrapped native via token0Addr/token1Addr rather than
- * the stored tokenIsToken0, which defaults to token0 for external token/token pools
- * and would mis-read the amount. Token/token swaps (no native leg) return null.
- */
 export function parseV3Swap(e: V3Swap, wrappedNative: string): ParsedSwap | null {
     const token0 = e.token0Addr?.toLowerCase()
     const token1 = e.token1Addr?.toLowerCase()
@@ -91,12 +63,6 @@ export function parseV3Swap(e: V3Swap, wrappedNative: string): ParsedSwap | null
     }
 }
 
-/**
- * Parse a V2 swap row. V2 amounts are non-negative in/out per side. Resolve the native
- * leg against the chain's wrapped native; token/token pools (no native leg) return
- * null. Maps to buy/sell semantics: buy = native paid in / tokens out, sell = tokens
- * in / native out.
- */
 export function parseV2Swap(e: V2Swap, wrappedNative: string): ParsedSwap | null {
     const token0 = e.token0Addr.toLowerCase()
     const token1 = e.token1Addr.toLowerCase()
@@ -129,7 +95,6 @@ export function parseV2Swap(e: V2Swap, wrappedNative: string): ParsedSwap | null
     }
 }
 
-/** Bonding-curve swaps (launchpad chain only). Already buy/sell-normalized by the indexer. */
 export async function fetchBondingCurveSwaps(
     chainId: number,
     filter: SwapFilter
@@ -151,7 +116,6 @@ export async function fetchBondingCurveSwaps(
     }
 }
 
-/** V3 swaps (junoswap + external kublerx), native leg resolved against wrapped native. */
 export async function fetchV3Swaps(chainId: number, filter: SwapFilter): Promise<ParsedSwap[]> {
     const wn = wrappedNativeFor(chainId)
     if (!wn) return []
@@ -169,7 +133,6 @@ export async function fetchV3Swaps(chainId: number, filter: SwapFilter): Promise
     }
 }
 
-/** External V2 swaps, native leg resolved against wrapped native. */
 export async function fetchV2Swaps(chainId: number, filter: SwapFilter): Promise<ParsedSwap[]> {
     const wn = wrappedNativeFor(chainId)
     if (!wn) return []
@@ -187,8 +150,6 @@ export async function fetchV2Swaps(chainId: number, filter: SwapFilter): Promise
     }
 }
 
-/** Every referral binding (sticky first-touch), grouped by referrer. Cross-chain
- *  (bindings are global). Returns lowercased referrer → lowercased referee addresses. */
 export async function fetchAllReferralBindings(): Promise<Map<string, string[]>> {
     try {
         const rows = await sdkFetchAllReferralBindings(ponderClient)
@@ -206,8 +167,6 @@ export async function fetchAllReferralBindings(): Promise<Map<string, string[]>>
     }
 }
 
-/** Wallets bound (sticky first-touch) to the given referrer. Cross-chain (binding is
- *  keyed by referee globally). Returns lowercased referee addresses. */
 export async function fetchReferralBindings(referrer: string): Promise<string[]> {
     try {
         const rows = await sdkFetchReferralBindings(ponderClient, {

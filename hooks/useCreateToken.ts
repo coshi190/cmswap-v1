@@ -48,7 +48,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
     const [createdTokenAddress, setCreatedTokenAddress] = useState<Address | null>(null)
     const [phaseError, setPhaseError] = useState<Error | null>(null)
 
-    // Track buy params so the buy-triggering effect is stable
     const buyParamsRef = useRef<{
         tokenAddr: Address
         minTokenOut: bigint
@@ -87,7 +86,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
         }
     }, [form?.upfrontBuyAmount])
 
-    // Calculate expected buy output (uses initial reserve state)
     const expectedTokens = useMemo(() => {
         if (upfrontBuyNative <= 0n || initialNative === undefined || virtualAmount === undefined)
             return 0n
@@ -159,7 +157,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
     const isBuyConfirming = !!buyHash && !buyReceipt
     const isBuySuccess = !!buyReceipt && buyReceipt.status === 'success'
 
-    // Parse token address from creation receipt
     const parseTokenAddress = async (hash: Address): Promise<Address | null> => {
         if (!publicClient) return null
         try {
@@ -177,7 +174,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
         if (didTriggerBuy.current) return
 
         if (upfrontBuyNative > 0n) {
-            // Parse token address then trigger buy
             didTriggerBuy.current = true
             setPhase('buying')
             parseTokenAddress(createHash).then(async (tokenAddr) => {
@@ -188,7 +184,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
                 }
                 setCreatedTokenAddress(tokenAddr)
 
-                // Read on-chain reserves to confirm the RPC node has indexed the block
                 if (!publicClient) {
                     setPhaseError(new Error('Public client not available'))
                     setPhase('error')
@@ -207,7 +202,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
                     return
                 }
 
-                // Recalculate minTokenOut using actual on-chain reserves
                 const actualExpected = calculateBuyOutput(
                     upfrontBuyNative,
                     nativeReserve,
@@ -260,7 +254,6 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
             (isBuyWriteError || (buyReceipt && buyReceipt.status === 'reverted'))
         ) {
             setPhaseError(buyWriteError ?? new Error('Buy transaction reverted'))
-            // Token was created, so mark as error but still have address
             setPhase('error')
         }
     }, [phase, isBuyWriteError, buyWriteError, buyReceipt])

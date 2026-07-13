@@ -12,16 +12,6 @@ export interface PositionFees {
     fees1: bigint
 }
 
-/**
- * Live unclaimed fees per position, keyed by tokenId string.
- *
- * The `positions().tokensOwed0/1` checkpoint only updates when the owner pokes the
- * position, so it reads 0 for an in-range position that earned fees purely from swaps.
- * Instead we statically simulate `collect()` (from = owner, MAX_UINT128 maxes): the
- * NonfungiblePositionManager pokes the pool via `burn(0)` before returning the owed
- * amounts, so the result reflects fees accrued up to the latest block. On any revert
- * (e.g. owner not authorized for a staked position) we fall back to `tokensOwed0/1`.
- */
 export function usePositionFees(
     positions: V3Position[],
     owner: Address | undefined,

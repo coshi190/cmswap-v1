@@ -22,20 +22,11 @@ export function buildSwapSearchParams(params: SwapUrlParams): URLSearchParams {
     if (params.output) searchParams.set('output', params.output)
     if (params.amount) searchParams.set('amount', params.amount)
     if (params.chain) searchParams.set('chain', params.chain)
-    // Keep ref last so existing input/output/amount/chain ordering is unchanged
     if (params.ref) searchParams.set('ref', params.ref)
 
     return searchParams
 }
 
-/**
- * Validate and resolve token address to Token object.
- *
- * `tokens` is the full, dynamic token list for the chain (static + graduated + V3).
- * The static list is checked first to preserve existing behavior; if the address
- * isn't there we fall back to the dynamic list so launchpad / Ponder V3 tokens
- * (which are never in the static lists) can resolve from shared links.
- */
 function resolveTokenFromAddress(
     chainId: number,
     address: string | undefined,
@@ -54,7 +45,6 @@ function resolveTokenFromAddress(
     const staticMatch = findTokenByAddress(chainId, address)
     if (staticMatch) return staticMatch
 
-    // Fall back to the dynamic list (graduated / V3 tokens, never in the static lists)
     if (tokens) {
         const lower = address.toLowerCase()
         return tokens.find((t) => t.address.toLowerCase() === lower) ?? null
@@ -92,7 +82,6 @@ export function parseAndValidateSwapParams(
 
     const amountIn = validateAmountString(urlParams.amount)
 
-    // Record invalid-token errors but still return partial state for the rest
     if (urlParams.input && !tokenIn) {
         errors.push(`Input token address "${urlParams.input}" not found`)
     }

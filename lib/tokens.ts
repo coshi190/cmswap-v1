@@ -6,16 +6,10 @@ import tokenData from './tokens.json'
 
 const KUSDT_ADDRESS = '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as const
 
-/**
- * Get the allowance function name for a token
- * Most tokens use 'allowance', but KUSDT uses 'allowances' (plural)
- */
 export function getAllowanceFunctionName(tokenAddress: Address): 'allowance' | 'allowances' {
     return tokenAddress.toLowerCase() === KUSDT_ADDRESS.toLowerCase() ? 'allowances' : 'allowance'
 }
 
-// tokens.json is keyed by chain slug (not numeric id) so that lib/wagmi.ts stays the single
-// source of truth for chain ids; the loader below maps each slug to its id and injects chainId.
 const CHAIN_ID_BY_SLUG: Record<string, number> = {
     kubTestnet: kubTestnet.id,
     bitkub: bitkub.id,

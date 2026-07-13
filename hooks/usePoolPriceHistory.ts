@@ -22,8 +22,6 @@ export function usePoolPriceHistory(poolAddress: Address | undefined): PoolPrice
         queryFn: async () => {
             const pool = poolAddress!.toLowerCase()
             const since = Math.floor(Date.now() / 1000) - RANGE_CHART_WINDOW_SEC
-            // The anchor is the last price before the window opens — without it a chart whose
-            // window starts mid-history would have nothing to draw from until the first swap.
             const [events, anchor] = await Promise.all([
                 fetchPoolPriceHistory(ponderClient, {
                     poolAddress: pool,

@@ -569,9 +569,6 @@ export function usePositionsByTokenIds(
             })
             .filter((p): p is V3Position => p !== null)
     }, [positionData, tokenIds])
-    // Staked NFTs are held by the staker contract; simulate collect() from it
-    // (the authorized owner) to read live fees, same as useUserPositions does
-    // for wallet positions.
     const stakerAddress = getV3StakerAddress(effectiveChainId)
     const {
         feesMap,

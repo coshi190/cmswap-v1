@@ -4,7 +4,6 @@ import { ProtocolType, getV2Config, getV3Config } from '@coshi190/junoswap-sdk'
 import { isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
 import { buildMultiHopSwapPath } from './uniswap-v2'
 
-/** Sentinel the router uses for the chain's native asset, matching lib/wagmi's. */
 export const NATIVE_SENTINEL: Address = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 
 export interface Hop {
@@ -28,7 +27,6 @@ export interface AggregateParams {
     referrer: Address
 }
 
-/** V2 pools are identified by tokenOut alone; V3 needs the fee tier to pick the pool. */
 export function encodeHopSwapData(tokenOut: Address, fee?: number): Hex {
     if (fee === undefined) {
         return encodeAbiParameters([{ type: 'address' }], [tokenOut])
@@ -36,10 +34,6 @@ export function encodeHopSwapData(tokenOut: Address, fee?: number): Hex {
     return encodeAbiParameters([{ type: 'address' }, { type: 'uint24' }], [tokenOut, fee])
 }
 
-/**
- * A route's `path` carries the native sentinel at its endpoints, but the router resolves
- * pools by wrapped token — so every hop's tokenOut must be normalized first.
- */
 export function routeToHops(routeQuote: RouteQuote, chainId: number): Hop[] {
     const { route, dexId, protocolType } = routeQuote
     const isV3 = protocolType === ProtocolType.V3
@@ -70,10 +64,6 @@ export function routeToHops(routeQuote: RouteQuote, chainId: number): Hop[] {
     })
 }
 
-/**
- * A hop with its DEX already resolved. Unlike a `RouteQuote` (one `dexId` for the whole route),
- * each hop carries its own `factory`, so a leg can cross DEXes. Token addresses are wrapped.
- */
 export interface ResolvedHop {
     dexId: string
     protocol: ProtocolType
@@ -83,10 +73,6 @@ export interface ResolvedHop {
     fee?: number
 }
 
-/**
- * Encodes a cross-DEX leg to router `Hop[]`, one `swapData` per hop using that hop's own factory.
- * Tokens must already be wrapped (the resolver looks pools up by wrapped token).
- */
 export function legToHops(hops: ResolvedHop[]): Hop[] {
     if (hops.length === 0) throw new Error('leg has no hops')
     return hops.map((h, i) => {
@@ -102,7 +88,6 @@ export function legToHops(hops: ResolvedHop[]): Hop[] {
     })
 }
 
-/** The router requires the legs' inputs to sum to exactly `amountIn`. */
 export function buildLegs(allocations: Leg[], amountIn: bigint): Leg[] {
     if (allocations.length === 0) throw new Error('no legs')
 
@@ -141,8 +126,6 @@ export function buildAggregateParams({
         minAmountOut,
         recipient,
         deadline: BigInt(deadline),
-        // KKUB gates withdraw behind KYC, so chain 96 takes delivery of the wrapped token
-        // and unwraps separately (see useKkubUnwrap).
         unwrapOut: isNativeToken(tokenOut) && !shouldSkipUnwrap(chainId),
         referrer,
     }

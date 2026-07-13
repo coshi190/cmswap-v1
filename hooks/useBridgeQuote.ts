@@ -10,23 +10,14 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { fetchBridgeRoutes } from '@/services/bridge/lifi'
 
 interface UseBridgeQuoteResult {
-    /** Best route from LI.FI */
     route: Route | null
-    /** All available routes (for future route comparison UI) */
     routes: Route[]
-    /** Estimated output amount (formatted string) */
     estimatedOutput: string
-    /** Whether the quote is loading */
     isLoading: boolean
-    /** Error message if quote failed */
     error: string | null
-    /** Gas cost in USD */
     gasCostUSD: string | null
-    /** Fee costs breakdown */
     feeCosts: { name: string; percentage: string; amountUSD: string }[]
-    /** Estimated execution duration in seconds */
     estimatedDuration: number | null
-    /** Manually refetch the quote */
     refetch: () => void
 }
 
@@ -52,7 +43,6 @@ export function useBridgeQuote(): UseBridgeQuoteResult {
     const abortRef = useRef<AbortController | null>(null)
 
     const fetchQuote = useCallback(async () => {
-        // Validate all required params
         if (
             !address ||
             !fromToken ||
@@ -68,7 +58,6 @@ export function useBridgeQuote(): UseBridgeQuoteResult {
             return
         }
 
-        // Cancel previous request
         abortRef.current?.abort()
         const controller = new AbortController()
         abortRef.current = controller
@@ -90,7 +79,6 @@ export function useBridgeQuote(): UseBridgeQuoteResult {
                 slippage: settings.slippage,
             })
 
-            // Check if request was aborted
             if (controller.signal.aborted) return
 
             setRoutes(result)

@@ -32,9 +32,6 @@ const rpcUrls = {
 export const wagmiConfig = createConfig({
     chains: supportedChains,
     transports: {
-        // batch: true coalesces concurrent eth_calls into a single JSON-RPC batch
-        // POST, sharply cutting HTTP request volume — KUB's single public RPCs hit
-        // their rate limit after a few page loads without it.
         [bsc.id]: http(rpcUrls[bsc.id], { batch: true }),
         [bitkub.id]: http(rpcUrls[bitkub.id], { batch: true }),
         [kubTestnet.id]: http(rpcUrls[kubTestnet.id], { batch: true }),
@@ -92,15 +89,10 @@ export function getChainMetadata(chainId: number) {
     return chainMetadata[chainId as keyof typeof chainMetadata]
 }
 
-/** Native tokens (ETH, KUB, …) are represented by the sentinel address 0xeee…eee. */
 export function isNativeToken(address: Address): boolean {
     return address.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 }
 
-/**
- * Chains that must NOT unwrap wrapped native (KYC/regulatory) — they collect the
- * wrapped token (e.g. KKUB) instead of the native token.
- */
 const SKIP_UNWRAP_CHAINS = [bitkub.id] as const
 
 export function shouldSkipUnwrap(chainId: number): boolean {

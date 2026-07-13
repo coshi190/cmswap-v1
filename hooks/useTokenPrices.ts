@@ -62,8 +62,6 @@ export function useTokenPrices(
         },
         enabled: hasBondingCurveTokens,
         staleTime: 30_000,
-        // The address list grows as token discovery resolves; keep the prices we
-        // already have instead of blanking every held token's value on each rekey.
         placeholderData: keepPreviousData,
     })
 

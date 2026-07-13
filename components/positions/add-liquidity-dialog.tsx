@@ -611,7 +611,6 @@ export function AddLiquidityDialog({
                         </>
                     )}
 
-                    {/* Initial Price (new pool only) - auto-derived from amounts */}
                     {token0 && token1 && !pool && !isLoadingPool && (
                         <div className="rounded-xl bg-primary/5 border border-primary/10 p-3 space-y-2">
                             <div className="flex items-center justify-between">

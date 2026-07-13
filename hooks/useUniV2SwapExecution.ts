@@ -197,10 +197,6 @@ export function useUniV2SwapExecution({
                   },
               }) as any // eslint-disable-line @typescript-eslint/no-explicit-any -- complex conditional type union
     )
-    // Every router swap (including Junoswap's own) carries a tracking suffix appended
-    // to the calldata, which requires a raw sendTransaction — writeContract re-encodes
-    // from abi/args and would drop the suffix. Wrap/unwrap is not a swap, so it stays on
-    // the simulated writeContract path and is left untagged.
     const shouldTag = !wrapOperation
     const {
         data: writeHash,
@@ -238,9 +234,6 @@ export function useUniV2SwapExecution({
                     abi: UNISWAP_V2_ROUTER_ABI,
                     functionName: contractCall.functionName,
                     args: contractCall.args,
-                    // shouldTag implies !wrapOperation, so functionName is always a
-                    // router method here, but the contractCall union still includes
-                    // the wrap ops — erase the param type rather than narrow.
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any),
                 referrer

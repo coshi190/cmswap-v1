@@ -27,7 +27,6 @@ export function useGraduatedPools(chainId: number): { pools: V3PoolData[]; isLoa
 
     const { tokens: enrichedTokens, isLoading: isLoadingTokens } = useGraduatedTokens(chainId)
 
-    // Pool discovery — batch factory.getPool
     const { data: poolAddressResults, isLoading: isLoadingPools } = useReadContracts({
         contracts: enrichedTokens.map((t) => ({
             address: v3Config!.factory as Address,
@@ -39,7 +38,6 @@ export function useGraduatedPools(chainId: number): { pools: V3PoolData[]; isLoa
         query: { enabled: enrichedTokens.length > 0 && isLaunchpadChain && !isLoadingTokens },
     })
 
-    // Map token index -> valid pool address
     const validPools = useMemo(() => {
         if (!poolAddressResults) return []
         return poolAddressResults
@@ -50,7 +48,6 @@ export function useGraduatedPools(chainId: number): { pools: V3PoolData[]; isLoa
             .filter((p) => p.address && p.address !== '0x0000000000000000000000000000000000000000')
     }, [poolAddressResults])
 
-    // Pool state — batch slot0 + liquidity
     const { data: poolStateResults, isLoading: isLoadingState } = useReadContracts({
         contracts: validPools.flatMap((p) => [
             {

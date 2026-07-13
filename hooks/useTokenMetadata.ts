@@ -10,11 +10,6 @@ interface UseTokenMetadataResult {
     isError: boolean
 }
 
-/**
- * Reads ERC-20 metadata (symbol/name/decimals) for an arbitrary address so an
- * unlisted token can be imported. Latest-block reads only — safe on the KUB RPC
- * (the archive-node caveat in CLAUDE.md is about historical reads).
- */
 export function useTokenMetadata(
     address: string | undefined,
     chainId: number
@@ -37,7 +32,6 @@ export function useTokenMetadata(
 
     const [symbolResult, nameResult, decimalsResult] = data
 
-    // symbol and decimals are required to treat this as a usable ERC-20
     if (symbolResult.status !== 'success' || decimalsResult.status !== 'success') {
         return { token: null, isLoading: false, isError: true }
     }

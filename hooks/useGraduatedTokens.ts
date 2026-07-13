@@ -19,8 +19,6 @@ export function useGraduatedTokens(chainId: number): {
         queryKey: ['graduated-tokens', chainId],
         queryFn: async () => {
             try {
-                // isGraduated is filtered server-side now — this used to fetch every launch
-                // token and drop the non-graduated ones here.
                 const items = await fetchGraduatedTokens(ponderClient, { chainId })
                 return items
                     .map((raw) => applyLaunchpadTokenOverride(raw, chainId))

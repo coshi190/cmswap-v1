@@ -19,7 +19,6 @@ import {
     type LegCandidate,
 } from '@/services/dex/cross-dex-routing'
 
-/** Connectors tried for the middle token; kept small to bound the two-round quote fan-out. */
 const MAX_CROSS_CONNECTORS = 3
 
 interface UseCrossDexRouteParams {
@@ -84,12 +83,6 @@ function parseOptionOut(
     return out != null && out > 0n ? out : null
 }
 
-/**
- * Finds the best two-hop cross-DEX leg tokenIn→connector→tokenOut, where each hop may be on a
- * different DEX. Quotes on-chain in two batched rounds (hop 1 at the full amount, hop 2 at hop 1's
- * best output), greedily picking the best DEX per hop. A cross-DEX leg can beat every single-DEX
- * route, since no single DEX router routes across DEXes.
- */
 export function useCrossDexRoute({
     tokenIn,
     tokenOut,
@@ -115,7 +108,6 @@ export function useCrossDexRoute({
         return out.slice(0, MAX_CROSS_CONNECTORS)
     }, [chainId, inW, outW])
 
-    // Round 1: quote tokenIn→connector at the full amount, every DEX option per connector.
     const round1 = useMemo(() => {
         const contracts: QuoteContract[] = []
         const layout: { connector: Address; options: HopOption[]; start: number }[] = []
@@ -133,7 +125,6 @@ export function useCrossDexRoute({
         query: { enabled: ready && round1.contracts.length > 0, staleTime: 10_000 },
     })
 
-    // Best hop-1 option (and its intermediate output) for each connector.
     const hop1PerConnector = useMemo(() => {
         if (!r1data) return []
         const result: { connector: Address; option: HopOption; mid: bigint }[] = []
@@ -145,7 +136,6 @@ export function useCrossDexRoute({
         return result
     }, [r1data, round1.layout])
 
-    // Round 2: quote connector→tokenOut at hop 1's best output, every DEX option per connector.
     const round2 = useMemo(() => {
         const contracts: QuoteContract[] = []
         const layout: {

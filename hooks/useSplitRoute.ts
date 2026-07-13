@@ -23,7 +23,6 @@ import {
     type SplitAllocation,
 } from '@/services/dex/split-routing'
 
-/** routeA's share of amountIn, grid-searched. Endpoints (0/1) are the single-route cases. */
 const SPLIT_FRACTIONS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 interface UseSplitRouteParams {
@@ -38,7 +37,6 @@ interface UseSplitRouteResult {
     allocation: SplitAllocation | null
     predictedNetOut: bigint | null
     bestSingleOut: bigint | null
-    /** The aggregator's protocol fee (bps), read once; cross-DEX plans reuse it. */
     aggFeeBps: number
     isLoading: boolean
 }
@@ -51,7 +49,6 @@ type QuoteContract = {
     chainId: number
 }
 
-/** One on-chain quote of `route` at `amount`, or null if the route's config is missing. */
 function buildQuoteContract(
     route: RouteQuote,
     amount: bigint,
@@ -111,12 +108,6 @@ function parseOut(
     return out != null && out > 0n ? out : null
 }
 
-/**
- * Predicts the best 2-way split of `amountIn` across two distinct DEXes by quoting a grid of
- * allocations on-chain. Returns the winning allocation (net of the aggregator fee) or null when
- * no split beats routing everything through the single best DEX. The caller applies the
- * MIN_AGG_IMPROVEMENT_BPS margin before actually routing through the aggregator.
- */
 export function useSplitRoute({
     tokenIn,
     tokenOut,
@@ -133,7 +124,6 @@ export function useSplitRoute({
 
     const isReady = enabled && !!tokenIn && !!tokenOut && !!router && !!candidates && amountIn > 0n
 
-    // Grid quotes for A at its shares, then B at its shares — results split at the midpoint.
     const contracts = useMemo(() => {
         if (!isReady || !candidates || !tokenIn || !tokenOut) return []
         const [a, b] = candidates

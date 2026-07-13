@@ -9,7 +9,6 @@ import { isNativeToken } from '@/lib/wagmi'
 import { parseTokenAmount } from '@/services/tokens'
 import { toastError } from '@/lib/toast'
 
-// Stable reference so error effects don't re-fire on every render.
 const REVERT_ERROR = new Error('Transaction reverted')
 
 interface UseSendTokenParams {
@@ -30,19 +29,11 @@ interface UseSendTokenResult {
     reset: () => void
 }
 
-/**
- * Sends either an ERC20 `transfer(to, amount)` or a native coin transfer.
- *
- * The receipt is polled manually via `publicClient.getTransactionReceipt`
- * (matching useCreateToken). useWaitForTransactionReceipt is unreliable on
- * these — especially KUB — RPCs and would hang at "Confirming…" forever.
- */
 export function useSendToken({ token, recipient, amount }: UseSendTokenParams): UseSendTokenResult {
     const isNative = token ? isNativeToken(token.address) : false
     const rawAmount = token && amount ? parseTokenAmount(amount, token.decimals) : 0n
     const publicClient = usePublicClient()
 
-    // ERC20 path: simulate then write transfer(to, amount)
     const { data: simulationData, isLoading: isPreparing } = useSimulateContract({
         address: token?.address as Address,
         abi: ERC20_ABI,
@@ -62,7 +53,6 @@ export function useSendToken({ token, recipient, amount }: UseSendTokenParams): 
         reset: resetWrite,
     } = useWriteContract()
 
-    // Native path: plain value transfer (no contract to simulate)
     const {
         data: nativeHash,
         sendTransaction,
@@ -74,7 +64,6 @@ export function useSendToken({ token, recipient, amount }: UseSendTokenParams): 
 
     const hash = (isNative ? nativeHash : writeHash) as Address | undefined
 
-    // Poll the receipt on the active chain every 2s; stop once it's found.
     const { data: receipt } = useQuery({
         queryKey: ['send-token-receipt', hash],
         queryFn: async () => {

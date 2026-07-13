@@ -42,12 +42,9 @@ export function useTokenList(): UseTokenListResult {
             const snapshotMap = new Map<string, SnapshotData>()
             for (const s of data.snapshots) {
                 const changePct = s.priceChange1dPct ? parseFloat(s.priceChange1dPct) : null
-                // Hide badge if the reference price timestamp is too far from the 24h mark
                 const isStale =
                     s.price1dAgoTimestamp == null ||
                     s.price1dAgoTimestamp < cutoff - STALENESS_TOLERANCE
-                // These columns are nullable in the indexer's schema (they carry SQL defaults
-                // rather than NOT NULL), so fall back to what the indexer would have written.
                 snapshotMap.set(s.tokenAddr.toLowerCase(), {
                     lastSwapAt: s.lastSwapAt ?? 0,
                     marketCapNative: s.marketCapNative ?? '0',

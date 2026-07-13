@@ -44,7 +44,6 @@ export function useDepositedTokenIds(
         if (!hasStoredTokenIds(chainId, owner)) {
             setNeedsEventFallback(true)
         }
-        // refreshKey re-reads storage after a stake/unstake mutates it elsewhere.
     }, [owner, chainId, refreshKey])
     useEffect(() => {
         if (!needsEventFallback || !owner || !stakerAddress || !publicClient) {
@@ -146,8 +145,7 @@ export function useDepositedTokenIds(
     const refetch = useCallback(() => {
         refetchDeposits()
     }, [refetchDeposits])
-    // Re-validate on-chain when refreshKey bumps; the candidate set may be unchanged
-    // (e.g. unstake) yet the deposits() owner has flipped.
+
     useEffect(() => {
         if (refreshKey === undefined || refreshKey === 0) return
         refetchDeposits()

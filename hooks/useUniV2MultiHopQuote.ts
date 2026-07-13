@@ -33,10 +33,8 @@ interface UseUniV2MultiHopQuoteResult {
     error: Error | null
 }
 
-/** Hard cap on batched quote calls per keystroke, guarding against pathological fan-out. */
 const MAX_QUOTE_QUERIES = 80
 
-/** One V2 multi-hop path on a specific DEX (native→wrapped normalized per that DEX). */
 interface Candidate {
     dexId: DEXType
     router: Address
@@ -60,7 +58,6 @@ export function useUniV2MultiHopQuote({
 
     const isReadyForQuote = enabled && !!tokenIn && !!tokenOut && amountIn > 0n && !wrapOperation
 
-    // Enumerate candidate paths across every V2 DEX × connector path (2- and 3-hop).
     const candidates = useMemo((): Candidate[] => {
         if (!isReadyForQuote || !tokenIn || !tokenOut) return []
         const connectors = getIntermediaryTokens(chainId)
@@ -76,7 +73,6 @@ export function useUniV2MultiHopQuote({
             if (!cfg?.router) continue
             for (const rawPath of rawPaths) {
                 const path = buildMultiHopSwapPath(rawPath, chainId, cfg.wnative)
-                // Drop paths that collapse after native→wrapped normalization.
                 const collapsed = path.some(
                     (t, i) => i > 0 && t.toLowerCase() === path[i - 1]!.toLowerCase()
                 )

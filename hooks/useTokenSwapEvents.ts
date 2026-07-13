@@ -5,7 +5,7 @@ import type { Address } from 'viem'
 import { fetchTokenBondingCurveSwaps, fetchTokenV3Swaps } from '@coshi190/junoswap-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
-import type { SwapEventData } from '@/lib/rpc/launchpad-queries'
+import type { SwapEventData } from '@/types/launchpad'
 
 export type { SwapEventData }
 
@@ -18,7 +18,6 @@ function absBigInt(n: bigint): bigint {
     return n < 0n ? -n : n
 }
 
-/** isBuy is an integer column in the indexer, not a boolean. */
 function toIsBuy(isBuy: boolean | undefined): number | undefined {
     return isBuy === undefined ? undefined : isBuy ? 1 : 0
 }
@@ -49,10 +48,7 @@ export function useTokenSwapEvents(
 
             const offset = (page - 1) * pageSize
 
-            // For graduated tokens, merge V3 + bonding curve events
             if (isGraduated) {
-                // V3 events are server-paginated; totalCount tells us where the BC tail begins
-                // in the global sequence. BC events are finite after graduation, so pull them all.
                 const [bcResult, v3Result] = await Promise.all([
                     fetchTokenBondingCurveSwaps(ponderClient, {
                         tokenAddr: tokenAddr.toLowerCase(),
@@ -70,7 +66,6 @@ export function useTokenSwapEvents(
                     }),
                 ])
 
-                // Normalize bonding curve events
                 const bcItems = bcResult.items.map((e) => ({
                     blockNumber: BigInt(e.blockNumber),
                     timestamp: e.timestamp,
@@ -84,18 +79,14 @@ export function useTokenSwapEvents(
                     transactionHash: e.transactionHash as `0x${string}`,
                 }))
 
-                // Normalize V3 events
                 let v3Items = v3Result.items.map((e) => {
                     const amount0 = BigInt(e.amount0)
                     const amount1 = BigInt(e.amount1)
 
-                    // Launch token can be token0 or token1; tokenIsToken0 disambiguates.
                     const tokenIsToken0 = e.tokenIsToken0 === 1
                     const tokenAmount = tokenIsToken0 ? amount0 : amount1
                     const nativeAmount = tokenIsToken0 ? amount1 : amount0
 
-                    // V3 amounts are signed from the pool's view: negative = pool paid
-                    // out to user. User receives the token on a buy.
                     const isBuy = tokenAmount < 0n
 
                     return {
@@ -112,17 +103,10 @@ export function useTokenSwapEvents(
                     }
                 })
 
-                // V3 isBuy is computed client-side, filter here if needed
                 if (filters?.isBuy !== undefined) {
                     v3Items = v3Items.filter((item) => item.isBuy === filters.isBuy)
                 }
 
-                // Global sequence is all V3 events (newer, desc) then all BC events
-                // (older, desc): every V3 timestamp >= graduatedAt and every BC
-                // timestamp < graduatedAt. V3 is server-paginated, so v3Items already
-                // covers [offset, offset+pageSize); the BC tail must be sliced by the
-                // *global* offset (offset - nv3), not always from 0, or earlier BC rows
-                // re-appear on every page once V3 is exhausted.
                 const nv3 = v3Result.totalCount
                 const bcStart = Math.max(0, offset - nv3)
                 const bcNeeded = pageSize - v3Items.length
@@ -133,7 +117,6 @@ export function useTokenSwapEvents(
                 return { data, totalCount }
             }
 
-            // Non-graduated: bonding curve events from Ponder
             const result = await fetchTokenBondingCurveSwaps(ponderClient, {
                 tokenAddr: tokenAddr.toLowerCase(),
                 limit: pageSize,

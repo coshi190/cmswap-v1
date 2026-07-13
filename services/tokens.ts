@@ -43,13 +43,6 @@ export function formatDisplayAmount(amount: bigint, decimals: number, maxDecimal
     return truncated.replace(/\.?0+$/, '')
 }
 
-/**
- * Format token balance for UI display with smart notation
- * - Very small numbers (< 0.000001): Show up to 8 significant digits
- * - Small numbers (< 1): Max 6 decimals
- * - Medium numbers (< 1000): Max 4 decimals
- * - Large numbers (≥ 1000): Use K/M/B notation with 2 decimals
- */
 export function formatBalance(amount: bigint, decimals: number): string {
     const valueStr = formatTokenAmount(amount, decimals)
     const value = parseFloat(valueStr)
@@ -57,7 +50,6 @@ export function formatBalance(amount: bigint, decimals: number): string {
     if (value === 0) return '0'
 
     if (value > 0 && value < 0.000001) {
-        // Keep leading zeros, then up to 8 significant digits
         const match = valueStr.match(/^0\.0*/)
         const leadingZeros = match ? match[0].length - 2 : 0
         const significant = valueStr.replace(/^0\.0*/, '').slice(0, 8)
@@ -97,17 +89,12 @@ export function isValidTokenAddress(address: string): boolean {
     return /^0x[a-fA-F0-9]{40}$/.test(address)
 }
 
-/**
- * TOKEN_LISTS convention: index 0 = native, index 1 = wrapped native.
- * Returns undefined for unsupported chains so render-time callers can fail soft.
- */
 export function findWrappedNativeAddress(chainId: number): Address | undefined {
     const tokens = TOKEN_LISTS[chainId]
     if (!tokens || tokens.length < 2) return undefined
     return tokens[1]!.address as Address
 }
 
-/** Throwing variant for transaction-execution paths that require a wrapped native. */
 export function getWrappedNativeAddress(chainId: number): Address {
     const address = findWrappedNativeAddress(chainId)
     if (!address) {
@@ -116,10 +103,6 @@ export function getWrappedNativeAddress(chainId: number): Address {
     return address
 }
 
-/**
- * Wrapped native shows under its native name on the UI (e.g. KKUB → KUB).
- * Returns a copy with the native symbol/name; address, decimals, logo unchanged.
- */
 export function getDisplayToken(token: Token): Token {
     const tokens = TOKEN_LISTS[token.chainId]
     const native = tokens?.find((t) => isNativeToken(t.address as Address))
@@ -132,21 +115,15 @@ export function getDisplayToken(token: Token): Token {
 
 export function getSwapAddress(tokenAddress: Address, chainId: number, wnative?: Address): Address {
     if (isNativeToken(tokenAddress)) {
-        // Fall back to the native address (rather than throwing) on unsupported chains —
-        // this runs in render-time quote memos where chainId can transiently be unsupported.
         return wnative || findWrappedNativeAddress(chainId) || tokenAddress
     }
     return tokenAddress
 }
 
-/**
- * Check if two tokens are the same (accounts for native → wrapped conversion)
- */
 export function isSameToken(tokenA: Token | null, tokenB: Token | null): boolean {
     if (!tokenA || !tokenB) return false
     if (tokenA.chainId !== tokenB.chainId) return false
 
-    // A native/wrapped pair must read as different so wrap/unwrap stays available
     if (isNativeWrappedPair(tokenA, tokenB)) return false
 
     const addressA = getSwapAddress(tokenA.address as Address, tokenA.chainId)

@@ -2,10 +2,6 @@ import { type Address } from 'viem'
 import { getSwapAddress } from '@/services/tokens'
 import { isNativeToken } from '@/lib/wagmi'
 
-/**
- * `wnative` overrides the chain's standard wrapped-native address — some DEXs (e.g. jibswap)
- * use their own wrapped native token, so native legs must route through it instead.
- */
 function buildSwapPath(
     tokenIn: Address,
     tokenOut: Address,
@@ -57,7 +53,6 @@ export function buildV2SwapParams(params: V2SwapParams, chainId: number, wnative
     }
 }
 
-/** slippageBasisPoints is in basis points (100 = 1%). */
 export function calculateMinOutput(amountOut: bigint, slippageBasisPoints: number): bigint {
     const slippageMultiplier = BigInt(10000 - slippageBasisPoints)
     return (amountOut * slippageMultiplier) / 10000n

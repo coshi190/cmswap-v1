@@ -1,11 +1,5 @@
 import { formatEther, formatUnits } from 'viem'
 
-/**
- * One swap as seen by a single user. Semantics match the indexer output:
- * - buy:  amountIn = native paid, amountOut = tokens received
- * - sell: amountIn = tokens sold, amountOut = native received
- * `timestamp` is used to value the trade at the KUB/USD rate of its time.
- */
 export interface PnlSwapEvent {
     tokenAddr: string
     isBuy: boolean
@@ -15,17 +9,11 @@ export interface PnlSwapEvent {
 }
 
 export interface TokenPnl {
-    /** Cost basis (USD-at-trade-time) of the tokens still held. */
     costBasisUsd: number
-    /** Total native (USD-at-trade-time) ever spent buying this token. */
     totalInvestedUsd: number
-    /** Realized PnL from sells (proceeds − avg cost of sold), USD-at-trade-time. */
     realizedUsd: number
-    /** Unrealized PnL on current holdings (current value − cost basis). */
     unrealizedUsd: number
-    /** realizedUsd + unrealizedUsd. */
     totalPnlUsd: number
-    /** totalPnlUsd / totalInvestedUsd × 100. */
     pnlPercent: number
 }
 
@@ -38,30 +26,10 @@ export interface PortfolioPnlTotals {
 }
 
 interface PortfolioPnlResult {
-    /** Keyed by lowercased token address; covers every token with swap history. */
     perToken: Map<string, TokenPnl>
     totals: PortfolioPnlTotals
 }
 
-/**
- * Weighted-average-cost PnL, denominated in historical USD.
- *
- * For each token, events are replayed in chronological order maintaining a running
- * position and USD cost pool. Each buy adds to the pool at the trade-time KUB/USD
- * rate; each sell realizes (proceeds − avgCost × sold) and removes that cost from
- * the pool. Unrealized PnL on remaining holdings is valued against the *on-chain*
- * balance so transfers/airdrops don't corrupt the held basis.
- *
- * @param events            user swaps, ideally already sorted ascending by timestamp
- * @param balanceByToken    current on-chain balance per lowercased token address
- * @param priceUsdByToken   current USD price per lowercased token address
- * @param priceAt           KUB/USD rate at a given unix timestamp
- * @param decimalsByToken   token decimals per lowercased token address (default 18).
- *                          The token leg of each swap is decoded with these so the
- *                          accounting position matches the externally-supplied
- *                          balance; mismatches blow up unrealized PnL for non-18-dec
- *                          tokens (e.g. 6-decimal USDT). The native leg is always 18.
- */
 export function computePortfolioPnl(
     events: PnlSwapEvent[],
     balanceByToken: Map<string, number>,
@@ -69,7 +37,6 @@ export function computePortfolioPnl(
     priceAt: (timestamp: number) => number,
     decimalsByToken?: Map<string, number>
 ): PortfolioPnlResult {
-    // Group events by token, preserving chronological order.
     const eventsByToken = new Map<string, PnlSwapEvent[]>()
     for (const event of events) {
         const key = event.tokenAddr.toLowerCase()
@@ -148,7 +115,6 @@ export function computePortfolioPnl(
     return { perToken, totals }
 }
 
-/** A swap tagged with the trader it belongs to (lowercased downstream). */
 export interface LeaderboardSwapEvent extends PnlSwapEvent {
     sender: string
 }
@@ -162,19 +128,6 @@ interface AddressTraderStats {
     sellCount: number
 }
 
-/**
- * Per-trader stats for the leaderboard. PnL is computed by the exact same engine
- * as the portfolio (`computePortfolioPnl`), run once per address, so the math is
- * identical. Volume (native side of each swap) and trade counts are aggregated in
- * the same pass.
- *
- * @param events            swaps tagged with `sender`
- * @param balanceByAddress  current on-chain balances, keyed by lowercased address
- *                          then lowercased token address
- * @param priceUsdByToken   current USD price per lowercased token address
- * @param priceAt           KUB/USD rate at a given unix timestamp
- * @param decimalsByToken   token decimals per lowercased token address (default 18)
- */
 export function computeTraderStatsByAddress(
     events: LeaderboardSwapEvent[],
     balanceByAddress: Map<string, Map<string, number>>,
@@ -197,7 +150,6 @@ export function computeTraderStatsByAddress(
         let buyCount = 0
         let sellCount = 0
         for (const event of addrEvents) {
-            // Native side of the swap: amountIn for buys, amountOut for sells.
             volumeNative += parseFloat(
                 formatEther(BigInt(event.isBuy ? event.amountIn : event.amountOut))
             )

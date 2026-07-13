@@ -14,19 +14,6 @@ store/          Zustand stores
 lib/            Config & utilities
 types/          TypeScript type definitions by domain
 
-## Related repos
-
-This repo is the frontend only. The contracts, the indexer, and the shared chain layer live in
-[junoswap-core](https://github.com/coshi190/junoswap-core).
-
-- **`@coshi190/junoswap-sdk`** (npm) — contract ABIs, deployed addresses, DEX/chain config, Ponder client.
-  Import chain primitives from here, never redefine them. ABIs there are **generated from the
-  Solidity**; a new deploy means: update the SDK's `addresses/deployments.ts` → publish → bump
-  the dep here.
-- **Indexer** — reached directly over HTTP via `NEXT_PUBLIC_PONDER_URL` (the browser calls the
-  indexer's `/graphql` endpoint directly; it is CORS-open). `lib/ponder-client.ts` is a thin
-  wrapper over the SDK's client.
-
 ## Key conventions
 
 - Runtime: **bun only** — never use npm, yarn, or pnpm. Lockfile is `bun.lock`.

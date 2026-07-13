@@ -23,20 +23,12 @@ interface UseRoutePriceImpactParams {
 }
 
 interface UseRoutePriceImpactResult {
-    /** Percentage (e.g. 2.5 = 2.5%), or undefined when it can't be measured. */
     priceImpact: number | undefined
     isLoading: boolean
 }
 
-/** Reference trade = 1/1000th of the input, used to approximate the near-spot marginal price. */
 const REFERENCE_DIVISOR = 1000n
 
-/**
- * Price impact as a percentage: how much worse the full-trade rate is than the near-spot
- * reference rate. `priceImpact = 1 - (fullRate / spotRate)` where each rate = out/in.
- * Decimals cancel since both rates use the same token pair. Returns undefined when it can't
- * be measured, and clamps small favorable rounding to 0 (impact is never negative here).
- */
 export function computePriceImpactPercent(
     fullAmountOut: bigint,
     amountIn: bigint,
@@ -51,13 +43,6 @@ export function computePriceImpactPercent(
     return Math.max(0, (10000 - ratioBps) / 100)
 }
 
-/**
- * Estimates price impact for a resolved route by re-quoting a tiny reference amount through
- * the same path/DEX and comparing the small-trade rate (near spot) to the full-trade rate:
- *   priceImpact = 1 - (fullRate / spotRate).
- * DEX-agnostic (works for V2/V3, single- and multi-hop) and costs one extra batched read for
- * the winning route only. Decimals cancel because both rates use the same token pair.
- */
 export function useRoutePriceImpact({
     route,
     tokenIn,
@@ -75,8 +60,6 @@ export function useRoutePriceImpact({
     const isV3 = canMeasure && route!.protocolType === ProtocolType.V3 && !!route!.route.fees
     const isV2 = canMeasure && route!.protocolType === ProtocolType.V2
 
-    // Direct routes store raw addresses (native sentinel included); normalize to wrapped so the
-    // reference quote resolves for native pairs too. Idempotent for already-normalized multi-hop paths.
     const normalizedPath = useMemo(
         () => route?.route.path.map((a) => getSwapAddress(a, chainId)) ?? [],
         [route, chainId]

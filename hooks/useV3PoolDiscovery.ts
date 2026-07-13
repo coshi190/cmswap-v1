@@ -13,7 +13,6 @@ export interface PoolQuery {
     fee: number
 }
 
-/** Order-independent key for a (factory, unordered pair, fee) pool. */
 export function poolKey(factory: Address, a: Address, b: Address, fee: number): string {
     const [x, y] =
         a.toLowerCase() < b.toLowerCase()
@@ -29,20 +28,12 @@ interface UseV3PoolDiscoveryParams {
 }
 
 interface UseV3PoolDiscoveryResult {
-    /** True once discovery has resolved and the pool for these tokens/fee exists. */
     hasPool: (factory: Address, a: Address, b: Address, fee: number) => boolean
     existingPools: Set<string>
     isLoading: boolean
     isError: boolean
 }
 
-/**
- * Batches `factory.getPool` across many (factory, pair, fee) combinations in a single
- * multicall so multi-hop routing can prune fee-tier candidates to pools that actually
- * exist before spending expensive `quoteExactInput` calls on them. Results are keyed
- * order-independently and deduped, and cached long (`staleTime`) since pool existence
- * changes rarely. Callers must memoize `queries` — its reference identity gates the batch.
- */
 export function useV3PoolDiscovery({
     queries,
     chainId,

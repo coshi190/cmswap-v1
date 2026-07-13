@@ -37,10 +37,8 @@ interface UseUniV3MultiHopQuoteResult {
 
 const ALL_FEE_TIERS: number[] = Object.values(FEE_TIERS)
 
-/** Hard cap on batched quote calls per keystroke, guarding against pathological fan-out. */
 const MAX_QUOTE_QUERIES = 80
 
-/** One V3 multi-hop path on a specific DEX (token addresses already native→wrapped normalized). */
 interface Candidate {
     dexId: DEXType
     factory: Address
@@ -50,7 +48,6 @@ interface Candidate {
     intermediaries: Address[] // raw connector addresses, for display/token lookup
 }
 
-/** A single quote call: a candidate crossed with one concrete per-leg fee combination. */
 interface QuoteMeta {
     candidate: Candidate
     fees: number[]
@@ -79,7 +76,6 @@ export function useUniV3MultiHopQuote({
 
     const isReadyForQuote = enabled && !!tokenIn && !!tokenOut && amountIn > 0n && !wrapOperation
 
-    // Enumerate candidate paths across every V3 DEX × connector path (2- and 3-hop).
     const candidates = useMemo((): Candidate[] => {
         if (!isReadyForQuote || !tokenIn || !tokenOut) return []
         const connectors = getIntermediaryTokens(chainId)
@@ -96,7 +92,6 @@ export function useUniV3MultiHopQuote({
             const feeTiers = cfg.feeTiers?.length ? cfg.feeTiers : ALL_FEE_TIERS
             for (const rawPath of rawPaths) {
                 const tokens = rawPath.map((a) => getSwapAddress(a, chainId))
-                // Drop paths that collapse after native→wrapped normalization.
                 const collapsed = tokens.some(
                     (t, i) => i > 0 && t.toLowerCase() === tokens[i - 1]!.toLowerCase()
                 )
@@ -114,7 +109,6 @@ export function useUniV3MultiHopQuote({
         return result
     }, [isReadyForQuote, tokenIn, tokenOut, chainId, targetDexIds])
 
-    // Discover which per-leg pools exist so we only quote realizable fee combinations.
     const poolQueries = useMemo((): PoolQuery[] => {
         const queries: PoolQuery[] = []
         for (const c of candidates) {
@@ -138,8 +132,6 @@ export function useUniV3MultiHopQuote({
         enabled: isReadyForQuote && poolQueries.length > 0,
     })
 
-    // Build the pruned quote set: for each candidate, cross-product the fee tiers whose
-    // pool exists on every leg. Candidates with a dead leg are dropped entirely.
     const quoteMetas = useMemo((): QuoteMeta[] => {
         if (discovery.isLoading) return []
         const metas: QuoteMeta[] = []

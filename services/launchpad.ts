@@ -5,11 +5,6 @@ import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import type { LaunchToken } from '@/types/launchpad'
 
-/**
- * The indexer's row shape. Most of these columns are nullable in the schema (they carry a SQL
- * default rather than NOT NULL), which the old hand-written interface claimed otherwise — hence
- * the `?? ''` fallbacks below, which were previously unreachable as far as tsc knew.
- */
 export type RawLaunchTokenItem = LaunchTokenDetail
 
 export function mapLaunchTokenItem(raw: RawLaunchTokenItem, chainId: number): LaunchToken {

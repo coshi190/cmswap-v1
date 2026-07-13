@@ -18,7 +18,6 @@ interface UseAggRouterSwapExecutionParams {
     amountOutMinimum: bigint
     recipient: Address
     deadlineMinutes: number
-    /** Legs of the winning aggregator plan (split or cross-DEX); null when not routing via the router. */
     legs: Leg[] | null
     skipSimulation?: boolean
 }
@@ -105,8 +104,6 @@ export function useAggRouterSwapExecution({
         query: { enabled: amountIn > 0n && !!router && !!call && !skipSimulation },
     })
 
-    // Fall back to raw sends so the referral tracking tag survives the encoded calldata,
-    // exactly as the per-DEX execution hooks do.
     const {
         data: sendHash,
         sendTransaction,

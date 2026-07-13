@@ -60,7 +60,6 @@ export interface SwapState {
     isUpdatingFromUrl: boolean
 }
 
-/** URL format: /swap?input={address}&output={address}&amount={string}&chain={chainId}&ref={address} */
 export interface SwapUrlParams {
     input?: string // Token address
     output?: string // Token address

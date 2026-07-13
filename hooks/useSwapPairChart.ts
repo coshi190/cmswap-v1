@@ -19,19 +19,16 @@ import {
 } from '@/services/chart'
 import type { V3SwapEvent } from '@/services/chart'
 
-// Wrapped native (KKUB/WJBC/WETH/WBNB/…) is 18 decimals on every supported chain.
 const NATIVE_DECIMALS = 18
 
 export interface SwapPairChart {
     candles: CandlestickData[]
     isLoading: boolean
-    /** True when the pair has no indexable price series. */
     isUnsupported: boolean
     timeframe: Timeframe
     setTimeframe: (tf: Timeframe) => void
     baseSymbol: string
     quoteSymbol: string
-    /** 'usd' → $ prefix (vs native/stable); 'native'/'token' → priced in the quote token. */
     denom: 'usd' | 'native' | 'token'
 }
 
@@ -48,7 +45,6 @@ function resolveToken(
     return null
 }
 
-// Per-token native price from its Junoswap V3 swaps (token↔native pool).
 function fetchV3Events(tokenAddr: string, chainId: number): Promise<V3SwapEvent[]> {
     return fetchV3History(ponderClient, {
         tokenAddr: tokenAddr.toLowerCase(),
@@ -86,9 +82,6 @@ export function useSwapPairChart(
         [quoteAddr, tokenIn, tokenOut]
     )
 
-    // native↔stable: the indexed native→USD price history is exactly the native/stable
-    // (e.g. KKUB/KUSDT) price. Populated per native/stable V3 swap, so it avoids the
-    // historical eth_call reads that fail on kub's non-archive RPC.
     const { data: snapshotRows, isLoading: loadingSnap } = useQuery({
         queryKey: ['swap-pair-native-usd', chainId],
         queryFn: () => fetchNativeUsdPriceSnapshots(ponderClient, { chainId }).catch(() => []),
@@ -97,7 +90,6 @@ export function useSwapPairChart(
         refetchInterval: 30_000,
     })
 
-    // base is always a non-native token in the ratio kinds.
     const { data: baseEvents, isLoading: loadingBase } = useQuery({
         queryKey: ['swap-pair-v3', baseAddr?.toLowerCase(), chainId],
         queryFn: () => fetchV3Events(baseAddr!, chainId),
@@ -134,7 +126,6 @@ export function useSwapPairChart(
                 NATIVE_DECIMALS,
                 timeframe
             )
-            // token↔native: the quote IS native, so the base series is already the price.
             if (quoteIsNative) return npBase
             if (!quoteAddr) return []
             const npQuote = tokenNativeCandles(

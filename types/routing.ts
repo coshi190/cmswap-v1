@@ -2,12 +2,9 @@ import type { Address } from 'viem'
 import { type Token, type DEXType, type ProtocolType } from '@coshi190/junoswap-sdk'
 import type { QuoteResult } from './swap'
 export interface SwapRoute {
-    /** Token addresses in order [tokenIn, ...intermediaries, tokenOut] */
     path: Address[]
-    /** Fee tiers for V3 (length = path.length - 1) */
     fees?: number[]
     pools?: Address[]
-    /** True when path.length > 2, i.e. the route has intermediary hops */
     isMultiHop: boolean
     intermediaryTokens: Token[]
 }
@@ -24,13 +21,11 @@ export interface RoutingResult {
     directRoute: RouteQuote | null
     multiHopRoutes: RouteQuote[]
     bestRoute: RouteQuote | null
-    /** allRoutes sorted by output amount, best first */
     allRoutes: RouteQuote[]
 }
 
 export interface IntermediaryConfig {
     wrappedNative: Address
     stables: Address[]
-    /** Order in which intermediaries are tried when building multi-hop routes */
     priority: Address[]
 }

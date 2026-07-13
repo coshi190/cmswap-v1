@@ -165,8 +165,6 @@ export function usePoolVolume(
             const isToken1Native = isAddr(pool.token1.address, wrappedNative)
 
             if (isToken0Native || isToken1Native) {
-                // Native-containing pools: use sqrtPriceX96-based computation
-                // (more reliable — uses pool's own on-chain price)
                 if (nativeUsdPrice) {
                     result[poolAddr] = {
                         volume1d: computeVolumeUsd(
@@ -187,7 +185,6 @@ export function usePoolVolume(
                         ),
                     }
                 } else if (pool.sqrtPriceX96 > 0n) {
-                    // Fallback: compute volume in native token terms (no USD conversion)
                     let vol1dNative: bigint, vol30dNative: bigint
                     if (isToken1Native) {
                         vol1dNative =
@@ -210,7 +207,6 @@ export function usePoolVolume(
                     }
                 }
             } else {
-                // Non-native pools: use price-map from Ponder token snapshots
                 const price0 = priceMap.get(pool.token0.address.toLowerCase())
                 const price1 = priceMap.get(pool.token1.address.toLowerCase())
 

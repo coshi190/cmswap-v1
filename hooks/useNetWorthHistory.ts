@@ -71,7 +71,6 @@ interface UseNetWorthHistoryParams {
     nativeUsdPoints: PricePoint[]
     nativeUsdPrice: number | null
     netWorthNow: number
-    /** Balances, spot prices, swap history and native-USD points still resolving. */
     isInputLoading: boolean
 }
 
