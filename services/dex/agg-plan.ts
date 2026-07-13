@@ -1,6 +1,6 @@
 import type { Address } from 'viem'
 import type { RouteQuote } from '@/types/routing'
-import { ProtocolType, getV2Config, getV3Config } from '@junoswap/sdk'
+import { ProtocolType, getV2Config, getV3Config } from '@coshi190/junoswap-sdk'
 import { buildMultiHopSwapPath } from './uniswap-v2'
 import { legToHops, type Leg, type ResolvedHop } from './agg-router'
 import type { SplitAllocation } from './split-routing'

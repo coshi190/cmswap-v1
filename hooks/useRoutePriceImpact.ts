@@ -9,7 +9,7 @@ import {
     ProtocolType,
     UNISWAP_V3_QUOTER_V2_ABI,
     UNISWAP_V2_ROUTER_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { RouteQuote } from '@/types/routing'
 import { encodeV3Path } from '@/services/dex/uniswap-v3'
 import { getSwapAddress, getWrapOperation } from '@/services/tokens'

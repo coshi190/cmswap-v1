@@ -1,4 +1,4 @@
-import { type Token } from '@junoswap/sdk'
+import { type Token } from '@coshi190/junoswap-sdk'
 import type { Route } from '@lifi/types'
 
 export const BRIDGE_SUPPORTED_CHAIN_IDS = [56, 8453, 480] as const // BSC, Base, Worldchain

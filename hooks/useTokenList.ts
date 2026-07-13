@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { isLaunchpadChain, fetchTokenList } from '@junoswap/sdk'
+import { isLaunchpadChain, fetchTokenList } from '@coshi190/junoswap-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderClient } from '@/lib/ponder-client'
 import { mapLaunchTokenItem } from '@/services/launchpad'

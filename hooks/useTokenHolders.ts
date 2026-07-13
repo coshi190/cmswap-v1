@@ -5,7 +5,7 @@ import { usePublicClient } from 'wagmi'
 import { parseEther } from 'viem'
 import type { Address } from 'viem'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
-import { ERC20_ABI, fetchTokenHolders } from '@junoswap/sdk'
+import { ERC20_ABI, fetchTokenHolders } from '@coshi190/junoswap-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import type { HolderData } from '@/lib/rpc/launchpad-queries'
 

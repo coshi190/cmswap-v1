@@ -6,7 +6,7 @@ import {
     fetchV2Swaps,
     type ParsedSwap,
 } from '@/lib/swap-events'
-import { isLaunchpadChain } from '@junoswap/sdk'
+import { isLaunchpadChain } from '@coshi190/junoswap-sdk'
 import type { LeaderboardTimePeriod } from '@/types/leaderboard'
 
 /** Chains that have indexed Ponder V3 swap data for the leaderboard/points/portfolio. */

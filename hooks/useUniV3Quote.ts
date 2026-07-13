@@ -15,7 +15,7 @@ import {
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
     ProtocolType,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { QuoteResult } from '@/types/swap'
 import { buildQuoteParams } from '@/services/dex/uniswap-v3'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'

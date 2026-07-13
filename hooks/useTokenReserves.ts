@@ -6,7 +6,7 @@ import {
     BONDING_CURVE_JUNOSWAP_ABI,
     BONDING_CURVE_JUNOSWAP_CHAIN_ID,
     getBondingCurveAddress,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 // Virtual amount is constant in the contract (3400 ether) — safe to hardcode.
 // graduationAmount is mutable via setCurveState(), so we read it from chain.
 const VIRTUAL_AMOUNT = 3400n * 10n ** 18n

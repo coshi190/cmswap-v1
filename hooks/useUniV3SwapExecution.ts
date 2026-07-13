@@ -14,7 +14,7 @@ import {
     UNISWAP_V3_SWAP_ROUTER_ABI,
     type DEXType,
     WETH9_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { SwapParams, SwapResult } from '@/types/swap'
 import { useSwapStore } from '@/store/swap-store'
 import {
@@ -28,7 +28,7 @@ import { toastError } from '@/lib/toast'
 import { isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
 import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
 import { useReferrer } from '@/hooks/useReferrer'
-import { appendTrackingTag } from '@junoswap/sdk'
+import { appendTrackingTag } from '@coshi190/junoswap-sdk'
 
 interface UseUniV3SwapExecutionParams {
     tokenIn: Token

@@ -1,4 +1,4 @@
-import { type Token } from '@junoswap/sdk'
+import { type Token } from '@coshi190/junoswap-sdk'
 import type { LaunchToken } from './launchpad'
 
 export type TokenType = 'static' | 'graduated' | 'bonding_curve'

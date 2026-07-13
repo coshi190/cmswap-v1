@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchV3TokenSnapshots, fetchNativeUsdPrice } from '@junoswap/sdk'
+import { fetchV3TokenSnapshots, fetchNativeUsdPrice } from '@coshi190/junoswap-sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 

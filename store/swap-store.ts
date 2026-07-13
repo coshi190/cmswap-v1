@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import { type Token, type DEXType } from '@junoswap/sdk'
+import { type Token, type DEXType } from '@coshi190/junoswap-sdk'
 import type { SwapSettings, SwapState, QuoteResult, DexQuote } from '@/types/swap'
 interface SwapStore extends SwapState {
     settings: SwapSettings

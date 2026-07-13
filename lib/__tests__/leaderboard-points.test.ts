@@ -22,7 +22,7 @@ import {
     fetchV2SwapEvents,
     type SwapEventRow,
 } from '@/lib/leaderboard-utils'
-import { resolveBinding } from '@junoswap/sdk'
+import { resolveBinding } from '@coshi190/junoswap-sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { bitkub } from '@/lib/wagmi'
 

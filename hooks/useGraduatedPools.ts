@@ -9,7 +9,7 @@ import {
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
     type Token,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import { sortTokens, getTickSpacing } from '@/lib/liquidity-helpers'

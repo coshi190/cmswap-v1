@@ -10,7 +10,7 @@ import {
     UNISWAP_V3_STAKER_ABI,
     UNISWAP_V3_POOL_ABI,
     ERC20_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { findTokenByAddress } from '@/lib/tokens'
 import { computeIncentiveId } from '@/services/mining/staking'
 import { isIncentiveActive, isIncentiveEnded } from '@/services/mining/incentives'

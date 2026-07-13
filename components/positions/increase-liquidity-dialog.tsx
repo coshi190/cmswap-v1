@@ -10,7 +10,7 @@ import { useIncreaseLiquidity } from '@/hooks/useLiquidity'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { usePool } from '@/hooks/usePools'
-import { getV3Config } from '@junoswap/sdk'
+import { getV3Config } from '@coshi190/junoswap-sdk'
 import { getChainMetadata } from '@/lib/wagmi'
 import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/services/tokens'
 import {

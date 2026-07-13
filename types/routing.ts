@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { type Token, type DEXType, type ProtocolType } from '@junoswap/sdk'
+import { type Token, type DEXType, type ProtocolType } from '@coshi190/junoswap-sdk'
 import type { QuoteResult } from './swap'
 export interface SwapRoute {
     /** Token addresses in order [tokenIn, ...intermediaries, tokenOut] */

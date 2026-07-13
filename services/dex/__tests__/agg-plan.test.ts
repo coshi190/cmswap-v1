@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { decodeAbiParameters, size, type Address } from 'viem'
-import { ProtocolType } from '@junoswap/sdk'
+import { ProtocolType } from '@coshi190/junoswap-sdk'
 import type { RouteQuote } from '@/types/routing'
 import type { LegCandidate } from '@/services/dex/cross-dex-routing'
 import type { SplitAllocation } from '@/services/dex/split-routing'
@@ -18,7 +18,7 @@ vi.mock('@/services/tokens', () => ({
 vi.mock('@/lib/wagmi', () => ({
     isNativeToken: vi.fn((addr: string) => addr.toLowerCase() === NATIVE),
 }))
-vi.mock('@junoswap/sdk', async (importOriginal) => ({
+vi.mock('@coshi190/junoswap-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     ProtocolType: { V2: 'v2', V3: 'v3' },
     getV2Config: vi.fn((_c: number, dexId: string) =>

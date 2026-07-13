@@ -13,7 +13,7 @@ import {
     isLaunchpadChain as isLaunchpadChainFn,
     fetchBondingCurveTokens,
     type Token,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { hasSettled } from '@/lib/query-status'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { useV3Tokens } from '@/hooks/useV3Tokens'

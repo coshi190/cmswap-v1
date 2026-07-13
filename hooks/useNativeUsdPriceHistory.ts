@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchNativeUsdPriceSnapshots } from '@junoswap/sdk'
+import { fetchNativeUsdPriceSnapshots } from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { hasSettled } from '@/lib/query-status'

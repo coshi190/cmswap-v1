@@ -10,10 +10,10 @@ import {
     fetchUserAggSwaps,
     fetchLaunchTokenMeta,
     fetchV3Tokens,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { isLaunchpadChain, isAggRouterChain } from '@junoswap/sdk'
+import { isLaunchpadChain, isAggRouterChain } from '@coshi190/junoswap-sdk'
 import { findTokenByAddress, getTokensForChain } from '@/lib/tokens'
 import { findWrappedNativeAddress } from '@/services/tokens'
 import { resolveLaunchpadLogo } from '@/lib/logo'

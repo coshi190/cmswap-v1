@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchGraduatedPool } from '@junoswap/sdk'
+import { fetchGraduatedPool } from '@coshi190/junoswap-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 
 /**

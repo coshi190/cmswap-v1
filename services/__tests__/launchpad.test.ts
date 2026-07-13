@@ -13,7 +13,7 @@ import {
     isReadyToGraduate,
 } from '@/services/launchpad'
 
-vi.mock('@junoswap/sdk', async (importOriginal) => ({
+vi.mock('@coshi190/junoswap-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     BONDING_CURVE_JUNOSWAP_ABI: [],
 }))

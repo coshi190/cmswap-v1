@@ -2,7 +2,7 @@
 
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import { ERC20_ABI, type Token } from '@junoswap/sdk'
+import { ERC20_ABI, type Token } from '@coshi190/junoswap-sdk'
 import { isValidTokenAddress } from '@/services/tokens'
 interface UseTokenMetadataResult {
     token: Token | null

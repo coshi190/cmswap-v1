@@ -13,7 +13,7 @@ import {
     UNISWAP_V2_ROUTER_ABI,
     UNISWAP_V2_FACTORY_ABI,
     ProtocolType,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { QuoteResult } from '@/types/swap'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'

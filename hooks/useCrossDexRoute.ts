@@ -8,7 +8,7 @@ import {
     ProtocolType,
     UNISWAP_V2_ROUTER_ABI,
     UNISWAP_V3_QUOTER_V2_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { getIntermediaryTokens } from '@/lib/routing-config'
 import { getSwapAddress } from '@/services/tokens'
 import {

@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { formatEther } from 'viem'
-import { fetchV3PoolDayVolumes, type V3PoolDayVolumeRow } from '@junoswap/sdk'
+import { fetchV3PoolDayVolumes, type V3PoolDayVolumeRow } from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { useTokenPriceMap } from '@/hooks/useTokenPriceMap'

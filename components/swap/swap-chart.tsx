@@ -17,7 +17,7 @@ import type {
     Time as LWTime,
 } from 'lightweight-charts'
 import { Loader2 } from 'lucide-react'
-import { type Token } from '@junoswap/sdk'
+import { type Token } from '@coshi190/junoswap-sdk'
 import { TIMEFRAMES } from '@/hooks/useTokenPriceHistory'
 import { useSwapPairChart } from '@/hooks/useSwapPairChart'
 import { useChartColors, toLocalChartTime } from '@/lib/lightweight-chart-theme'

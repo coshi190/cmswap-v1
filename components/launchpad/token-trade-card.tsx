@@ -21,7 +21,7 @@ import {
     getV3Config,
     getDefaultDexForChain,
     type Token,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { isValidNumberInput } from '@/lib/utils'
 import {

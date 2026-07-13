@@ -14,7 +14,7 @@ import type {
     PositionWithTokens,
     PositionDetails,
 } from '@/types/earn'
-import { getV3Config, NONFUNGIBLE_POSITION_MANAGER_ABI } from '@junoswap/sdk'
+import { getV3Config, NONFUNGIBLE_POSITION_MANAGER_ABI } from '@coshi190/junoswap-sdk'
 import {
     buildMintParams,
     buildMintWithNativeMulticall,

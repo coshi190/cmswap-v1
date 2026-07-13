@@ -3,7 +3,7 @@
 import { useMemo, useRef } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { formatUnits } from 'viem'
-import { fetchBondingCurvePricesSince, fetchV3PricesSince } from '@junoswap/sdk'
+import { fetchBondingCurvePricesSince, fetchV3PricesSince } from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { isNativeToken } from '@/lib/wagmi'

@@ -11,7 +11,7 @@ import {
     NONFUNGIBLE_POSITION_MANAGER_ABI,
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { usePositionFees } from '@/hooks/usePositionFees'

@@ -10,7 +10,7 @@ import {
     isV2Config,
     isV3Config,
     ProtocolType,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { DexQuote } from '@/types/swap'
 import type { RouteQuote } from '@/types/routing'
 import { percentDiff } from '@/lib/routing-config'

@@ -21,7 +21,7 @@ import {
 import { getExplorerTxUrl } from '@/lib/explorer'
 import { toastError } from '@/lib/toast'
 import { Check } from 'lucide-react'
-import { type Token } from '@junoswap/sdk'
+import { type Token } from '@coshi190/junoswap-sdk'
 interface SendDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void

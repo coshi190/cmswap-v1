@@ -11,7 +11,7 @@ import {
     getDexsByProtocol,
     ProtocolType,
     UNISWAP_V3_QUOTER_V2_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
 import { encodeV3Path } from '@/services/dex/uniswap-v3'

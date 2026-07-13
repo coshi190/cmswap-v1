@@ -7,7 +7,11 @@ import { formatEther, type Address } from 'viem'
 import { isNativeToken } from '@/lib/wagmi'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { isLaunchpadChain, fetchAllTokenHolders, type LeaderboardHolder } from '@junoswap/sdk'
+import {
+    isLaunchpadChain,
+    fetchAllTokenHolders,
+    type LeaderboardHolder,
+} from '@coshi190/junoswap-sdk'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
 import { useMultiBalances } from '@/hooks/useMultiBalances'
 import { useTokenPrices } from '@/hooks/useTokenPrices'

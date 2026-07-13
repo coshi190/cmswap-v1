@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { Address } from 'viem'
-import { normalizeReferrer, DEFAULT_REFERRER } from '@junoswap/sdk'
+import { normalizeReferrer, DEFAULT_REFERRER } from '@coshi190/junoswap-sdk'
 import { useReferralStore } from '@/store/referral-store'
 
 /**

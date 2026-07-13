@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { ProtocolType, getV2Config, getV3Config, getDexsByProtocol } from '@junoswap/sdk'
+import { ProtocolType, getV2Config, getV3Config, getDexsByProtocol } from '@coshi190/junoswap-sdk'
 import { poolKey } from '@/hooks/useV3PoolDiscovery'
 import type { ResolvedHop } from './agg-router'
 

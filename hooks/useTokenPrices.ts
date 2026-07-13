@@ -11,7 +11,7 @@ import {
     fetchTokenSnapshotsByAddresses,
     fetchV3TokenSnapshots,
     type Token,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { TokenType } from '@/types/portfolio'
 
 const STABLECOIN_SYMBOLS = new Set(['USDT', 'USDC', 'KUSDT', 'JUSDT', 'DAI', 'BUSD'])

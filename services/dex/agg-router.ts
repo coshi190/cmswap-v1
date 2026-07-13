@@ -1,6 +1,6 @@
 import { encodeAbiParameters, type Address, type Hex } from 'viem'
 import type { RouteQuote } from '@/types/routing'
-import { ProtocolType, getV2Config, getV3Config } from '@junoswap/sdk'
+import { ProtocolType, getV2Config, getV3Config } from '@coshi190/junoswap-sdk'
 import { isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
 import { buildMultiHopSwapPath } from './uniswap-v2'
 

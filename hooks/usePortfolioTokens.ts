@@ -3,13 +3,13 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchHolderBalances, fetchLaunchTokensByAddresses } from '@junoswap/sdk'
+import { fetchHolderBalances, fetchLaunchTokensByAddresses } from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import { hasSettled } from '@/lib/query-status'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
-import { type Token } from '@junoswap/sdk'
+import { type Token } from '@coshi190/junoswap-sdk'
 export function usePortfolioTokens(chainId: number, userAddress?: Address) {
     const {
         allTokens: discoveredTokens,

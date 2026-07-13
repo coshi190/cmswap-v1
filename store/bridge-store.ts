@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import { type Token } from '@junoswap/sdk'
+import { type Token } from '@coshi190/junoswap-sdk'
 import type { BridgeSettings, BridgeState } from '@/types/bridge'
 import type { Route } from '@lifi/types'
 

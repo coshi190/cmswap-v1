@@ -19,7 +19,7 @@ types/          TypeScript type definitions by domain
 This repo is the frontend only. The contracts, the indexer, and the shared chain layer live in
 [junoswap-core](https://github.com/coshi190/junoswap-core).
 
-- **`@junoswap/sdk`** (npm) — contract ABIs, deployed addresses, DEX/chain config, Ponder client.
+- **`@coshi190/junoswap-sdk`** (npm) — contract ABIs, deployed addresses, DEX/chain config, Ponder client.
   Import chain primitives from here, never redefine them. ABIs there are **generated from the
   Solidity**; a new deploy means: update the SDK's `addresses/deployments.ts` → publish → bump
   the dep here.

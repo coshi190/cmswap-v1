@@ -7,7 +7,7 @@ import {
     type SwapScanFilter,
     type V2Swap,
     type V3Swap,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 

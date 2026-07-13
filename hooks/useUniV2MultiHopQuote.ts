@@ -10,7 +10,7 @@ import {
     getDexsByProtocol,
     ProtocolType,
     UNISWAP_V2_ROUTER_ABI,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
 import { buildMultiHopSwapPath } from '@/services/dex/uniswap-v2'

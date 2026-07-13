@@ -1,6 +1,6 @@
 import { encodeFunctionData, encodeAbiParameters, keccak256, type Address, type Hex } from 'viem'
 import type { IncentiveKey, UnstakeParams } from '@/types/earn'
-import { UNISWAP_V3_STAKER_ABI } from '@junoswap/sdk'
+import { UNISWAP_V3_STAKER_ABI } from '@coshi190/junoswap-sdk'
 export function computeIncentiveId(key: IncentiveKey): `0x${string}` {
     return keccak256(
         encodeAbiParameters(

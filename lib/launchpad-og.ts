@@ -1,4 +1,4 @@
-import { createPonderClient, fetchLaunchTokenOg } from '@junoswap/sdk'
+import { createPonderClient, fetchLaunchTokenOg } from '@coshi190/junoswap-sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 

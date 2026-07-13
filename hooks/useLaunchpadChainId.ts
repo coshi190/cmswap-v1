@@ -6,7 +6,7 @@ import {
     BONDING_CURVE_JUNOSWAP_CHAIN_ID,
     getBondingCurveAddress,
     isLaunchpadChain,
-} from '@junoswap/sdk'
+} from '@coshi190/junoswap-sdk'
 import type { Address } from 'viem'
 
 /**
