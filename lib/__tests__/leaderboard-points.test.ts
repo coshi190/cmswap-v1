@@ -13,7 +13,7 @@ import {
     fetchV2SwapEvents,
     type SwapEventRow,
 } from '@/lib/leaderboard-utils'
-import { resolveBinding } from '@/indexer/src/tracking'
+import { resolveBinding } from '@junoswap/sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { bitkub } from '@/lib/wagmi'
 

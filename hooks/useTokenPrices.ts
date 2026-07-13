@@ -6,8 +6,7 @@ import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { isNativeToken } from '@/lib/wagmi'
 import { ponderRequest, isPonderError } from '@/lib/ponder-client'
 import { hasSettled } from '@/lib/query-status'
-import { isLaunchpadChain as isLaunchpadChainFn } from '@/lib/abis/bonding-curve-junoswap'
-import type { Token } from '@/types/tokens'
+import { isLaunchpadChain as isLaunchpadChainFn, type Token } from '@junoswap/sdk'
 import type { TokenType } from '@/types/portfolio'
 
 const STABLECOIN_SYMBOLS = new Set(['USDT', 'USDC', 'KUSDT', 'JUSDT', 'DAI', 'BUSD'])

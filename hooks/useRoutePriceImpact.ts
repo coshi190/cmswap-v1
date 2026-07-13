@@ -2,11 +2,15 @@
 
 import { useMemo } from 'react'
 import { useReadContract } from 'wagmi'
-import type { Token } from '@/types/tokens'
+import {
+    type Token,
+    getV2Config,
+    getV3Config,
+    ProtocolType,
+    UNISWAP_V3_QUOTER_V2_ABI,
+    UNISWAP_V2_ROUTER_ABI,
+} from '@junoswap/sdk'
 import type { RouteQuote } from '@/types/routing'
-import { getV2Config, getV3Config, ProtocolType } from '@/lib/dex-config'
-import { UNISWAP_V3_QUOTER_V2_ABI } from '@/lib/abis/uniswap-v3-quoter'
-import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
 import { encodeV3Path } from '@/services/dex/uniswap-v3'
 import { getSwapAddress, getWrapOperation } from '@/services/tokens'
 

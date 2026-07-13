@@ -6,7 +6,7 @@ import {
     BONDING_CURVE_JUNOSWAP_CHAIN_ID,
     getBondingCurveAddress,
     isLaunchpadChain,
-} from '@/lib/abis/bonding-curve-junoswap'
+} from '@junoswap/sdk'
 import type { Address } from 'viem'
 
 /**

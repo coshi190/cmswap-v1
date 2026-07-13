@@ -4,16 +4,18 @@ import { useState, useCallback, useRef } from 'react'
 import { useWriteContract, usePublicClient, useAccount } from 'wagmi'
 import type { Address } from 'viem'
 import { maxUint256, maxUint128, decodeEventLog, parseEther } from 'viem'
-import { BONDING_CURVE_JUNOSWAP_ABI } from '@/lib/abis/bonding-curve-junoswap'
+import {
+    BONDING_CURVE_JUNOSWAP_ABI,
+    NONFUNGIBLE_POSITION_MANAGER_ABI,
+    UNISWAP_V3_FACTORY_ABI,
+    UNISWAP_V3_POOL_ABI,
+    UNISWAP_V3_SWAP_ROUTER_ABI,
+    WETH9_ABI,
+    ERC20_ABI,
+    getV3Config,
+} from '@junoswap/sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
-import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
-import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
-import { UNISWAP_V3_SWAP_ROUTER_ABI } from '@/lib/abis/uniswap-v3-swap-router'
-import { WETH9_ABI } from '@/lib/abis/weth9'
-import { ERC20_ABI } from '@/lib/abis/erc20'
 import { calculateGraduationSqrtPriceX96 } from '@/lib/liquidity-helpers'
-import { getV3Config } from '@/lib/dex-config'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 
 type PoolStatus = 'no_pool' | 'not_initialized' | 'correct' | 'wrong'

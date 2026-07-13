@@ -2,17 +2,17 @@
 
 import { useMemo } from 'react'
 import { useChainId } from 'wagmi'
-import type { Token } from '@/types/tokens'
-import type { DEXType } from '@/types/dex'
-import type { DexQuote } from '@/types/swap'
-import type { RouteQuote } from '@/types/routing'
 import {
+    type Token,
+    type DEXType,
     getSupportedDexs,
     getDexConfig,
     isV2Config,
     isV3Config,
     ProtocolType,
-} from '@/lib/dex-config'
+} from '@junoswap/sdk'
+import type { DexQuote } from '@/types/swap'
+import type { RouteQuote } from '@/types/routing'
 import { percentDiff } from '@/lib/routing-config'
 import { useUniV3Quote } from './useUniV3Quote'
 import { useUniV2Quote } from './useUniV2Quote'

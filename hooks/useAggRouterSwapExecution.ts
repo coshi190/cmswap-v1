@@ -3,14 +3,13 @@
 import { useMemo } from 'react'
 import { useWaitForTransactionReceipt, useSimulateContract, useSendTransaction } from 'wagmi'
 import { encodeFunctionData, type Address } from 'viem'
-import type { Token } from '@/types/tokens'
+import { type Token, AGG_ROUTER_JUNOSWAP_ABI, getAggRouterAddress } from '@junoswap/sdk'
 import type { SwapResult } from '@/types/swap'
-import { AGG_ROUTER_JUNOSWAP_ABI, getAggRouterAddress } from '@/lib/abis/agg-router-junoswap'
 import { buildAggregateParams, buildLegs, type Leg } from '@/services/dex/agg-router'
 import { isNativeToken } from '@/lib/wagmi'
 import { toastError } from '@/lib/toast'
 import { useReferrer } from '@/hooks/useReferrer'
-import { appendTrackingTag } from '@/lib/swap-tracking'
+import { appendTrackingTag } from '@junoswap/sdk'
 
 interface UseAggRouterSwapExecutionParams {
     tokenIn: Token

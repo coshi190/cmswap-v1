@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import type { Token } from '@/types/tokens'
+import { type Token, getV3Config, FEE_TIERS } from '@junoswap/sdk'
 import { useAccount, useChainId } from 'wagmi'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -15,7 +15,6 @@ import { usePool } from '@/hooks/usePools'
 import { useAddLiquidity } from '@/hooks/useLiquidity'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
-import { getV3Config, FEE_TIERS } from '@/lib/dex-config'
 import { getChainMetadata } from '@/lib/wagmi'
 import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/services/tokens'
 import {

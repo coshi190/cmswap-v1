@@ -1,8 +1,6 @@
 import type { Address } from 'viem'
-import type { DEXType } from './dex'
+import { type DEXType, ProtocolType, type Token } from '@junoswap/sdk'
 import type { SwapRoute } from './routing'
-import { ProtocolType } from '@/lib/dex-config'
-
 export interface SwapParams {
     tokenIn: Address
     tokenOut: Address
@@ -79,5 +77,3 @@ export interface ParsedSwapUrlParams {
     isValid: boolean
     errors: string[]
 }
-
-import type { Token } from './tokens'

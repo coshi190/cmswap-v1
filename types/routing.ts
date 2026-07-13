@@ -1,9 +1,6 @@
 import type { Address } from 'viem'
-import type { Token } from './tokens'
-import type { DEXType } from './dex'
+import { type Token, type DEXType, type ProtocolType } from '@junoswap/sdk'
 import type { QuoteResult } from './swap'
-import type { ProtocolType } from '@/lib/dex-config'
-
 export interface SwapRoute {
     /** Token addresses in order [tokenIn, ...intermediaries, tokenOut] */
     path: Address[]

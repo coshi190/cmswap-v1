@@ -2,8 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
-import type { Token } from '@/types/tokens'
-
+import { type Token } from '@junoswap/sdk'
 const SwapChart = dynamic(() => import('./swap-chart').then((mod) => mod.SwapChart), {
     ssr: false,
     loading: () => (

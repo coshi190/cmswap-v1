@@ -2,13 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { isLaunchpadChain } from '@/lib/abis/bonding-curve-junoswap'
+import { isLaunchpadChain, type Token } from '@junoswap/sdk'
 import { ponderRequest, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import { hasSettled } from '@/lib/query-status'
-import type { Token } from '@/types/tokens'
-
 const GRADUATED_TOKENS_QUERY = `
   query GraduatedTokens($chainId: Int!) {
     launchTokens(where: { chainId: $chainId }, orderBy: "graduatedAt", orderDirection: "desc") {

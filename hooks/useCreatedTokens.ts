@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { isLaunchpadChain } from '@/lib/abis/bonding-curve-junoswap'
+import { isLaunchpadChain } from '@junoswap/sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderRequest } from '@/lib/ponder-client'
 import { mapLaunchTokenItem } from '@/services/launchpad'

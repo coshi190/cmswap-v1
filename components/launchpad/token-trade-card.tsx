@@ -15,8 +15,13 @@ import { useUniV3SwapExecution } from '@/hooks/useUniV3SwapExecution'
 import { useUniV3Quote } from '@/hooks/useUniV3Quote'
 import { useGraduate } from '@/hooks/useGraduate'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
-import { ERC20_ABI } from '@/lib/abis/erc20'
-import { getBondingCurveAddress } from '@/lib/abis/bonding-curve-junoswap'
+import {
+    ERC20_ABI,
+    getBondingCurveAddress,
+    getV3Config,
+    getDefaultDexForChain,
+    type Token,
+} from '@junoswap/sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { isValidNumberInput } from '@/lib/utils'
 import {
@@ -30,11 +35,8 @@ import { getChainMetadata } from '@/lib/wagmi'
 import { ConnectModal } from '@/components/web3/connect-modal'
 import { SettingsMenu } from '@/components/swap/settings-menu'
 import { useSwapStore } from '@/store/swap-store'
-import { getV3Config, getDefaultDexForChain } from '@/lib/dex-config'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { getDefaultPairTokens } from '@/lib/tokens'
-import type { Token } from '@/types/tokens'
-
 interface TokenTradeCardProps {
     tokenAddr: Address
     tokenSymbol?: string

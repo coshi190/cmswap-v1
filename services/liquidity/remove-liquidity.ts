@@ -5,7 +5,7 @@ import type {
     CollectCallParams,
 } from '@/types/earn'
 import { MAX_UINT128 } from '@/types/earn'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
+import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@junoswap/sdk'
 import { calculateDeadline } from '@/lib/liquidity-helpers'
 import { getWrappedNativeAddress } from '@/services/tokens'
 import { shouldSkipUnwrap } from '@/lib/wagmi'

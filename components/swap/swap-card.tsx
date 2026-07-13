@@ -3,7 +3,16 @@
 import { Fragment, useMemo, useEffect, useRef, useState } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { parseUnits, zeroAddress, type Address } from 'viem'
-import type { Token } from '@/types/tokens'
+import {
+    type Token,
+    getDexConfig,
+    isV2Config,
+    getDefaultDexForChain,
+    getSupportedDexs,
+    ProtocolType,
+    getAggRouterAddress,
+    isAggRouterChain,
+} from '@junoswap/sdk'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -35,13 +44,6 @@ import { formatBalance, formatTokenAmount, formatDisplayAmount } from '@/service
 import { ConnectModal } from '@/components/web3/connect-modal'
 import { toastError } from '@/lib/toast'
 import { getDefaultPairTokens } from '@/lib/tokens'
-import {
-    getDexConfig,
-    isV2Config,
-    getDefaultDexForChain,
-    getSupportedDexs,
-    ProtocolType,
-} from '@/lib/dex-config'
 import type { RouteQuote } from '@/types/routing'
 import { TokenSelect } from './token-select'
 import { SettingsMenu } from './settings-menu'
@@ -50,7 +52,6 @@ import { toast } from 'sonner'
 import { isSameToken, getWrapOperation } from '@/services/tokens'
 import { isValidNumberInput, cn } from '@/lib/utils'
 import { getChainMetadata, isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
-import { getAggRouterAddress, isAggRouterChain } from '@/lib/abis/agg-router-junoswap'
 import { MIN_AGG_IMPROVEMENT_BPS } from '@/lib/routing-config'
 import { useKkubUnwrap } from '@/hooks/useKkubUnwrap'
 

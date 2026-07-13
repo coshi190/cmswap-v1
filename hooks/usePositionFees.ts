@@ -6,9 +6,7 @@ import { usePublicClient } from 'wagmi'
 import type { Address } from 'viem'
 import type { V3Position } from '@/types/earn'
 import { MAX_UINT128 } from '@/types/earn'
-import { getV3Config } from '@/lib/dex-config'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
-
+import { getV3Config, NONFUNGIBLE_POSITION_MANAGER_ABI } from '@junoswap/sdk'
 export interface PositionFees {
     fees0: bigint
     fees1: bigint

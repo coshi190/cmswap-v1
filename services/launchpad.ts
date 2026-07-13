@@ -1,6 +1,6 @@
 import { formatEther, parseEther, decodeEventLog } from 'viem'
 import type { Address, Log } from 'viem'
-import { BONDING_CURVE_JUNOSWAP_ABI } from '@/lib/abis/bonding-curve-junoswap'
+import { BONDING_CURVE_JUNOSWAP_ABI } from '@junoswap/sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import type { LaunchToken } from '@/types/launchpad'

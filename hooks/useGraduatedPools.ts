@@ -3,17 +3,18 @@
 import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import { getV3Config } from '@/lib/dex-config'
+import {
+    getV3Config,
+    isLaunchpadChain as isLaunchpadChainFn,
+    UNISWAP_V3_FACTORY_ABI,
+    UNISWAP_V3_POOL_ABI,
+    type Token,
+} from '@junoswap/sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { TOKEN_LISTS } from '@/lib/tokens'
-import { isLaunchpadChain as isLaunchpadChainFn } from '@/lib/abis/bonding-curve-junoswap'
-import { UNISWAP_V3_FACTORY_ABI } from '@/lib/abis/uniswap-v3-factory'
-import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
 import { sortTokens, getTickSpacing } from '@/lib/liquidity-helpers'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import type { V3PoolData } from '@/types/earn'
-import type { Token } from '@/types/tokens'
-
 const GRADUATED_FEE_TIER = 10000
 
 export function useGraduatedPools(chainId: number): { pools: V3PoolData[]; isLoading: boolean } {

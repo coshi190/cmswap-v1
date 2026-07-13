@@ -4,14 +4,12 @@ import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import { useQuery } from '@tanstack/react-query'
-import { UNISWAP_V3_POOL_ABI } from '@/lib/abis/uniswap-v3-pool'
+import { UNISWAP_V3_POOL_ABI, type Token } from '@junoswap/sdk'
 import { ponderRequest, isPonderError } from '@/lib/ponder-client'
 import { getTokensForChain } from '@/lib/tokens'
 import { getTickSpacing } from '@/lib/liquidity-helpers'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import type { V3PoolData } from '@/types/earn'
-import type { Token } from '@/types/tokens'
-
 export const PONDER_INDEXED_CHAINS = new Set([25925, 96, 8899])
 
 interface V3PoolRow {

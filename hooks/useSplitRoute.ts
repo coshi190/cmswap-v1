@@ -3,12 +3,17 @@
 import { useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import type { Token } from '@/types/tokens'
+import {
+    type Token,
+    ProtocolType,
+    getV2Config,
+    getV3Config,
+    UNISWAP_V2_ROUTER_ABI,
+    UNISWAP_V3_QUOTER_V2_ABI,
+    AGG_ROUTER_JUNOSWAP_ABI,
+    getAggRouterAddress,
+} from '@junoswap/sdk'
 import type { RouteQuote } from '@/types/routing'
-import { ProtocolType, getV2Config, getV3Config } from '@/lib/dex-config'
-import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
-import { UNISWAP_V3_QUOTER_V2_ABI } from '@/lib/abis/uniswap-v3-quoter'
-import { AGG_ROUTER_JUNOSWAP_ABI, getAggRouterAddress } from '@/lib/abis/agg-router-junoswap'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { getSwapAddress } from '@/services/tokens'
 import {

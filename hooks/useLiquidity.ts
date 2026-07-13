@@ -14,8 +14,7 @@ import type {
     PositionWithTokens,
     PositionDetails,
 } from '@/types/earn'
-import { getV3Config } from '@/lib/dex-config'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@/lib/abis/nonfungible-position-manager'
+import { getV3Config, NONFUNGIBLE_POSITION_MANAGER_ABI } from '@junoswap/sdk'
 import {
     buildMintParams,
     buildMintWithNativeMulticall,

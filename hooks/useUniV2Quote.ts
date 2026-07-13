@@ -3,16 +3,20 @@
 import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import type { Token } from '@/types/tokens'
+import {
+    type Token,
+    type DEXType,
+    getV2Config,
+    getDexsByProtocol,
+    isV2Config,
+    getDexConfig,
+    UNISWAP_V2_ROUTER_ABI,
+    UNISWAP_V2_FACTORY_ABI,
+    ProtocolType,
+} from '@junoswap/sdk'
 import type { QuoteResult } from '@/types/swap'
-import type { DEXType } from '@/types/dex'
-import { getV2Config, getDexsByProtocol, isV2Config, getDexConfig } from '@/lib/dex-config'
-import { UNISWAP_V2_ROUTER_ABI } from '@/lib/abis/uniswap-v2-router'
-import { UNISWAP_V2_FACTORY_ABI } from '@/lib/abis/uniswap-v2-factory'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'
-import { ProtocolType } from '@/lib/dex-config'
-
 interface UseUniV2QuoteParams {
     tokenIn: Token | null
     tokenOut: Token | null

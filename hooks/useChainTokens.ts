@@ -7,8 +7,7 @@ import { getTokensForChain } from '@/lib/tokens'
 import { ponderRequest, isPonderError } from '@/lib/ponder-client'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { useCustomTokensStore } from '@/store/custom-tokens-store'
-import type { Token } from '@/types/tokens'
-
+import { type Token } from '@junoswap/sdk'
 interface V3TokenResponse {
     v3Tokens: {
         items: Array<{

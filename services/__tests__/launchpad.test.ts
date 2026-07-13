@@ -13,8 +13,8 @@ import {
     isReadyToGraduate,
 } from '@/services/launchpad'
 
-vi.mock('@/lib/abis/bonding-curve-junoswap', () => ({
-    BONDING_CURVE_JUNOSWAP_ADDRESS: '0xPumpCore',
+vi.mock('@junoswap/sdk', async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
     BONDING_CURVE_JUNOSWAP_ABI: [],
 }))
 

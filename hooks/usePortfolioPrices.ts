@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useTokenPrices } from '@/hooks/useTokenPrices'
-import type { Token } from '@/types/tokens'
+import { type Token } from '@junoswap/sdk'
 import type { TokenHolding } from '@/hooks/useMultiBalances'
 import type { TokenType } from '@/types/portfolio'
 

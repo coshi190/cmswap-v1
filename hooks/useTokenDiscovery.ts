@@ -9,10 +9,9 @@ import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { ponderRequest, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
-import { isLaunchpadChain as isLaunchpadChainFn } from '@/lib/abis/bonding-curve-junoswap'
+import { isLaunchpadChain as isLaunchpadChainFn, type Token } from '@junoswap/sdk'
 import { hasSettled } from '@/lib/query-status'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
-import type { Token } from '@/types/tokens'
 import type { TokenType } from '@/types/portfolio'
 
 interface V3TokenResponse {

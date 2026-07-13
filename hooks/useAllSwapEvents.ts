@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useChainId } from 'wagmi'
 import type { Address } from 'viem'
-import { isLaunchpadChain } from '@/lib/abis/bonding-curve-junoswap'
+import { isLaunchpadChain } from '@junoswap/sdk'
 import { ponderRequest } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'

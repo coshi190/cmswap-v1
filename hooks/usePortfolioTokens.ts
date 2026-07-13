@@ -8,8 +8,7 @@ import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import { hasSettled } from '@/lib/query-status'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
-import type { Token } from '@/types/tokens'
-
+import { type Token } from '@junoswap/sdk'
 interface TokenHolderResponse {
     tokenHolders: {
         items: Array<{
