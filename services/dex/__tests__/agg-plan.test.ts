@@ -12,7 +12,7 @@ const CMM = '0x9B005000A10Ac871947D99001345b01C1cEf2790' as Address
 const UDON_FACTORY = '0x18c7a4CA020A0c648976208dF2e3AE1BAA32e8d1' as Address
 const JUNO_FACTORY = '0x090C6E5fF29251B1eF9EC31605Bdd13351eA316C' as Address
 
-vi.mock('@/services/tokens', () => ({
+vi.mock('@/lib/tokens', () => ({
     getSwapAddress: vi.fn((addr: string) => (addr.toLowerCase() === NATIVE ? WNATIVE : addr)),
 }))
 vi.mock('@/lib/wagmi', () => ({

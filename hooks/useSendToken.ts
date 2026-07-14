@@ -7,7 +7,7 @@ import { zeroAddress, type Address } from 'viem'
 import { ERC20_ABI } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { isNativeToken } from '@/lib/wagmi'
-import { parseTokenAmount } from '@/services/tokens'
+import { parseTokenAmount } from '@/lib/tokens'
 import { toastError } from '@/lib/toast'
 
 const REVERT_ERROR = new Error('Transaction reverted')

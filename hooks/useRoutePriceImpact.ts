@@ -12,7 +12,7 @@ import {
 import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
 import { encodeV3Path } from '@/services/dex/uniswap-v3'
-import { getSwapAddress, getWrapOperation } from '@/services/tokens'
+import { getSwapAddress, getWrapOperation } from '@/lib/tokens'
 
 interface UseRoutePriceImpactParams {
     route: RouteQuote | null

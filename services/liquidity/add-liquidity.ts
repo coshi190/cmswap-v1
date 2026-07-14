@@ -14,7 +14,7 @@ import {
     getTickSpacing,
 } from '@/lib/liquidity-helpers'
 import { isNativeToken } from '@/lib/wagmi'
-import { getWrappedNativeAddress } from '@/services/tokens'
+import { getWrappedNativeAddress } from '@/lib/tokens'
 
 export function buildMintParams(params: AddLiquidityParams): MintCallParams {
     const [token0, token1] = sortTokens(params.token0, params.token1)

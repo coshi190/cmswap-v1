@@ -5,7 +5,7 @@ import { useReadContracts } from 'wagmi'
 import { type Address } from 'viem'
 import { ERC20_ABI } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
-import { formatTokenAmount } from '@/services/tokens'
+import { formatTokenAmount } from '@/lib/tokens'
 export interface TokenHolding {
     token: Token
     rawBalance: bigint

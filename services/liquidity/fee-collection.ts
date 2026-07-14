@@ -2,7 +2,7 @@ import { encodeFunctionData, type Address, type Hex } from 'viem'
 import type { CollectCallParams } from '@/types/earn'
 import { MAX_UINT128 } from '@/types/earn'
 import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@coshi190/junoswap-sdk'
-import { getWrappedNativeAddress } from '@/services/tokens'
+import { getWrappedNativeAddress } from '@/lib/tokens'
 import { shouldSkipUnwrap } from '@/lib/wagmi'
 
 export function buildCollectFeesParams(tokenId: bigint, recipient: Address): CollectCallParams {

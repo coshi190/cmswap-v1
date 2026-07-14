@@ -15,7 +15,7 @@ import {
 import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
-import { getSwapAddress } from '@/services/tokens'
+import { getSwapAddress } from '@/lib/tokens'
 import {
     selectSplitCandidates,
     computeGridAmounts,

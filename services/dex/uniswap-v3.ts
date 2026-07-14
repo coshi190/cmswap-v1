@@ -1,7 +1,7 @@
 import { encodeFunctionData, concat, pad, toHex, type Address, type Hex } from 'viem'
 import type { SwapParams } from '@/types/swap'
 import { DEFAULT_FEE_TIER, UNISWAP_V3_SWAP_ROUTER_ABI } from '@coshi190/junoswap-sdk'
-import { getSwapAddress } from '@/services/tokens'
+import { getSwapAddress } from '@/lib/tokens'
 const ADDRESS_THIS = '0x0000000000000000000000000000000000000002' as Address
 
 export function buildQuoteParams(

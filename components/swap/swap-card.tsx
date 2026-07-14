@@ -40,16 +40,21 @@ import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { useChainTokens } from '@/hooks/useChainTokens'
 import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { calculateMinOutput as calculateMinOutputV2 } from '@/services/dex/uniswap-v2'
-import { formatBalance, formatTokenAmount, formatDisplayAmount } from '@/services/tokens'
+import {
+    formatBalance,
+    formatTokenAmount,
+    formatDisplayAmount,
+    getDefaultPairTokens,
+    isSameToken,
+    getWrapOperation,
+} from '@/lib/tokens'
 import { ConnectModal } from '@/components/web3/connect-modal'
 import { toastError } from '@/lib/toast'
-import { getDefaultPairTokens } from '@/lib/tokens'
 import type { RouteQuote } from '@/types/routing'
 import { TokenSelect } from './token-select'
 import { SettingsMenu } from './settings-menu'
 import { ArrowDownUp, ArrowRightLeft, CandlestickChart } from 'lucide-react'
 import { toast } from 'sonner'
-import { isSameToken, getWrapOperation } from '@/services/tokens'
 import { isValidNumberInput, cn } from '@/lib/utils'
 import { getChainMetadata, isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
 import { MIN_AGG_IMPROVEMENT_BPS } from '@/lib/routing-config'

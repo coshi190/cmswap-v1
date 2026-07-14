@@ -16,7 +16,7 @@ import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { QuoteResult } from '@/types/swap'
 import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
-import { isSameToken, getSwapAddress, getWrapOperation } from '@/services/tokens'
+import { isSameToken, getSwapAddress, getWrapOperation } from '@/lib/tokens'
 interface UseUniV2QuoteParams {
     tokenIn: Token | null
     tokenOut: Token | null

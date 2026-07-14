@@ -12,8 +12,8 @@ import {
     tokenNativeCandles,
     ratioCandles,
     SAFE_CANDLE_VALUE_MAX,
-} from '@/services/chart'
-import type { V3SwapEvent } from '@/services/chart'
+} from '@/services/launchpad/chart'
+import type { V3SwapEvent } from '@/services/launchpad/chart'
 import type { CandlestickData } from '@/types/chart'
 
 const NATIVE = (n: number) => BigInt(n) * 10n ** 18n

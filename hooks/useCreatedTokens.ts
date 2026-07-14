@@ -5,7 +5,7 @@ import type { Address } from 'viem'
 import { isLaunchpadChain, fetchCreatedTokens, fetchCreatorSnapshots } from '@coshi190/junoswap-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderClient } from '@/lib/ponder-client'
-import { mapLaunchTokenItem } from '@/services/launchpad'
+import { mapLaunchTokenItem } from '@/services/launchpad/launchpad'
 import type { CreatedToken } from '@/types/portfolio'
 
 interface UseCreatedTokensResult {

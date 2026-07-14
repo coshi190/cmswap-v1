@@ -29,7 +29,7 @@ import {
     formatTokenAmount,
     isReadyToGraduate,
     calculateGraduationTarget,
-} from '@/services/launchpad'
+} from '@/services/launchpad/launchpad'
 import { toastSuccess, toastError } from '@/lib/toast'
 import { getChainMetadata } from '@/lib/wagmi'
 import { ConnectModal } from '@/components/web3/connect-modal'

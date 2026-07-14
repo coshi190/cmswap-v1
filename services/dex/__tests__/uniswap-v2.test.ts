@@ -4,7 +4,7 @@ const mockSwapAddress = '0xWrapped1234567890abcdef1234567890ab' as `0x${string}`
 const mockTokenB = '0xTokenB1234567890abcdef1234567890abcd' as `0x${string}`
 const nativeAddr = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as `0x${string}`
 
-vi.mock('@/services/tokens', () => ({
+vi.mock('@/lib/tokens', () => ({
     getSwapAddress: vi.fn((addr: string) => {
         if (addr === nativeAddr) return mockSwapAddress
         return addr

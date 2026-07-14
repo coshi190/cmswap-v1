@@ -14,8 +14,7 @@ import type { DEXType } from '@/lib/dex-meta'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
 import { buildMultiHopSwapPath } from '@/services/dex/uniswap-v2'
-import { getWrapOperation } from '@/services/tokens'
-import { findTokenByAddress } from '@/lib/tokens'
+import { getWrapOperation, findTokenByAddress } from '@/lib/tokens'
 
 interface UseUniV2MultiHopQuoteParams {
     tokenIn: Token | null

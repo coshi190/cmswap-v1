@@ -20,7 +20,7 @@ import { TokenIcon, TokenIconSkeleton } from '@/components/ui/token-icon'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ChevronDown, Search, Copy, Loader2, Trash2, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatBalance, isValidTokenAddress } from '@/services/tokens'
+import { formatBalance, isValidTokenAddress } from '@/lib/tokens'
 import { toastSuccess } from '@/lib/toast'
 
 function truncateAddress(address: string): string {

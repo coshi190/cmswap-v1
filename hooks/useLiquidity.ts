@@ -27,7 +27,7 @@ import {
     buildCollectWithUnwrapMulticall,
     buildCollectFeesParams,
 } from '@/services/liquidity/fee-collection'
-import { getWrappedNativeAddress } from '@/services/tokens'
+import { getWrappedNativeAddress } from '@/lib/tokens'
 import {
     calculateMinAmounts,
     tickToSqrtPriceX96,

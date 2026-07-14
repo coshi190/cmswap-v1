@@ -1,9 +1,8 @@
 import type { SwapUrlParams, ParsedSwapUrlParams } from '@/types/swap'
 import type { Token } from '@/types/token'
 import type { Address } from 'viem'
-import { findTokenByAddress } from './tokens'
+import { findTokenByAddress, isValidTokenAddress } from './tokens'
 import { isNativeToken } from './wagmi'
-import { isValidTokenAddress } from '@/services/tokens'
 
 export function parseSwapSearchParams(searchParams: URLSearchParams): SwapUrlParams {
     return {

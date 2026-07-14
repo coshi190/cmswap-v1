@@ -19,7 +19,7 @@ import { useNativeUsdPriceHistory } from '@/hooks/useNativeUsdPriceHistory'
 import {
     computeTraderStatsByAddress,
     type LeaderboardSwapEvent,
-} from '@/services/dex/portfolio-pnl'
+} from '@/services/portfolio/portfolio-pnl'
 import {
     getTimeThreshold,
     fetchSwapEvents,

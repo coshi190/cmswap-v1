@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { fetchLaunchTokenMeta } from '@/lib/launchpad-og'
 import { tokenHue } from '@/lib/token-color'
-import { formatCompact } from '@/services/launchpad'
+import { formatCompact } from '@/services/launchpad/launchpad'
 
 export const alt = 'Junoswap Launchpad token'
 export const size = { width: 1200, height: 630 }

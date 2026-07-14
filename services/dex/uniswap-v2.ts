@@ -1,5 +1,5 @@
 import { type Address } from 'viem'
-import { getSwapAddress } from '@/services/tokens'
+import { getSwapAddress } from '@/lib/tokens'
 import { isNativeToken } from '@/lib/wagmi'
 
 function buildSwapPath(

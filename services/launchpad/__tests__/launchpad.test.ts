@@ -11,7 +11,7 @@ import {
     formatTokenAmount,
     formatCompact,
     isReadyToGraduate,
-} from '@/services/launchpad'
+} from '@/services/launchpad/launchpad'
 
 vi.mock('@coshi190/junoswap-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),

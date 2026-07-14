@@ -12,7 +12,7 @@ import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { usePool } from '@/hooks/usePools'
 import { getV3Config } from '@coshi190/junoswap-sdk'
 import { getChainMetadata } from '@/lib/wagmi'
-import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/services/tokens'
+import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/lib/tokens'
 import {
     tickToSqrtPriceX96,
     calculateAmount1FromAmount0,

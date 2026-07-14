@@ -10,7 +10,7 @@ import {
 } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { getIntermediaryTokens } from '@/lib/routing-config'
-import { getSwapAddress } from '@/services/tokens'
+import { getSwapAddress } from '@/lib/tokens'
 import {
     candidateHopOptions,
     pickBestHopOption,

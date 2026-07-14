@@ -1,7 +1,7 @@
 import { formatEther } from 'viem'
 import type { Timeframe, ChartMode, CandlestickData } from '@/types/chart'
 import { TIMEFRAME_DURATIONS } from '@/types/chart'
-import { PUMP_FEE_BPS } from '@/services/launchpad'
+import { PUMP_FEE_BPS } from './launchpad'
 
 const TOTAL_SUPPLY = 1_000_000_000
 const VIRTUAL_AMOUNT = 3400n * 10n ** 18n

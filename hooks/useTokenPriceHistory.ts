@@ -13,8 +13,8 @@ import {
     computeFeeBreakdown,
     extractCreatorTrades,
     stitchCandlesticks,
-} from '@/services/chart'
-import type { V3SwapEvent } from '@/services/chart'
+} from '@/services/launchpad/chart'
+import type { V3SwapEvent } from '@/services/launchpad/chart'
 import type { Timeframe, ChartMode } from '@/types/chart'
 
 export const TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '1h', '4h', '1d']

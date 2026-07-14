@@ -5,7 +5,7 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import type { Address } from 'viem'
 import { maxUint256, zeroAddress } from 'viem'
 import { ERC20_ABI } from '@coshi190/junoswap-sdk'
-import { getWrappedNativeAddress } from '@/services/tokens'
+import { getWrappedNativeAddress } from '@/lib/tokens'
 import { shouldSkipUnwrap } from '@/lib/wagmi'
 
 const KKUB_UNWRAPPER_ADDRESS = '0xff76DD8086428EBC4Ed1b14B0e56E95eDc46a315' as const

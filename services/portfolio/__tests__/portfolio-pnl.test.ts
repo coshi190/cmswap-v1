@@ -5,7 +5,7 @@ import {
     computeTraderStatsByAddress,
     type PnlSwapEvent,
     type LeaderboardSwapEvent,
-} from '@/services/dex/portfolio-pnl'
+} from '@/services/portfolio/portfolio-pnl'
 
 const TOKEN = '0xtoken'
 

@@ -8,7 +8,7 @@ import { useMultiDexQuotes } from '@/hooks/useMultiDexQuotes'
 import { getSupportedDexs } from '@coshi190/junoswap-sdk'
 import { DEX_REGISTRY } from '@/lib/dex-meta'
 import { percentDiff } from '@/lib/routing-config'
-import { formatDisplayAmount } from '@/services/tokens'
+import { formatDisplayAmount } from '@/lib/tokens'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 

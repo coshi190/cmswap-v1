@@ -15,7 +15,7 @@ const REFERRER = '0x000000000000000000000000000000000000CAFE' as Address
 const SKIP_UNWRAP_CHAIN = 96
 const UNWRAP_CHAIN = 8899
 
-vi.mock('@/services/tokens', () => ({
+vi.mock('@/lib/tokens', () => ({
     getSwapAddress: vi.fn((addr: string) => (addr === NATIVE ? WNATIVE : addr)),
 }))
 

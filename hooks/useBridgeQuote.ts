@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAccount } from 'wagmi'
 import { parseUnits } from 'viem'
-import { formatDisplayAmount } from '@/services/tokens'
+import { formatDisplayAmount } from '@/lib/tokens'
 import type { Route } from '@lifi/types'
 import { useBridgeStore } from '@/store/bridge-store'
 import { useDebounce } from '@/hooks/useDebounce'

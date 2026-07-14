@@ -3,7 +3,7 @@ import {
     sanitizePricePoints,
     type NetWorthPoint,
     type PricePoint,
-} from '@/services/net-worth-history'
+} from '@/services/portfolio/net-worth-history'
 
 export interface BalanceDelta {
     timestamp: number

@@ -1,4 +1,4 @@
-import { calculatePriceFromSqrtPrice } from '@/services/chart'
+import { calculatePriceFromSqrtPrice } from '@/services/launchpad/chart'
 
 export interface PoolSwapPoint {
     timestamp: number

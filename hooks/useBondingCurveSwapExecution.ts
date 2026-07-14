@@ -13,7 +13,11 @@ import { zeroAddress, type Address } from 'viem'
 import { BONDING_CURVE_JUNOSWAP_ABI, ERC20_ABI } from '@coshi190/junoswap-sdk'
 import { getAllowanceFunctionName } from '@/lib/tokens'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
-import { calculateBuyOutput, calculateSellOutput, calculateMinOutput } from '@/services/launchpad'
+import {
+    calculateBuyOutput,
+    calculateSellOutput,
+    calculateMinOutput,
+} from '@/services/launchpad/launchpad'
 import { useSwapStore } from '@/store/swap-store'
 
 interface UseBondingCurveSwapExecutionParams {

@@ -8,8 +8,8 @@ import {
     priceToY,
     RANGE_CHART_BUCKET_SEC,
     RANGE_CHART_WINDOW_SEC,
-} from '@/services/position-chart'
-import type { PoolSwapPoint } from '@/services/position-chart'
+} from '@/lib/position-chart'
+import type { PoolSwapPoint } from '@/lib/position-chart'
 import { tickToPrice } from '@/lib/liquidity-helpers'
 
 const Q96 = 2n ** 96n

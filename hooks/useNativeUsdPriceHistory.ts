@@ -6,7 +6,7 @@ import { fetchNativeUsdPriceSnapshots } from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { hasSettled } from '@/lib/query-status'
-import { sanitizePricePoints } from '@/services/net-worth-history'
+import { sanitizePricePoints } from '@/services/portfolio/net-worth-history'
 
 export interface NativeUsdPricePoint {
     timestamp: number

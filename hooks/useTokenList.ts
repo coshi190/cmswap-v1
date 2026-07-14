@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { isLaunchpadChain, fetchTokenList } from '@coshi190/junoswap-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderClient } from '@/lib/ponder-client'
-import { mapLaunchTokenItem } from '@/services/launchpad'
+import { mapLaunchTokenItem } from '@/services/launchpad/launchpad'
 import type { LaunchToken } from '@/types/launchpad'
 
 const STALENESS_TOLERANCE = 3600 // 1 hour — hide badge if reference price is >1h before the 24h mark

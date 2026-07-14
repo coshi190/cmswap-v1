@@ -12,7 +12,7 @@ import {
     calculateMinOutput,
     INITIAL_TOKEN_SUPPLY,
     parseTokenAddressFromLogs,
-} from '@/services/launchpad'
+} from '@/services/launchpad/launchpad'
 import { useSwapStore } from '@/store/swap-store'
 import type { CreateTokenForm } from '@/types/launchpad'
 

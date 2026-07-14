@@ -9,14 +9,18 @@ import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { isNativeToken } from '@/lib/wagmi'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { isStablecoin } from '@/hooks/useTokenPrices'
-import { calculatePrice, calculatePriceFromSqrtPrice } from '@/services/chart'
+import { calculatePrice, calculatePriceFromSqrtPrice } from '@/services/launchpad/chart'
 import {
     buildLedgerNetWorthSeries,
     type BalanceDelta,
     type LedgerToken,
     type PriceKind,
-} from '@/services/net-worth-ledger'
-import { DAY_SECONDS, type NetWorthPoint, type PricePoint } from '@/services/net-worth-history'
+} from '@/services/portfolio/net-worth-ledger'
+import {
+    DAY_SECONDS,
+    type NetWorthPoint,
+    type PricePoint,
+} from '@/services/portfolio/net-worth-history'
 import type { UserSwapEvent } from '@/hooks/useUserSwapEvents'
 import type { PortfolioToken, TokenType } from '@/types/portfolio'
 

@@ -29,7 +29,7 @@ vi.mock('@/lib/wagmi', () => ({
     isNativeToken: vi.fn((addr: string) => addr === NATIVE),
 }))
 
-vi.mock('@/services/tokens', () => ({
+vi.mock('@/lib/tokens', () => ({
     getWrappedNativeAddress: vi.fn(() => WRAPPED),
 }))
 

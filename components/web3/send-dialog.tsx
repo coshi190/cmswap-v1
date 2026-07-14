@@ -18,7 +18,7 @@ import {
     formatBalance,
     formatTokenAmount,
     parseTokenAmount,
-} from '@/services/tokens'
+} from '@/lib/tokens'
 import { getExplorerTxUrl } from '@/lib/explorer'
 import { toastError } from '@/lib/toast'
 import { Check } from 'lucide-react'

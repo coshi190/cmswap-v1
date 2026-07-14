@@ -6,7 +6,7 @@ import { useBalance } from 'wagmi'
 import type { Address } from 'viem'
 import { isNativeToken } from '@/lib/wagmi'
 import { hasSettled } from '@/lib/query-status'
-import { formatTokenAmount } from '@/services/tokens'
+import { formatTokenAmount } from '@/lib/tokens'
 import { useMultiBalances, type TokenHolding } from '@/hooks/useMultiBalances'
 
 export type { TokenHolding }

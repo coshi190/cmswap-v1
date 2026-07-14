@@ -16,7 +16,7 @@ import { buildV2SwapParams, buildV2MultiHopSwapParams } from '@/services/dex/uni
 import type { SwapRoute } from '@/types/routing'
 import { toastError } from '@/lib/toast'
 import { isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
-import { getWrapOperation, getWrappedNativeAddress } from '@/services/tokens'
+import { getWrapOperation, getWrappedNativeAddress } from '@/lib/tokens'
 import { useReferrer } from '@/hooks/useReferrer'
 import { appendTrackingTag } from '@coshi190/junoswap-sdk'
 

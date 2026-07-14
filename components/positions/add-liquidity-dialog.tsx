@@ -17,7 +17,7 @@ import { useAddLiquidity } from '@/hooks/useLiquidity'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { getChainMetadata } from '@/lib/wagmi'
-import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/services/tokens'
+import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/lib/tokens'
 import {
     tickToSqrtPriceX96,
     priceToSqrtPriceX96,

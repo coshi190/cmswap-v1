@@ -17,8 +17,8 @@ import {
     buildContinuousSeries,
     tokenNativeCandles,
     ratioCandles,
-} from '@/services/chart'
-import type { V3SwapEvent } from '@/services/chart'
+} from '@/services/launchpad/chart'
+import type { V3SwapEvent } from '@/services/launchpad/chart'
 
 const NATIVE_DECIMALS = 18
 

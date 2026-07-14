@@ -5,7 +5,7 @@ import {
     computePortfolioPnl,
     type TokenPnl,
     type PortfolioPnlTotals,
-} from '@/services/dex/portfolio-pnl'
+} from '@/services/portfolio/portfolio-pnl'
 import type { UserSwapEvent } from '@/hooks/useUserSwapEvents'
 import type { TokenHolding } from '@/hooks/useMultiBalances'
 

@@ -15,8 +15,7 @@ import type { DEXType } from '@/lib/dex-meta'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
 import { encodeV3Path } from '@/services/dex/uniswap-v3'
-import { getSwapAddress, getWrapOperation } from '@/services/tokens'
-import { findTokenByAddress } from '@/lib/tokens'
+import { getSwapAddress, getWrapOperation, findTokenByAddress } from '@/lib/tokens'
 import { useV3PoolDiscovery, type PoolQuery } from './useV3PoolDiscovery'
 
 interface UseUniV3MultiHopQuoteParams {

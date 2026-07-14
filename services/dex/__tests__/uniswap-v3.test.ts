@@ -6,7 +6,7 @@ const mockTokenA = '0xbbbbbbbb1234567890abcdef1234567890abcdef' as Address
 const mockTokenB = '0xcccccccc1234567890abcdef1234567890abcdef' as Address
 const nativeAddr = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as Address
 
-vi.mock('@/services/tokens', () => ({
+vi.mock('@/lib/tokens', () => ({
     getSwapAddress: vi.fn((addr: string) => {
         if (addr === nativeAddr) return mockSwapAddress
         return addr
