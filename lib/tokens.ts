@@ -1,7 +1,14 @@
 import type { Address } from 'viem'
-import { ERC20_ABI } from '@coshi190/junoswap-sdk'
+import {
+    ERC20_ABI,
+    NATIVE_TOKEN_ADDRESS,
+    WRAPPED_NATIVE_ADDRESSES,
+    getSwapAddress,
+    getWrapOperation as getWrapOperationBySdk,
+    isNativeToken,
+} from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
-import { kubTestnet, jbc, bitkub, worldchain, base, bsc, isNativeToken } from './wagmi'
+import { kubTestnet, jbc, bitkub, worldchain, base, bsc } from './wagmi'
 import { resolveLaunchpadLogo } from './logo'
 import tokenData from './tokens.json'
 
@@ -66,7 +73,7 @@ export function getDefaultPairTokens(chainId: number): {
 export function findTokenByAddress(chainId: number, address: string): Token | undefined {
     const tokens = TOKEN_LISTS[chainId] || []
     if (isNativeToken(address as Address)) {
-        return tokens.find((t) => t.address === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+        return tokens.find((t) => t.address === NATIVE_TOKEN_ADDRESS)
     }
     return tokens.find((t) => t.address.toLowerCase() === address.toLowerCase())
 }
@@ -158,9 +165,7 @@ export function isValidTokenAddress(address: string): boolean {
 }
 
 export function findWrappedNativeAddress(chainId: number): Address | undefined {
-    const tokens = TOKEN_LISTS[chainId]
-    if (!tokens || tokens.length < 2) return undefined
-    return tokens[1]!.address as Address
+    return WRAPPED_NATIVE_ADDRESSES[chainId]
 }
 
 export function getWrappedNativeAddress(chainId: number): Address {
@@ -181,12 +186,7 @@ export function getDisplayToken(token: Token): Token {
     return token
 }
 
-export function getSwapAddress(tokenAddress: Address, chainId: number, wnative?: Address): Address {
-    if (isNativeToken(tokenAddress)) {
-        return wnative || findWrappedNativeAddress(chainId) || tokenAddress
-    }
-    return tokenAddress
-}
+export { getSwapAddress }
 
 export function isSameToken(tokenA: Token | null, tokenB: Token | null): boolean {
     if (!tokenA || !tokenB) return false
@@ -201,28 +201,19 @@ export function isSameToken(tokenA: Token | null, tokenB: Token | null): boolean
 }
 
 function isNativeWrappedPair(tokenA: Token | null, tokenB: Token | null): boolean {
-    if (!tokenA || !tokenB) return false
-    if (tokenA.chainId !== tokenB.chainId) return false
-
-    const isANative = isNativeToken(tokenA.address as Address)
-    const isBNative = isNativeToken(tokenB.address as Address)
-
-    if (isANative && isBNative) return false
-    if (!isANative && !isBNative) return false
-
-    const wrappedAddress = findWrappedNativeAddress(tokenA.chainId)
-    if (!wrappedAddress) return false
-    const nonNativeAddress = isANative ? tokenB.address : tokenA.address
-
-    return nonNativeAddress.toLowerCase() === wrappedAddress.toLowerCase()
+    return getWrapOperation(tokenA, tokenB) !== null
 }
 
 export function getWrapOperation(
     tokenIn: Token | null,
     tokenOut: Token | null
 ): 'wrap' | 'unwrap' | null {
-    if (!isNativeWrappedPair(tokenIn, tokenOut)) return null
+    if (!tokenIn || !tokenOut) return null
+    if (tokenIn.chainId !== tokenOut.chainId) return null
 
-    const isInputNative = isNativeToken(tokenIn?.address as Address)
-    return isInputNative ? 'wrap' : 'unwrap'
+    return getWrapOperationBySdk(
+        tokenIn.address as Address,
+        tokenOut.address as Address,
+        tokenIn.chainId
+    )
 }

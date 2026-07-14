@@ -8,6 +8,7 @@ import {
     getDexsByProtocol,
     isV2Config,
     getDexConfig,
+    resolveSwapPath,
     UNISWAP_V2_ROUTER_ABI,
     UNISWAP_V2_FACTORY_ABI,
     ProtocolType,
@@ -15,7 +16,6 @@ import {
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { QuoteResult } from '@/types/swap'
-import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/lib/tokens'
 interface UseUniV2QuoteParams {
     tokenIn: Token | null
@@ -120,18 +120,19 @@ export function useUniV2Quote({
         })
     }, [requestedDexIds, pairResults])
     const quoteParamsMap = useMemo(() => {
-        const params: Record<DEXType, ReturnType<typeof buildV2QuoteParams> | null> = {}
+        const params: Record<DEXType, { amountIn: bigint; path: Address[] } | null> = {}
         for (const id of requestedDexIds) {
             if (!tokenIn || !tokenOut || amountIn <= 0n) {
                 params[id] = null
             } else {
-                params[id] = buildV2QuoteParams(
-                    tokenIn.address as Address,
-                    tokenOut.address as Address,
+                params[id] = {
                     amountIn,
-                    chainId,
-                    dexConfigs[id]?.wnative
-                )
+                    path: resolveSwapPath(
+                        [tokenIn.address as Address, tokenOut.address as Address],
+                        chainId,
+                        dexConfigs[id]?.wnative
+                    ),
+                }
             }
         }
         return params

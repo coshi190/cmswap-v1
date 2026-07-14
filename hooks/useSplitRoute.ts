@@ -7,6 +7,7 @@ import {
     ProtocolType,
     getV2Config,
     getV3Config,
+    resolveSwapPath,
     UNISWAP_V2_ROUTER_ABI,
     UNISWAP_V3_QUOTER_V2_ABI,
     AGG_ROUTER_JUNOSWAP_ABI,
@@ -14,7 +15,6 @@ import {
 } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
-import { buildV2QuoteParams } from '@/services/dex/uniswap-v2'
 import { getSwapAddress } from '@/lib/tokens'
 import {
     selectSplitCandidates,
@@ -78,10 +78,8 @@ function buildQuoteContract(
     }
     const cfg = getV2Config(chainId, route.dexId)
     if (!cfg?.router) return null
-    const { path } = buildV2QuoteParams(
-        tokenIn.address as Address,
-        tokenOut.address as Address,
-        amount,
+    const path = resolveSwapPath(
+        [tokenIn.address as Address, tokenOut.address as Address],
         chainId,
         cfg.wnative
     )

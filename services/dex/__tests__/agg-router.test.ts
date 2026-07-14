@@ -15,15 +15,6 @@ const REFERRER = '0x000000000000000000000000000000000000CAFE' as Address
 const SKIP_UNWRAP_CHAIN = 96
 const UNWRAP_CHAIN = 8899
 
-vi.mock('@/lib/tokens', () => ({
-    getSwapAddress: vi.fn((addr: string) => (addr === NATIVE ? WNATIVE : addr)),
-}))
-
-vi.mock('@/lib/wagmi', () => ({
-    isNativeToken: vi.fn((addr: string) => addr.toLowerCase() === NATIVE),
-    shouldSkipUnwrap: vi.fn((chainId: number) => chainId === SKIP_UNWRAP_CHAIN),
-}))
-
 vi.mock('@coshi190/junoswap-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     ProtocolType: { V2: 'v2', V3: 'v3' },

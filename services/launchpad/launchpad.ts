@@ -116,10 +116,6 @@ export function calculateStableGraduationProgress(
     return Math.min(100, progress)
 }
 
-export function calculateMinOutput(expectedOut: bigint, slippageBps: number): bigint {
-    return (expectedOut * BigInt(10000 - slippageBps)) / 10000n
-}
-
 export function formatKub(weiValue: bigint): string {
     const formatted = formatEther(weiValue)
     const num = parseFloat(formatted)

@@ -10,17 +10,19 @@ import {
     fetchUserAggSwaps,
     fetchLaunchTokenMeta,
     fetchV3Tokens,
+    isLaunchpadChain,
+    isAggRouterChain,
+    NATIVE_TOKEN_ADDRESS,
 } from '@coshi190/junoswap-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { isLaunchpadChain, isAggRouterChain } from '@coshi190/junoswap-sdk'
 import { findTokenByAddress, getTokensForChain, findWrappedNativeAddress } from '@/lib/tokens'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import type { ActivityEvent, ActivityLeg } from '@/types/portfolio'
 
 const PAGE_SIZE = 20
-const NATIVE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+const NATIVE_ADDRESS: string = NATIVE_TOKEN_ADDRESS
 
 interface TokenMeta {
     symbol: string

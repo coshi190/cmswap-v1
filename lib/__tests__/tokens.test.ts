@@ -102,8 +102,14 @@ describe('lib/tokens', () => {
     })
 
     describe('findWrappedNativeAddress', () => {
-        it('returns the index-1 token for a supported chain', () => {
-            expect(findWrappedNativeAddress(96)).toBe(wrapped.address)
+        // Wrapped-native now comes from the SDK's WRAPPED_NATIVE_ADDRESSES, while the token
+        // list still carries its own copy at index 1. If the two ever disagree, swaps route
+        // through the wrong wrapper, so pin them together for every chain we ship.
+        it.each(Object.keys(TOKEN_LISTS))('agrees with the token list on chain %s', (chainId) => {
+            const listed = TOKEN_LISTS[Number(chainId)]![1]!.address
+            expect(findWrappedNativeAddress(Number(chainId))?.toLowerCase()).toBe(
+                listed.toLowerCase()
+            )
         })
 
         it('returns undefined for an unsupported chain', () => {
@@ -112,8 +118,8 @@ describe('lib/tokens', () => {
     })
 
     describe('getWrappedNativeAddress', () => {
-        it('returns the index-1 token from TOKEN_LISTS', () => {
-            expect(getWrappedNativeAddress(96)).toBe(wrapped.address)
+        it('returns the wrapped native for a supported chain', () => {
+            expect(getWrappedNativeAddress(96).toLowerCase()).toBe(wrapped.address.toLowerCase())
         })
 
         it('throws for an unknown chain', () => {
@@ -123,7 +129,9 @@ describe('lib/tokens', () => {
 
     describe('getSwapAddress', () => {
         it('returns the wrapped address for a native token', () => {
-            expect(getSwapAddress(native.address as Address, 96)).toBe(wrapped.address)
+            expect(getSwapAddress(native.address as Address, 96).toLowerCase()).toBe(
+                wrapped.address.toLowerCase()
+            )
         })
 
         // Render-time quote memos can call this with an unsupported chain (e.g. while the

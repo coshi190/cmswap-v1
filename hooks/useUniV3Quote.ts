@@ -17,7 +17,6 @@ import {
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { QuoteResult } from '@/types/swap'
-import { buildQuoteParams } from '@/services/dex/uniswap-v3'
 import { isSameToken, getSwapAddress, getWrapOperation } from '@/lib/tokens'
 interface UseUniV3QuoteParams {
     tokenIn: Token | null
@@ -199,13 +198,13 @@ export function useUniV3Quote({
     ])
     const quoteParams =
         isReadyForQuote && bestPool && bestFee
-            ? buildQuoteParams(
-                  tokenIn.address as Address,
-                  tokenOut.address as Address,
+            ? {
+                  tokenIn: getSwapAddress(tokenIn.address as Address, tokenIn.chainId),
+                  tokenOut: getSwapAddress(tokenOut.address as Address, tokenIn.chainId),
                   amountIn,
-                  bestFee,
-                  tokenIn.chainId
-              )
+                  fee: bestFee,
+                  sqrtPriceLimitX96: 0n,
+              }
             : null
     const {
         data,

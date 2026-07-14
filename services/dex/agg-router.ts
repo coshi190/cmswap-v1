@@ -1,10 +1,13 @@
 import { encodeAbiParameters, type Address, type Hex } from 'viem'
 import type { RouteQuote } from '@/types/routing'
-import { ProtocolType, getV2Config, getV3Config } from '@coshi190/junoswap-sdk'
-import { isNativeToken, shouldSkipUnwrap } from '@/lib/wagmi'
-import { buildMultiHopSwapPath } from './uniswap-v2'
-
-export const NATIVE_SENTINEL: Address = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+import {
+    ProtocolType,
+    getV2Config,
+    getV3Config,
+    isNativeToken,
+    resolveSwapPath,
+    shouldSkipUnwrap,
+} from '@coshi190/junoswap-sdk'
 
 export interface Hop {
     factory: Address
@@ -44,7 +47,7 @@ export function routeToHops(routeQuote: RouteQuote, chainId: number): Hop[] {
     }
 
     const wnative = isV3 ? undefined : getV2Config(chainId, dexId)?.wnative
-    const path = buildMultiHopSwapPath(route.path, chainId, wnative)
+    const path = resolveSwapPath(route.path, chainId, wnative)
     if (path.length < 2) throw new Error('route path needs at least two tokens')
 
     const hopCount = path.length - 1

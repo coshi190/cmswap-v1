@@ -1,7 +1,6 @@
 import { http, createConfig } from 'wagmi'
 import { cookieStorage, createStorage } from 'wagmi'
 import { bsc, bitkub, jbc, base, worldchain } from 'wagmi/chains'
-import type { Address } from 'viem'
 
 export { bsc, bitkub, jbc, base, worldchain }
 
@@ -89,12 +88,4 @@ export function getChainMetadata(chainId: number) {
     return chainMetadata[chainId as keyof typeof chainMetadata]
 }
 
-export function isNativeToken(address: Address): boolean {
-    return address.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-}
-
-const SKIP_UNWRAP_CHAINS = [bitkub.id] as const
-
-export function shouldSkipUnwrap(chainId: number): boolean {
-    return SKIP_UNWRAP_CHAINS.includes(chainId as (typeof SKIP_UNWRAP_CHAINS)[number])
-}
+export { isNativeToken, shouldSkipUnwrap } from '@coshi190/junoswap-sdk'

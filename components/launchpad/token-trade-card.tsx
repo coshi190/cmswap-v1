@@ -11,12 +11,15 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTokenReserves } from '@/hooks/useTokenReserves'
 import { useBondingCurveSwapExecution } from '@/hooks/useBondingCurveSwapExecution'
-import { useUniV3SwapExecution } from '@/hooks/useUniV3SwapExecution'
+import { useSwapExecution } from '@/hooks/useSwapExecution'
 import { useUniV3Quote } from '@/hooks/useUniV3Quote'
 import { useGraduate } from '@/hooks/useGraduate'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import {
     ERC20_ABI,
+    NATIVE_TOKEN_ADDRESS,
+    ProtocolType,
+    calculateMinOutput,
     getBondingCurveAddress,
     getV3Config,
     getDefaultDexForChain,
@@ -35,7 +38,6 @@ import { getChainMetadata } from '@/lib/wagmi'
 import { ConnectModal } from '@/components/web3/connect-modal'
 import { SettingsMenu } from '@/components/swap/settings-menu'
 import { useSwapStore } from '@/store/swap-store'
-import { calculateMinOutput } from '@/services/dex/uniswap-v3'
 import { getDefaultPairTokens } from '@/lib/tokens'
 interface TokenTradeCardProps {
     tokenAddr: Address
@@ -201,7 +203,7 @@ export function TokenTradeCard({
         if (native) return native
         const meta = getChainMetadata(chainId)
         return {
-            address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            address: NATIVE_TOKEN_ADDRESS,
             symbol: meta?.symbol ?? 'KUB',
             name: meta?.name ?? 'Native',
             decimals: 18,
@@ -243,13 +245,13 @@ export function TokenTradeCard({
         isError: isBuyErrorV3,
         error: buyErrorV3,
         hash: buyHashV3,
-    } = useUniV3SwapExecution({
+    } = useSwapExecution({
+        protocol: ProtocolType.V3,
         tokenIn: nativeToken,
         tokenOut: launchpadToken,
         amountIn: buyAmountWei,
         amountOutMinimum: v3MinTokenOut,
         recipient: address ?? zeroAddress,
-        slippage: settings.slippage,
         deadlineMinutes: settings.deadlineMinutes,
         fee: poolFee ?? 10000,
         dexId: launchpadDex,
@@ -324,13 +326,13 @@ export function TokenTradeCard({
         isError: isSellErrorV3,
         error: sellErrorV3,
         hash: sellHashV3,
-    } = useUniV3SwapExecution({
+    } = useSwapExecution({
+        protocol: ProtocolType.V3,
         tokenIn: launchpadToken,
         tokenOut: nativeToken,
         amountIn: sellAmountWei,
         amountOutMinimum: v3MinNativeOut,
         recipient: address ?? zeroAddress,
-        slippage: settings.slippage,
         deadlineMinutes: settings.deadlineMinutes,
         fee: poolFee ?? 10000,
         dexId: launchpadDex,

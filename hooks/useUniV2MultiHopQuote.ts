@@ -6,6 +6,7 @@ import type { Address } from 'viem'
 import {
     getV2Config,
     getDexsByProtocol,
+    resolveSwapPath,
     ProtocolType,
     UNISWAP_V2_ROUTER_ABI,
 } from '@coshi190/junoswap-sdk'
@@ -13,7 +14,6 @@ import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
-import { buildMultiHopSwapPath } from '@/services/dex/uniswap-v2'
 import { getWrapOperation, findTokenByAddress } from '@/lib/tokens'
 
 interface UseUniV2MultiHopQuoteParams {
@@ -71,7 +71,7 @@ export function useUniV2MultiHopQuote({
             const cfg = getV2Config(chainId, targetDexId)
             if (!cfg?.router) continue
             for (const rawPath of rawPaths) {
-                const path = buildMultiHopSwapPath(rawPath, chainId, cfg.wnative)
+                const path = resolveSwapPath(rawPath, chainId, cfg.wnative)
                 const collapsed = path.some(
                     (t, i) => i > 0 && t.toLowerCase() === path[i - 1]!.toLowerCase()
                 )

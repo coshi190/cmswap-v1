@@ -7,6 +7,7 @@ import {
     getV3Config,
     FEE_TIERS,
     getDexsByProtocol,
+    encodeV3Path,
     ProtocolType,
     UNISWAP_V3_QUOTER_V2_ABI,
 } from '@coshi190/junoswap-sdk'
@@ -14,7 +15,6 @@ import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { RouteQuote, SwapRoute } from '@/types/routing'
 import { getIntermediaryTokens, enumerateHopPaths, MAX_HOPS } from '@/lib/routing-config'
-import { encodeV3Path } from '@/services/dex/uniswap-v3'
 import { getSwapAddress, getWrapOperation, findTokenByAddress } from '@/lib/tokens'
 import { useV3PoolDiscovery, type PoolQuery } from './useV3PoolDiscovery'
 

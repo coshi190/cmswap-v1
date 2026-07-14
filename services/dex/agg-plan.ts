@@ -1,7 +1,6 @@
 import type { Address } from 'viem'
 import type { RouteQuote } from '@/types/routing'
-import { ProtocolType, getV2Config, getV3Config } from '@coshi190/junoswap-sdk'
-import { buildMultiHopSwapPath } from './uniswap-v2'
+import { ProtocolType, getV2Config, getV3Config, resolveSwapPath } from '@coshi190/junoswap-sdk'
 import { legToHops, type Leg, type ResolvedHop } from './agg-router'
 import type { SplitAllocation } from './split-routing'
 import type { LegCandidate } from './cross-dex-routing'
@@ -22,7 +21,7 @@ function routeToResolvedHops(rq: RouteQuote, chainId: number): ResolvedHop[] {
     const cfg = isV3 ? getV3Config(chainId, rq.dexId) : getV2Config(chainId, rq.dexId)
     if (!cfg?.factory) throw new Error(`no factory for ${rq.dexId} on chain ${chainId}`)
     const wnative = isV3 ? undefined : getV2Config(chainId, rq.dexId)?.wnative
-    const path = buildMultiHopSwapPath(rq.route.path, chainId, wnative)
+    const path = resolveSwapPath(rq.route.path, chainId, wnative)
 
     const hops: ResolvedHop[] = []
     for (let i = 0; i < path.length - 1; i++) {

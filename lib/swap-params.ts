@@ -1,8 +1,8 @@
 import type { SwapUrlParams, ParsedSwapUrlParams } from '@/types/swap'
 import type { Token } from '@/types/token'
 import type { Address } from 'viem'
+import { NATIVE_TOKEN_ADDRESS, isNativeToken } from '@coshi190/junoswap-sdk'
 import { findTokenByAddress, isValidTokenAddress } from './tokens'
-import { isNativeToken } from './wagmi'
 
 export function parseSwapSearchParams(searchParams: URLSearchParams): SwapUrlParams {
     return {
@@ -38,7 +38,7 @@ function resolveTokenFromAddress(
     }
 
     if (isNativeToken(address as Address)) {
-        return findTokenByAddress(chainId, '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') || null
+        return findTokenByAddress(chainId, NATIVE_TOKEN_ADDRESS) || null
     }
 
     const staticMatch = findTokenByAddress(chainId, address)

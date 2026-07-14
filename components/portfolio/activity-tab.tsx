@@ -8,6 +8,7 @@ import { ExternalLink, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
 import { useUserActivity } from '@/hooks/useUserActivity'
 import { useNativeUsdPriceContext } from '@/components/launchpad/native-usd-price-provider'
 import { formatKub, formatTokenAmount, formatCompact } from '@/services/launchpad/launchpad'
+import { NATIVE_TOKEN_ADDRESS } from '@coshi190/junoswap-sdk'
 import {
     formatTokenAmount as formatTokenAmountDecimals,
     formatDisplayAmount,
@@ -29,7 +30,7 @@ import { PaginationControls } from '@/components/ui/pagination'
 import type { ActivityEvent, ActivityLeg } from '@/types/portfolio'
 
 const PAGE_SIZE = 20
-const NATIVE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+const NATIVE_ADDRESS: string = NATIVE_TOKEN_ADDRESS
 
 function groupByDate(events: ActivityEvent[]): { label: string; events: ActivityEvent[] }[] {
     const now = new Date()
