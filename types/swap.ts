@@ -15,12 +15,9 @@ export interface SwapParams {
     fees?: number[] // Fee tiers for V3 multi-hop (length = path.length - 1)
 }
 
-export interface QuoteResult {
-    amountOut: bigint
-    sqrtPriceX96After: bigint
-    initializedTicksCrossed: number
-    gasEstimate: bigint
-}
+import type { QuoteResult } from '@coshi190/junoswap-sdk'
+
+export type { QuoteResult }
 
 export interface DexQuote {
     dexId: DEXType

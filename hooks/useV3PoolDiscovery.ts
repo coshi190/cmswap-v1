@@ -2,23 +2,14 @@
 
 import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
-import type { Address } from 'viem'
-import { UNISWAP_V3_FACTORY_ABI } from '@coshi190/junoswap-sdk'
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+import { zeroAddress, type Address } from 'viem'
+import { UNISWAP_V3_FACTORY_ABI, poolKey } from '@coshi190/junoswap-sdk'
 
 export interface PoolQuery {
     factory: Address
     tokenA: Address
     tokenB: Address
     fee: number
-}
-
-export function poolKey(factory: Address, a: Address, b: Address, fee: number): string {
-    const [x, y] =
-        a.toLowerCase() < b.toLowerCase()
-            ? [a.toLowerCase(), b.toLowerCase()]
-            : [b.toLowerCase(), a.toLowerCase()]
-    return `${factory.toLowerCase()}:${x}:${y}:${fee}`
 }
 
 interface UseV3PoolDiscoveryParams {
@@ -67,7 +58,7 @@ export function useV3PoolDiscovery({
         data.forEach((res, i) => {
             if (res.status === 'success') {
                 const addr = res.result as Address | undefined
-                if (addr && addr.toLowerCase() !== ZERO_ADDRESS) {
+                if (addr && addr.toLowerCase() !== zeroAddress) {
                     set.add(uniqueQueries[i]![0])
                 }
             }

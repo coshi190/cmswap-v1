@@ -5,11 +5,10 @@ import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import {
     getV3Config,
-    FEE_TIERS,
+    getFeeTiers,
     getDexsByProtocol,
-    encodeV3Path,
+    buildQuoteCall,
     ProtocolType,
-    UNISWAP_V3_QUOTER_V2_ABI,
 } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
@@ -33,8 +32,6 @@ interface UseUniV3MultiHopQuoteResult {
     isError: boolean
     error: Error | null
 }
-
-const ALL_FEE_TIERS: number[] = Object.values(FEE_TIERS)
 
 const MAX_QUOTE_QUERIES = 80
 
@@ -88,7 +85,7 @@ export function useUniV3MultiHopQuote({
         for (const targetDexId of targetDexIds) {
             const cfg = getV3Config(chainId, targetDexId)
             if (!cfg?.factory || !cfg?.quoter) continue
-            const feeTiers = cfg.feeTiers?.length ? cfg.feeTiers : ALL_FEE_TIERS
+            const feeTiers = getFeeTiers(cfg)
             for (const rawPath of rawPaths) {
                 const tokens = rawPath.map((a) => getSwapAddress(a, chainId))
                 const collapsed = tokens.some(
@@ -162,13 +159,20 @@ export function useUniV3MultiHopQuote({
         isError,
         error,
     } = useReadContracts({
-        contracts: quoteMetas.map(({ candidate, fees }) => ({
-            address: candidate.quoter,
-            abi: UNISWAP_V3_QUOTER_V2_ABI,
-            functionName: 'quoteExactInput' as const,
-            args: [encodeV3Path(candidate.tokens, fees), amountIn],
-            chainId,
-        })),
+        contracts: quoteMetas.map(({ candidate, fees }) => {
+            const call = buildQuoteCall({
+                protocol: ProtocolType.V3,
+                chainId,
+                dexId: candidate.dexId,
+                tokenIn: candidate.tokens[0]!,
+                tokenOut: candidate.tokens[candidate.tokens.length - 1]!,
+                amountIn,
+                path: candidate.tokens,
+                fees,
+            })
+            if (!call) throw new Error(`No quote call for ${candidate.dexId} on chain ${chainId}`)
+            return { ...call, chainId }
+        }),
         query: {
             enabled: isReadyForQuote && quoteMetas.length > 0,
             staleTime: 10_000,

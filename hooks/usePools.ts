@@ -4,7 +4,12 @@ import { useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import { TOKEN_LISTS } from '@/lib/tokens'
-import { getV3Config, UNISWAP_V3_FACTORY_ABI, UNISWAP_V3_POOL_ABI } from '@coshi190/junoswap-sdk'
+import {
+    getFeeTiers,
+    getV3Config,
+    UNISWAP_V3_FACTORY_ABI,
+    UNISWAP_V3_POOL_ABI,
+} from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import type { V3PoolData } from '@/types/earn'
 import { getTickSpacing } from '@/lib/liquidity-helpers'
@@ -107,7 +112,7 @@ function usePoolsForPair(
 } {
     const effectiveChainId = chainId ?? token0?.chainId ?? token1?.chainId ?? 1
     const dexConfig = getV3Config(effectiveChainId)
-    const feeTiers = useMemo(() => dexConfig?.feeTiers ?? [100, 500, 3000, 10000], [dexConfig])
+    const feeTiers = useMemo(() => getFeeTiers(dexConfig), [dexConfig])
     const [sortedToken0, sortedToken1] = useMemo(() => {
         if (!token0 || !token1) return [null, null]
         return sortTokens(token0, token1)

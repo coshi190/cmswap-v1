@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Address } from 'viem'
-import { ProtocolType } from '@coshi190/junoswap-sdk'
-import { poolKey } from '@/hooks/useV3PoolDiscovery'
+import { ProtocolType, poolKey } from '@coshi190/junoswap-sdk'
 
 const WNATIVE = '0x67eBD850304c70d983B2d1b93ea79c7CD6c3F6b5' as Address
 const KUSDT = '0x7d984C24d2499D840eB3b7016077164e15E5faA6' as Address

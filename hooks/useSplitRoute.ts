@@ -5,17 +5,13 @@ import { useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import {
     ProtocolType,
-    getV2Config,
-    getV3Config,
-    resolveSwapPath,
-    UNISWAP_V2_ROUTER_ABI,
-    UNISWAP_V3_QUOTER_V2_ABI,
+    buildQuoteCall,
     AGG_ROUTER_JUNOSWAP_ABI,
     getAggRouterAddress,
+    type ContractCall,
 } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
-import { getSwapAddress } from '@/lib/tokens'
 import {
     selectSplitCandidates,
     computeGridAmounts,
@@ -41,13 +37,7 @@ interface UseSplitRouteResult {
     isLoading: boolean
 }
 
-type QuoteContract = {
-    address: Address
-    abi: typeof UNISWAP_V2_ROUTER_ABI | typeof UNISWAP_V3_QUOTER_V2_ABI
-    functionName: 'getAmountsOut' | 'quoteExactInputSingle'
-    args: readonly unknown[]
-    chainId: number
-}
+type QuoteContract = ContractCall & { chainId: number }
 
 function buildQuoteContract(
     route: RouteQuote,
@@ -56,40 +46,19 @@ function buildQuoteContract(
     tokenOut: Token,
     chainId: number
 ): QuoteContract | null {
-    if (route.protocolType === ProtocolType.V3) {
-        const cfg = getV3Config(chainId, route.dexId)
-        const fee = route.route.fees?.[0]
-        if (!cfg?.quoter || fee == null) return null
-        return {
-            address: cfg.quoter,
-            abi: UNISWAP_V3_QUOTER_V2_ABI,
-            functionName: 'quoteExactInputSingle',
-            args: [
-                {
-                    tokenIn: getSwapAddress(tokenIn.address as Address, chainId),
-                    tokenOut: getSwapAddress(tokenOut.address as Address, chainId),
-                    amountIn: amount,
-                    fee,
-                    sqrtPriceLimitX96: 0n,
-                },
-            ],
-            chainId,
-        }
-    }
-    const cfg = getV2Config(chainId, route.dexId)
-    if (!cfg?.router) return null
-    const path = resolveSwapPath(
-        [tokenIn.address as Address, tokenOut.address as Address],
+    const fee = route.route.fees?.[0]
+    if (route.protocolType === ProtocolType.V3 && fee == null) return null
+
+    const call = buildQuoteCall({
+        protocol: route.protocolType,
         chainId,
-        cfg.wnative
-    )
-    return {
-        address: cfg.router,
-        abi: UNISWAP_V2_ROUTER_ABI,
-        functionName: 'getAmountsOut',
-        args: [amount, path],
-        chainId,
-    }
+        dexId: route.dexId,
+        tokenIn: tokenIn.address as Address,
+        tokenOut: tokenOut.address as Address,
+        amountIn: amount,
+        fee,
+    })
+    return call ? { ...call, chainId } : null
 }
 
 function parseOut(

@@ -3,11 +3,7 @@
 import { useMemo } from 'react'
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import {
-    ProtocolType,
-    UNISWAP_V2_ROUTER_ABI,
-    UNISWAP_V3_QUOTER_V2_ABI,
-} from '@coshi190/junoswap-sdk'
+import { ProtocolType, buildQuoteCall, type ContractCall } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { getIntermediaryTokens } from '@/lib/routing-config'
 import { getSwapAddress } from '@/lib/tokens'
@@ -34,39 +30,20 @@ interface UseCrossDexRouteResult {
     isLoading: boolean
 }
 
-type QuoteContract = {
-    address: Address
-    abi: typeof UNISWAP_V2_ROUTER_ABI | typeof UNISWAP_V3_QUOTER_V2_ABI
-    functionName: 'getAmountsOut' | 'quoteExactInputSingle'
-    args: readonly unknown[]
-    chainId: number
-}
+type QuoteContract = ContractCall & { chainId: number }
 
 function optionContract(o: HopOption, amount: bigint, chainId: number): QuoteContract {
-    if (o.protocol === ProtocolType.V3) {
-        return {
-            address: o.quoteAddress,
-            abi: UNISWAP_V3_QUOTER_V2_ABI,
-            functionName: 'quoteExactInputSingle',
-            args: [
-                {
-                    tokenIn: o.tokenIn,
-                    tokenOut: o.tokenOut,
-                    amountIn: amount,
-                    fee: o.fee,
-                    sqrtPriceLimitX96: 0n,
-                },
-            ],
-            chainId,
-        }
-    }
-    return {
-        address: o.quoteAddress,
-        abi: UNISWAP_V2_ROUTER_ABI,
-        functionName: 'getAmountsOut',
-        args: [amount, [o.tokenIn, o.tokenOut]],
+    const call = buildQuoteCall({
+        protocol: o.protocol,
         chainId,
-    }
+        dexId: o.dexId,
+        tokenIn: o.tokenIn,
+        tokenOut: o.tokenOut,
+        amountIn: amount,
+        fee: o.fee,
+    })
+    if (!call) throw new Error(`No quote call for ${o.dexId} on chain ${chainId}`)
+    return { ...call, chainId }
 }
 
 function parseOptionOut(
