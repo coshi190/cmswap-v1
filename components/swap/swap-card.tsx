@@ -645,7 +645,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                                     </span>
                                                 </div>
                                             )}
-                                            {priceImpact !== undefined && (
+                                            {priceImpact !== undefined && !useAggPath && (
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-muted-foreground">
                                                         Price Impact
