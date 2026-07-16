@@ -635,7 +635,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
                                                     {tokenOut.symbol}
                                                 </span>
                                             </div>
-                                            {effectiveQuote && (
+                                            {effectiveQuote && !useAggPath && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground">
                                                         Fee
