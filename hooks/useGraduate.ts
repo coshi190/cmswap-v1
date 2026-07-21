@@ -16,9 +16,9 @@ import {
     isReadyToGraduate,
     isSqrtPriceWithinTolerance,
     PRICE_TOLERANCE_BPS,
+    calculateGraduationSqrtPriceX96,
 } from '@coshi190/junoswap-sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
-import { calculateGraduationSqrtPriceX96 } from '@/lib/liquidity-helpers'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 
 type PoolStatus = 'no_pool' | 'not_initialized' | 'correct' | 'wrong'
