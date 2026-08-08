@@ -352,12 +352,12 @@ export function TokenChart({
         })
 
         const candleSeries = chart.addSeries(CandlestickSeries, {
-            upColor: 'rgb(30, 215, 96)',
-            downColor: 'rgb(233, 20, 41)',
-            borderUpColor: 'rgb(30, 215, 96)',
-            borderDownColor: 'rgb(233, 20, 41)',
-            wickUpColor: 'rgb(30, 215, 96)',
-            wickDownColor: 'rgb(233, 20, 41)',
+            upColor: chartColors.candleUp,
+            downColor: chartColors.candleDown,
+            borderUpColor: chartColors.candleUp,
+            borderDownColor: chartColors.candleDown,
+            wickUpColor: chartColors.candleUp,
+            wickDownColor: chartColors.candleDown,
             lastValueVisible: false,
             priceLineVisible: false,
         })
@@ -525,7 +525,7 @@ export function TokenChart({
             const isUp = lastCandle.close >= lastCandle.open
             priceLineRef.current = candleSeriesRef.current.createPriceLine({
                 price: lastCandle.close,
-                color: isUp ? 'rgb(30, 215, 96)' : 'rgb(233, 20, 41)',
+                color: isUp ? chartColors.candleUp : chartColors.candleDown,
                 lineWidth: 1,
                 lineStyle: 2,
                 axisLabelVisible: true,

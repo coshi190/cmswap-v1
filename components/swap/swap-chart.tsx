@@ -107,12 +107,12 @@ export function SwapChart({ tokenIn, tokenOut, className }: SwapChartProps) {
         })
 
         const candleSeries = chart.addSeries(CandlestickSeries, {
-            upColor: 'rgb(30, 215, 96)',
-            downColor: 'rgb(233, 20, 41)',
-            borderUpColor: 'rgb(30, 215, 96)',
-            borderDownColor: 'rgb(233, 20, 41)',
-            wickUpColor: 'rgb(30, 215, 96)',
-            wickDownColor: 'rgb(233, 20, 41)',
+            upColor: chartColors.candleUp,
+            downColor: chartColors.candleDown,
+            borderUpColor: chartColors.candleUp,
+            borderDownColor: chartColors.candleDown,
+            wickUpColor: chartColors.candleUp,
+            wickDownColor: chartColors.candleDown,
             lastValueVisible: true,
             priceLineVisible: true,
         })

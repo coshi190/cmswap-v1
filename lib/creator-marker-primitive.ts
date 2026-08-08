@@ -25,8 +25,8 @@ const RADIUS = 9
 const RING_WIDTH = 2
 const GAP_ABOVE_BAR = 7
 const STACK_GAP = 4
-const BUY_COLOR = 'rgb(30, 215, 96)'
-const SELL_COLOR = 'rgb(233, 20, 41)'
+const BUY_COLOR = '#089981'
+const SELL_COLOR = '#F23645'
 
 export async function createJazziconAvatar(
     address: string,
