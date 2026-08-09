@@ -47,13 +47,6 @@ export function formatRewardAmount(value: bigint, decimals: number): string {
     return num.toFixed(leadingZeros + 3)
 }
 
-const SUBSCRIPT = '₀₁₂₃₄₅₆₇₈₉'
-const toSubscript = (n: number) =>
-    String(n)
-        .split('')
-        .map((d) => SUBSCRIPT[+d])
-        .join('')
-
 export function formatChartPrice(value: number): string {
     if (!Number.isFinite(value) || value === 0) return '0'
     if (value >= 1000) return value.toFixed(2)
@@ -69,7 +62,7 @@ export function formatChartPrice(value: number): string {
         leadingZeros -= 1
     }
     const sig = String(digits).replace(/0+$/, '') || '0'
-    return `0.0${toSubscript(leadingZeros)}${sig}`
+    return `0.${'0'.repeat(leadingZeros)}${sig}`
 }
 
 export function calculateApr(poolFee: number, tvl: number, volume30d: number): number | null {

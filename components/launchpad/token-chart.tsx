@@ -37,6 +37,7 @@ import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { useNativeUsdPriceContext } from './native-usd-price-provider'
 import { formatCompact } from '@/services/launchpad/launchpad'
+import { formatChartPrice } from '@/lib/format'
 
 interface TokenChartProps {
     tokenAddr: Address
@@ -51,13 +52,6 @@ interface TokenChartProps {
     className?: string
 }
 
-function formatPrice(value: number): string {
-    if (value < 0.0001) return '<0.0001'
-    if (value < 1) return value.toFixed(6)
-    if (value < 100) return value.toFixed(4)
-    return value.toFixed(2)
-}
-
 function formatMcap(value: number): string {
     if (value < 0.01) return '<0.01'
     return value.toLocaleString('en-US', {
@@ -66,8 +60,15 @@ function formatMcap(value: number): string {
     })
 }
 
+// lightweight-charts uses this to quantize axis ticks/autoscale, independent of display
+// formatting — mcap trades in whole cents, price mode routinely deals in sub-1e-6 tokens, so
+// leaving it at the library's 0.01 default flattens every price-mode candle onto one tick.
+function chartMinMove(mode: ChartMode): number {
+    return mode === 'mcap' ? 0.01 : 1e-9
+}
+
 function formatChartValue(value: number, mode: ChartMode): string {
-    return mode === 'mcap' ? formatMcap(value) : formatPrice(value)
+    return mode === 'mcap' ? formatMcap(value) : formatChartPrice(value)
 }
 
 export function TokenChart({
@@ -352,12 +353,12 @@ export function TokenChart({
         })
 
         const candleSeries = chart.addSeries(CandlestickSeries, {
-            upColor: 'rgb(30, 215, 96)',
-            downColor: 'rgb(233, 20, 41)',
-            borderUpColor: 'rgb(30, 215, 96)',
-            borderDownColor: 'rgb(233, 20, 41)',
-            wickUpColor: 'rgb(30, 215, 96)',
-            wickDownColor: 'rgb(233, 20, 41)',
+            upColor: chartColors.candleUp,
+            downColor: chartColors.candleDown,
+            borderUpColor: chartColors.candleUp,
+            borderDownColor: chartColors.candleDown,
+            wickUpColor: chartColors.candleUp,
+            wickDownColor: chartColors.candleDown,
             lastValueVisible: false,
             priceLineVisible: false,
         })
@@ -463,6 +464,7 @@ export function TokenChart({
             priceFormat: {
                 type: 'custom',
                 formatter: (price: number) => `${prefix}${formatChartValue(price, chartMode)}`,
+                minMove: chartMinMove(chartMode),
             },
         })
 
@@ -525,7 +527,7 @@ export function TokenChart({
             const isUp = lastCandle.close >= lastCandle.open
             priceLineRef.current = candleSeriesRef.current.createPriceLine({
                 price: lastCandle.close,
-                color: isUp ? 'rgb(30, 215, 96)' : 'rgb(233, 20, 41)',
+                color: isUp ? chartColors.candleUp : chartColors.candleDown,
                 lineWidth: 1,
                 lineStyle: 2,
                 axisLabelVisible: true,
@@ -551,7 +553,16 @@ export function TokenChart({
         setVol1d(metrics?.volume1d ?? null)
         onDailyMetricsChange?.(metrics ? { ...metrics, feeBreakdown } : null)
 
-        chartRef.current?.timeScale().fitContent()
+        const VISIBLE_CANDLES = 60
+        const len = visibleData.length
+        if (len > VISIBLE_CANDLES) {
+            chartRef.current?.timeScale().setVisibleLogicalRange({
+                from: len - VISIBLE_CANDLES,
+                to: len + 2, // small right gap, matches the timeScale rightOffset: 5
+            })
+        } else {
+            chartRef.current?.timeScale().fitContent() // few candles → just fit them all
+        }
     }, [
         displayData,
         visibleData,

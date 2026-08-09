@@ -200,6 +200,11 @@ export function aggregateV3Candlesticks(
 
     const duration = TIMEFRAME_DURATIONS[timeframe]
     const candles = new Map<number, CandlestickData>()
+    // V3 swap events only carry the post-trade price, unlike bonding-curve events (which can
+    // unwind to a true pre-trade price via calculatePreSwapPrice). So a bucket's open is taken
+    // from the previous trade's close instead — otherwise a bucket with a single trade would
+    // open/high/low/close on that one price and render as a flat, wick-less point.
+    let prevTradeClose: number | null = null
 
     for (const event of events) {
         const sqrtPrice = BigInt(event.sqrtPriceX96)
@@ -222,11 +227,12 @@ export function aggregateV3Candlesticks(
 
         const existing = candles.get(candleTime)
         if (!existing) {
+            const open = prevTradeClose ?? value
             candles.set(candleTime, {
                 time: candleTime,
-                open: value,
-                high: value,
-                low: value,
+                open,
+                high: Math.max(open, value),
+                low: Math.min(open, value),
                 close: value,
                 volume,
             })
@@ -236,6 +242,7 @@ export function aggregateV3Candlesticks(
             existing.close = value
             existing.volume += volume
         }
+        prevTradeClose = value
     }
 
     const times = Array.from(candles.keys()).sort((a, b) => a - b)
@@ -319,6 +326,11 @@ export function stitchCandlesticks(
         const lastPre = preGrad[preGrad.length - 1]!
         const firstPost = postGrad[0]!
         firstPost.open = lastPre.close
+        // Graduation can gap hard between the bonding-curve close and the V3 pool's first
+        // trade, so the bridged open can land outside this candle's own high/low — re-clamp
+        // or the chart's price scale chokes on an open outside [low, high].
+        firstPost.high = Math.max(firstPost.high, firstPost.open)
+        firstPost.low = Math.min(firstPost.low, firstPost.open)
     }
 
     return [...preGrad, ...postGrad]
