@@ -11,12 +11,11 @@ import {
     isLaunchpadChain,
     fetchAllTokenHolders,
     type LeaderboardHolder,
-    type LeaderboardTraderStat,
 } from '@coshi190/junoswap-sdk'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
 import { useMultiBalances } from '@/hooks/useMultiBalances'
 import { useTokenPrices } from '@/hooks/useTokenPrices'
-import { fetchLeaderboardTraders } from '@/lib/user-pnl'
+import { fetchLeaderboardTraders, type LeaderboardTraderStat } from '@/lib/user-pnl'
 import type { LeaderboardTimePeriod, TraderSortKey, SortDirection } from '@/types/leaderboard'
 
 export interface TraderAgg {
