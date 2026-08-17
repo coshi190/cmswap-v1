@@ -3,8 +3,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount, useChainId } from 'wagmi'
-import { computeReferralPoints, isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { fetchAllReferralBindings } from '@/lib/swap-events'
+import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { fetchLeaderboardTraders } from '@/lib/user-pnl'
 import type { PointsTrader, PointsTimePeriod, PointsSortKey, SortDirection } from '@/types/points'
 
@@ -56,14 +55,6 @@ export function usePointsData(
         refetchInterval: 30_000,
     })
 
-    const { data: referralBindings } = useQuery({
-        queryKey: ['referral-bindings-all', chainId],
-        queryFn: fetchAllReferralBindings,
-        enabled: isSupportedChain,
-        staleTime: 30_000,
-        refetchInterval: 30_000,
-    })
-
     return useMemo(() => {
         if (!isSupportedChain) {
             return {
@@ -78,7 +69,7 @@ export function usePointsData(
             }
         }
 
-        if (!traderStats || !referralBindings) {
+        if (!traderStats) {
             return {
                 traders: [],
                 totalCount: 0,
@@ -93,21 +84,15 @@ export function usePointsData(
 
         const effectiveNativeUsdPrice = nativeUsdPrice ?? 0
 
-        const pointsByAddr = new Map(
-            traderStats.map((t) => [t.address.toLowerCase(), t.points] as const)
-        )
         const allTraders: PointsTrader[] = traderStats.map((t) => {
             const addr = t.address.toLowerCase()
-            const referees = referralBindings.get(addr) ?? []
             return {
                 rank: 0,
                 address: addr,
                 volumeNative: t.volumeNative,
                 volumeUsd: t.volumeNative * effectiveNativeUsdPrice,
                 points: t.points,
-                referredPoints: computeReferralPoints(
-                    referees.map((a) => pointsByAddr.get(a) ?? 0)
-                ),
+                referredPoints: t.referredPoints ?? 0,
                 tradeCount: t.tradeCount,
                 buyCount: t.buyCount,
                 sellCount: t.sellCount,
@@ -181,7 +166,6 @@ export function usePointsData(
         }
     }, [
         traderStats,
-        referralBindings,
         nativeUsdPrice,
         sortKey,
         sortDirection,

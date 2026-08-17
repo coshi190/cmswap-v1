@@ -1,5 +1,4 @@
 import {
-    fetchAllReferralBindings as sdkFetchAllReferralBindings,
     fetchBondingCurveSwaps as sdkFetchBondingCurveSwaps,
     fetchV3Swaps as sdkFetchV3Swaps,
     fetchV2Swaps as sdkFetchV2Swaps,
@@ -9,7 +8,7 @@ import {
     type ParsedSwap,
     type SwapScanFilter,
 } from '@coshi190/junoswap-sdk'
-import { ponderClient, isPonderError } from '@/lib/ponder-client'
+import { ponderClient } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 
 export type SwapFilter = Omit<SwapScanFilter, 'chainId'>
@@ -50,21 +49,4 @@ export async function fetchV2Swaps(chainId: number, filter: SwapFilter): Promise
     if (!wrappedNative) return []
     const rows = await sdkFetchV2Swaps(ponderClient, { chainId, ...filter })
     return rows.map((e) => parseV2Swap(e, wrappedNative)).filter((s): s is ParsedSwap => s !== null)
-}
-
-export async function fetchAllReferralBindings(): Promise<Map<string, string[]>> {
-    try {
-        const rows = await sdkFetchAllReferralBindings(ponderClient)
-        const map = new Map<string, string[]>()
-        for (const r of rows) {
-            const referrer = r.referrer.toLowerCase()
-            const list = map.get(referrer) ?? []
-            list.push(r.referee.toLowerCase())
-            map.set(referrer, list)
-        }
-        return map
-    } catch (e) {
-        if (isPonderError(e)) return new Map()
-        throw e
-    }
 }
