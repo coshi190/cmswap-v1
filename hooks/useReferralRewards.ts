@@ -3,13 +3,9 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount, useChainId } from 'wagmi'
-import {
-    computeReferralRewards,
-    fetchReferralData,
-    type ReferredTrader,
-} from '@coshi190/junoswap-sdk'
+import { fetchReferralRewards, type ReferredTrader } from '@coshi190/junoswap-sdk'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { ponderClient } from '@/lib/ponder-client'
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 
 export interface ReferralRewards {
     referralPoints: number
@@ -19,6 +15,8 @@ export interface ReferralRewards {
     isSupportedChain: boolean
 }
 
+const EMPTY = { referralPoints: 0, refereeCount: 0, referees: [] as ReferredTrader[] }
+
 export function useReferralRewards(nativeUsdPrice: number | null): ReferralRewards {
     const { address } = useAccount()
     const chainId = useChainId()
@@ -26,31 +24,31 @@ export function useReferralRewards(nativeUsdPrice: number | null): ReferralRewar
     const enabled = isSupportedChain && !!address
 
     const { data, isLoading } = useQuery({
-        queryKey: ['referral-rewards', address?.toLowerCase(), chainId],
-        queryFn: () =>
-            fetchReferralData(ponderClient, {
-                chainId,
-                referrer: address!,
-            }),
+        queryKey: ['referral-rewards', address?.toLowerCase(), chainId, nativeUsdPrice],
+        queryFn: async () => {
+            try {
+                return await fetchReferralRewards(ponderClient, {
+                    chainId,
+                    referrer: address!,
+                    nativeUsdPrice,
+                })
+            } catch (e) {
+                if (isPonderError(e)) return EMPTY
+                throw e
+            }
+        },
         enabled,
+        placeholderData: (prev) => prev,
         staleTime: 30_000,
         refetchInterval: 30_000,
     })
 
-    return useMemo(() => {
-        if (!enabled || !data) {
-            return {
-                referralPoints: 0,
-                refereeCount: 0,
-                referees: [],
-                isLoading: enabled && isLoading,
-                isSupportedChain,
-            }
-        }
-        return {
-            ...computeReferralRewards(data.referees, data.stats, nativeUsdPrice),
-            isLoading: false,
+    return useMemo(
+        () => ({
+            ...(data ?? EMPTY),
+            isLoading: enabled && isLoading,
             isSupportedChain,
-        }
-    }, [enabled, data, isLoading, nativeUsdPrice, isSupportedChain])
+        }),
+        [data, enabled, isLoading, isSupportedChain]
+    )
 }
