@@ -16,7 +16,11 @@ import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { findTokenByAddress } from '@/lib/tokens'
 import { useV3Tokens } from '@/hooks/useV3Tokens'
-import { isIncentiveActive, isIncentiveEnded } from '@/services/mining/incentives'
+import {
+    extractIncentiveCreatedAt,
+    isIncentiveActive,
+    isIncentiveEnded,
+} from '@/services/mining/incentives'
 
 const PONDER_INDEXED_CHAINS = new Set([25925, 96, 8899])
 
@@ -147,6 +151,7 @@ export function useIncentives(): {
                     poolFee: pool.fee,
                     isActive: isIncentiveActive(key),
                     isEnded: isIncentiveEnded(key),
+                    createdAt: extractIncentiveCreatedAt(row),
                 }
             })
             .filter((i): i is Incentive => i !== null)
