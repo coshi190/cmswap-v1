@@ -1,3 +1,7 @@
 export { MiningFarms } from './mining-farms'
 export { StakeDialog } from './stake-dialog'
 export { UnstakeDialog } from './unstake-dialog'
+export { FarmUnstakeDialog } from './farm-unstake-dialog'
+export { CreateFarmDialog } from './create-farm-dialog'
+export { MyFarms } from './my-farms'
+export { MyPositions } from './my-positions'

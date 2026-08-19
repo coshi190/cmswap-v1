@@ -20,6 +20,7 @@ import {
     encodeIncentiveKeyData,
     buildUnstakeAndWithdrawMulticall,
     buildUnstakeAndClaimMulticall,
+    buildUnstakeManyAndWithdrawMulticall,
 } from '@/services/mining/staking'
 const SAFE_TRANSFER_FROM_ABI = [
     {
@@ -142,6 +143,123 @@ export function useStakePosition(
         isConfirming,
         isSuccess,
         error: writeError || receiptError || (simulationError as Error | null),
+        hash,
+    }
+}
+
+/**
+ * Unstakes and withdraws several positions from one farm in a single transaction. A wallet with
+ * three positions in a farm should not have to sign three times to get them all back.
+ */
+export function useUnstakePositions(
+    tokenIds: readonly bigint[],
+    incentiveKey: IncentiveKey | null,
+    recipient: Address | undefined
+): {
+    unstake: () => void
+    isPreparing: boolean
+    isExecuting: boolean
+    isConfirming: boolean
+    isSuccess: boolean
+    error: Error | null
+    hash: `0x${string}` | undefined
+} {
+    const chainId = useChainId()
+    const stakerAddress = getV3StakerAddress(chainId)
+    const multicallData = useMemo(() => {
+        if (!incentiveKey || !recipient || tokenIds.length === 0) return null
+        return buildUnstakeManyAndWithdrawMulticall(tokenIds, incentiveKey, recipient)
+    }, [tokenIds, incentiveKey, recipient])
+    const isEnabled = !!stakerAddress && !!multicallData
+    const {
+        data: simulation,
+        isLoading: isSimulating,
+        error: simulationError,
+    } = useSimulateContract({
+        address: stakerAddress,
+        abi: UNISWAP_V3_STAKER_ABI,
+        functionName: 'multicall',
+        args: multicallData ? [multicallData] : undefined,
+        query: { enabled: isEnabled },
+    })
+    const {
+        writeContract,
+        data: hash,
+        isPending: isExecuting,
+        error: writeError,
+    } = useWriteContract()
+    const {
+        isLoading: isConfirming,
+        isSuccess,
+        error: receiptError,
+    } = useWaitForTransactionReceipt({ hash })
+    const unstake = useCallback(() => {
+        if (!simulation?.request) return
+        writeContract(simulation.request)
+    }, [simulation, writeContract])
+    return {
+        unstake,
+        isPreparing: isEnabled && isSimulating,
+        isExecuting,
+        isConfirming,
+        isSuccess,
+        error: writeError || receiptError || (isEnabled ? (simulationError as Error | null) : null),
+        hash,
+    }
+}
+
+/**
+ * Pulls an NFT back out of the staker. A position that was transferred in but is staked in nothing
+ * earns no rewards and cannot be moved, so this is the exit for a deposit left behind.
+ */
+export function useWithdrawPosition(
+    tokenId: bigint | undefined,
+    recipient: Address | undefined
+): {
+    withdraw: () => void
+    isPreparing: boolean
+    isExecuting: boolean
+    isConfirming: boolean
+    isSuccess: boolean
+    error: Error | null
+    hash: `0x${string}` | undefined
+} {
+    const chainId = useChainId()
+    const stakerAddress = getV3StakerAddress(chainId)
+    const isEnabled = tokenId !== undefined && !!recipient && !!stakerAddress
+    const {
+        data: simulation,
+        isLoading: isSimulating,
+        error: simulationError,
+    } = useSimulateContract({
+        address: stakerAddress,
+        abi: UNISWAP_V3_STAKER_ABI,
+        functionName: 'withdrawToken',
+        args: isEnabled ? [tokenId, recipient, '0x'] : undefined,
+        query: { enabled: isEnabled },
+    })
+    const {
+        writeContract,
+        data: hash,
+        isPending: isExecuting,
+        error: writeError,
+    } = useWriteContract()
+    const {
+        isLoading: isConfirming,
+        isSuccess,
+        error: receiptError,
+    } = useWaitForTransactionReceipt({ hash })
+    const withdraw = useCallback(() => {
+        if (!simulation?.request) return
+        writeContract(simulation.request)
+    }, [simulation, writeContract])
+    return {
+        withdraw,
+        isPreparing: isEnabled && isSimulating,
+        isExecuting,
+        isConfirming,
+        isSuccess,
+        error: writeError || receiptError || (isEnabled ? (simulationError as Error | null) : null),
         hash,
     }
 }

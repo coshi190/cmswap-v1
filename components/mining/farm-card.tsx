@@ -2,24 +2,29 @@
 
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
+import { Droplets, Minus } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { TokenIcon, TokenIconPair } from '@/components/ui/token-icon'
 import { ConnectModal } from '@/components/web3/connect-modal'
+import { FarmIdentity, FarmStatusBadge } from './farm-status-badge'
 import { formatTokenAmount, getDisplayToken } from '@/lib/tokens'
+import { formatTvl } from '@/lib/format'
 import { useTokenPriceMap } from '@/hooks/useTokenPriceMap'
 import {
     formatTimeRemaining,
     getIncentiveProgress,
     getIncentiveStatus,
 } from '@/services/mining/incentives'
+import type { FarmStats } from '@/hooks/useFarmStats'
 import type { Incentive } from '@/types/earn'
 
 interface MiningFarmCardProps {
     incentive: Incentive
+    stats?: FarmStats
     onStake: (incentive: Incentive) => void
+    onUnstake: (incentive: Incentive) => void
+    onAddLiquidity: (incentive: Incentive) => void
 }
 
 function formatUsd(value: number): string {
@@ -29,12 +34,53 @@ function formatUsd(value: number): string {
     return `$${value.toFixed(2)}`
 }
 
-export function MiningFarmCard({ incentive, onStake }: MiningFarmCardProps) {
+function formatAprPercent(apr: number | undefined): string {
+    if (apr === undefined) return '—'
+    if (apr >= 1000) return `${Math.round(apr).toLocaleString('en-US')}%`
+    if (apr >= 1) return `${apr.toFixed(1)}%`
+    return apr > 0 ? '<1%' : '0%'
+}
+
+function Metric({
+    label,
+    value,
+    sub,
+    accent,
+}: {
+    label: string
+    value: string
+    sub?: string
+    accent?: boolean
+}) {
+    return (
+        <div className="min-w-0">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {label}
+            </div>
+            <div
+                className={`mt-1 truncate text-base font-bold tracking-tight ${
+                    accent ? 'text-positive' : ''
+                }`}
+            >
+                {value}
+            </div>
+            {sub && (
+                <div className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{sub}</div>
+            )}
+        </div>
+    )
+}
+
+export function MiningFarmCard({
+    incentive,
+    stats,
+    onStake,
+    onUnstake,
+    onAddLiquidity,
+}: MiningFarmCardProps) {
     const { isConnected } = useAccount()
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
 
-    const poolToken0 = getDisplayToken(incentive.poolToken0)
-    const poolToken1 = getDisplayToken(incentive.poolToken1)
     const rewardToken = getDisplayToken(incentive.rewardTokenInfo)
 
     const status = getIncentiveStatus(incentive)
@@ -75,63 +121,50 @@ export function MiningFarmCard({ incentive, onStake }: MiningFarmCardProps) {
             : 'Ended'
 
     return (
-        <Card className="position-card-hover flex flex-col">
-            <CardContent className="p-5 flex flex-col flex-1">
+        <Card className="position-card-hover flex flex-col overflow-hidden">
+            <CardContent className="flex flex-1 flex-col p-5">
                 <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                        <TokenIconPair
-                            src0={poolToken0.logo}
-                            symbol0={poolToken0.symbol}
-                            src1={poolToken1.logo}
-                            symbol1={poolToken1.symbol}
-                            size="md"
-                        />
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold">
-                                    {poolToken0.symbol} / {poolToken1.symbol}
-                                </span>
-                                <Badge variant="outline" className="text-xs">
-                                    {(incentive.poolFee / 10000).toFixed(2)}%
-                                </Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                <span>Earn</span>
-                                <TokenIcon
-                                    src={rewardToken.logo}
-                                    symbol={rewardToken.symbol}
-                                    size="xs"
-                                />
-                                <span>{rewardToken.symbol}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <FarmIdentity incentive={incentive} />
+                    <FarmStatusBadge status={status} />
                 </div>
 
                 <Separator className="my-4" />
 
-                <div className="flex flex-col flex-1 gap-4">
-                    <div>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Remaining
-                        </div>
-                        <div className="mt-1 flex items-baseline gap-1.5">
-                            <span className="text-base font-bold font-mono tracking-tight">
-                                {rewardAmount}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {rewardToken.symbol}
-                            </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-0.5 font-mono">
-                            {rewardValueUsd !== null ? formatUsd(rewardValueUsd) : '—'}
-                        </div>
+                <div className="flex flex-1 flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <Metric
+                            label="APR"
+                            value={formatAprPercent(stats?.aprPercent)}
+                            sub={
+                                stats?.aprPercent === undefined && incentive.numberOfStakes === 0
+                                    ? 'no stakers yet'
+                                    : undefined
+                            }
+                            accent={stats?.aprPercent !== undefined}
+                        />
+                        <Metric
+                            label="Staked TVL"
+                            value={
+                                stats?.stakedTvlUsd === undefined
+                                    ? '—'
+                                    : formatTvl(stats.stakedTvlUsd)
+                            }
+                            sub={`${incentive.numberOfStakes} position${
+                                incentive.numberOfStakes === 1 ? '' : 's'
+                            }`}
+                        />
                     </div>
 
+                    <Metric
+                        label="Remaining"
+                        value={`${rewardAmount} ${rewardToken.symbol}`}
+                        sub={rewardValueUsd !== null ? formatUsd(rewardValueUsd) : '—'}
+                    />
+
                     <div className="mt-auto">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{barLabel}</span>
-                            <span className="tabular-nums">
+                        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                            <span className="truncate">{barLabel}</span>
+                            <span className="shrink-0 tabular-nums">
                                 {isEnded ? '100%' : `${progress}%`}
                             </span>
                         </div>
@@ -144,20 +177,50 @@ export function MiningFarmCard({ incentive, onStake }: MiningFarmCardProps) {
                     </div>
                 </div>
 
-                <Button
-                    className="w-full mt-4"
-                    variant={isDisabled ? 'outline' : 'default'}
-                    disabled={isDisabled}
-                    onClick={() => {
-                        if (!isConnected) {
-                            setIsConnectModalOpen(true)
-                            return
-                        }
-                        onStake(incentive)
-                    }}
-                >
-                    {buttonLabel}
-                </Button>
+                <div className="mt-4 flex gap-2">
+                    <Button
+                        className="flex-1"
+                        variant={isDisabled ? 'outline' : 'default'}
+                        disabled={isDisabled}
+                        onClick={() => {
+                            if (!isConnected) {
+                                setIsConnectModalOpen(true)
+                                return
+                            }
+                            onStake(incentive)
+                        }}
+                    >
+                        {buttonLabel}
+                    </Button>
+                    {isConnected && (
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0"
+                            title="Unstake &amp; claim"
+                            aria-label="Unstake from this farm"
+                            onClick={() => onUnstake(incentive)}
+                        >
+                            <Minus />
+                        </Button>
+                    )}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        title="Add liquidity to this pool"
+                        aria-label="Add liquidity to this pool"
+                        onClick={() => {
+                            if (!isConnected) {
+                                setIsConnectModalOpen(true)
+                                return
+                            }
+                            onAddLiquidity(incentive)
+                        }}
+                    >
+                        <Droplets />
+                    </Button>
+                </div>
             </CardContent>
             <ConnectModal open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen} />
         </Card>

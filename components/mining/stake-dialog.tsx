@@ -15,12 +15,11 @@ import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { EmptyState } from '@/components/ui/empty-state'
-import { TICK_SPACING } from '@/types/earn'
 import { useUserPositions } from '@/hooks/useUserPositions'
 import { useDepositInfo } from '@/hooks/useStakedPositions'
 import { useStakePosition } from '@/hooks/useStaking'
-import { formatTokenAmount } from '@/lib/tokens'
-import { formatTimeRemaining } from '@/services/mining/incentives'
+import { formatBalance } from '@/lib/tokens'
+import { formatTimeRemaining, incentiveToPoolData } from '@/services/mining/incentives'
 import { toastSuccess, toastError } from '@/lib/toast'
 import { markStaked } from '@/lib/optimistic-deposits'
 import type { PositionWithTokens, Incentive, V3PoolData } from '@/types/earn'
@@ -171,17 +170,7 @@ export function StakeDialog({
                                         variant="outline"
                                         onClick={() => {
                                             onClose()
-                                            onAddLiquidity({
-                                                address: selectedIncentive.pool,
-                                                token0: selectedIncentive.poolToken0,
-                                                token1: selectedIncentive.poolToken1,
-                                                fee: selectedIncentive.poolFee,
-                                                liquidity: 0n,
-                                                sqrtPriceX96: 0n,
-                                                tick: 0,
-                                                tickSpacing:
-                                                    TICK_SPACING[selectedIncentive.poolFee] ?? 60,
-                                            })
+                                            onAddLiquidity(incentiveToPoolData(selectedIncentive))
                                         }}
                                     >
                                         <Plus className="h-3.5 w-3.5" />
@@ -250,9 +239,9 @@ function PositionOption({ position, isSelected }: PositionOptionProps) {
                     )}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                    {formatTokenAmount(position.amount0, position.token0Info.decimals)}{' '}
+                    {formatBalance(position.amount0, position.token0Info.decimals)}{' '}
                     {position.token0Info.symbol} +{' '}
-                    {formatTokenAmount(position.amount1, position.token1Info.decimals)}{' '}
+                    {formatBalance(position.amount1, position.token1Info.decimals)}{' '}
                     {position.token1Info.symbol}
                 </div>
             </div>

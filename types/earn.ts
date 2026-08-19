@@ -203,6 +203,8 @@ export interface Incentive extends IncentiveKey {
     poolFee: number
     isActive: boolean
     isEnded: boolean
+    /** Indexer creation time; null when the row doesn't record one. */
+    createdAt: number | null
 }
 
 export interface StakedPosition {
@@ -226,3 +228,44 @@ export interface UnstakeParams {
     tokenId: bigint
     incentiveKey: IncentiveKey
 }
+
+/** Immutable caps baked into the deployed UniswapV3Staker. Read per chain, never hardcoded. */
+export interface StakerLimits {
+    maxIncentiveDuration: number
+    maxIncentiveStartLeadTime: number
+}
+
+export type StartMode = 'now' | 'scheduled'
+
+export interface CreateIncentiveForm {
+    pool: V3PoolData | null
+    rewardToken: Token | null
+    rewardAmount: string
+    startMode: StartMode
+    scheduledStart: number | null
+    durationSeconds: number
+}
+
+export type CreateIncentiveError =
+    | 'NO_ACCOUNT'
+    | 'NO_POOL'
+    | 'NO_REWARD_TOKEN'
+    | 'REWARD_ZERO'
+    | 'REWARD_INVALID'
+    | 'REWARD_EXCEEDS_BALANCE'
+    | 'START_MISSING'
+    | 'START_IN_PAST'
+    | 'START_TOO_FAR'
+    | 'DURATION_ZERO'
+    | 'DURATION_TOO_LONG'
+
+export type FarmStatusFilter = 'all' | 'active' | 'upcoming' | 'ended'
+
+export type FarmOwnershipFilter = 'all' | 'my-staked' | 'match-my-position'
+
+/** My Farms is a creator's own list, so it slices by what still needs their attention. */
+export type MyFarmFilter = 'ongoing' | 'unclaimed' | 'ended'
+
+export type FarmView = 'card' | 'table'
+
+export type FarmSortKey = 'reward-value' | 'newest' | 'opening-soon' | 'ending-soon'
