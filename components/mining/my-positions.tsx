@@ -8,9 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { PaginationControls } from '@/components/ui/pagination'
 import { TokenIcon, TokenIconPair } from '@/components/ui/token-icon'
-import { useUserPositions } from '@/hooks/useUserPositions'
 import { useIncentives } from '@/hooks/useIncentives'
-import { useStakedPositions } from '@/hooks/useStakedPositions'
+import { useStakerDeposits } from '@/hooks/useStakerDeposits'
+import { useFarmStakes, toStakedPosition } from '@/hooks/useFarmStakes'
 import { usePendingRewardsMultiple } from '@/hooks/useRewards'
 import { useWithdrawPosition } from '@/hooks/useStaking'
 import { useNowSeconds } from '@/hooks/useNowSeconds'
@@ -214,23 +214,30 @@ function IdlePositionCard({
  */
 export function MyPositions({ onUnstake }: { onUnstake: (staked: StakedPosition) => void }) {
     const { address, isConnected } = useAccount()
-    const chainId = useChainId()
     const now = useNowSeconds()
     const [page, setPage] = useState(1)
 
-    const { positions } = useUserPositions(address, chainId)
     const { incentives } = useIncentives()
-    const { stakedPositions, depositedPositions, isLoading, refetch } = useStakedPositions(
-        positions,
-        incentives,
-        address
+    const { deposits, isLoading: isLoadingDeposits, refetch } = useStakerDeposits()
+    const { stakes, isLoading: isLoadingStakes } = useFarmStakes(incentives, deposits)
+    const isLoading = isLoadingDeposits || isLoadingStakes
+
+    const owner = address?.toLowerCase()
+    const myStakes = useMemo(
+        () => (owner ? stakes.filter((s) => s.depositor.toLowerCase() === owner) : []),
+        [stakes, owner]
     )
+    const stakedPositions = useMemo(() => myStakes.map(toStakedPosition), [myStakes])
     const { rewards } = usePendingRewardsMultiple(stakedPositions)
 
     const idlePositions = useMemo(() => {
-        const stakedTokenIds = new Set(stakedPositions.map((s) => s.tokenId.toString()))
-        return depositedPositions.filter((p) => !stakedTokenIds.has(p.tokenId.toString()))
-    }, [depositedPositions, stakedPositions])
+        if (!owner) return []
+        const stakedTokenIds = new Set(myStakes.map((s) => s.position.tokenId.toString()))
+        return deposits
+            .filter((d) => d.depositor.toLowerCase() === owner)
+            .filter((d) => !stakedTokenIds.has(d.position.tokenId.toString()))
+            .map((d) => d.position)
+    }, [deposits, myStakes, owner])
 
     type Entry =
         | { kind: 'staked'; key: string; staked: StakedPosition }

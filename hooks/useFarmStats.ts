@@ -1,27 +1,22 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useChainId, useReadContracts } from 'wagmi'
-import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/junoswap-sdk'
+import { useChainId } from 'wagmi'
 import { useNowSeconds } from '@/hooks/useNowSeconds'
 import { useTokenPriceMap } from '@/hooks/useTokenPriceMap'
-import { useUserPositions } from '@/hooks/useUserPositions'
+import { useStakerDeposits } from '@/hooks/useStakerDeposits'
+import { useFarmStakes } from '@/hooks/useFarmStakes'
 import { computeFarmApr, positionValueUsd } from '@/services/mining/farm-metrics'
-import type { Incentive, PositionWithTokens } from '@/types/earn'
+import type { Incentive } from '@/types/earn'
 
 export interface FarmStats {
     stakedTvlUsd: number | undefined
     aprPercent: number | undefined
 }
 
-const EMPTY_STATS: FarmStats = { stakedTvlUsd: undefined, aprPercent: undefined }
-
 /**
- * Staked TVL and APR per farm.
- *
- * Every NFT sitting in the staker is owned by the staker contract, so the whole staked set is one
- * position query away. A position can only be staked in an incentive on its own pool, so `stakes()`
- * is read for those pairs only rather than the full cross product.
+ * Staked TVL and APR per farm, built on the same deposit and stake reads the position views use, so
+ * both surfaces agree and the queries are shared rather than duplicated.
  */
 export function useFarmStats(
     incentives: readonly Incentive[],
@@ -32,54 +27,17 @@ export function useFarmStats(
 } {
     const chainId = useChainId()
     const now = useNowSeconds()
-    const stakerAddress = getV3StakerAddress(chainId)
 
-    const { positions, isLoading: isLoadingPositions } = useUserPositions(stakerAddress, chainId)
+    const { deposits, isLoading: isLoadingDeposits } = useStakerDeposits()
+    const { stakes, isLoading: isLoadingStakes } = useFarmStakes(incentives, deposits)
     const { priceMap, isLoading: isLoadingPrices } = useTokenPriceMap(chainId)
-
-    const pairs = useMemo(() => {
-        if (!stakerAddress || positions.length === 0) return []
-        const byPool = new Map<string, PositionWithTokens[]>()
-        for (const position of positions) {
-            const key = position.poolAddress.toLowerCase()
-            const bucket = byPool.get(key)
-            if (bucket) bucket.push(position)
-            else byPool.set(key, [position])
-        }
-        const result: { incentiveId: `0x${string}`; position: PositionWithTokens }[] = []
-        for (const incentive of incentives) {
-            for (const position of byPool.get(incentive.pool.toLowerCase()) ?? []) {
-                result.push({ incentiveId: incentive.incentiveId, position })
-            }
-        }
-        return result
-    }, [incentives, positions, stakerAddress])
-
-    const contracts = useMemo(() => {
-        if (!stakerAddress) return []
-        return pairs.map((pair) => ({
-            address: stakerAddress,
-            abi: UNISWAP_V3_STAKER_ABI,
-            functionName: 'stakes' as const,
-            args: [pair.position.tokenId, pair.incentiveId] as const,
-            chainId,
-        }))
-    }, [pairs, stakerAddress, chainId])
-
-    const { data: stakeData, isLoading: isLoadingStakes } = useReadContracts({
-        contracts,
-        query: { enabled: contracts.length > 0, staleTime: 30_000 },
-    })
 
     const statsByIncentiveId = useMemo(() => {
         const tvl = new Map<string, number>()
         const unpriced = new Set<string>()
 
-        pairs.forEach((pair, index) => {
-            const stake = stakeData?.[index]?.result as readonly [bigint, bigint] | undefined
-            if (!stake || stake[1] <= 0n) return
-
-            const { position } = pair
+        for (const stake of stakes) {
+            const { position } = stake
             const value = positionValueUsd(
                 position.amount0,
                 position.token0Info.decimals,
@@ -91,11 +49,12 @@ export function useFarmStats(
             // One unpriced position makes the whole total a guess, so the farm reports no TVL
             // instead of a number that is quietly too low.
             if (value === undefined) {
-                unpriced.add(pair.incentiveId)
-                return
+                unpriced.add(stake.incentive.incentiveId)
+                continue
             }
-            tvl.set(pair.incentiveId, (tvl.get(pair.incentiveId) ?? 0) + value)
-        })
+            const key = stake.incentive.incentiveId
+            tvl.set(key, (tvl.get(key) ?? 0) + value)
+        }
 
         const result: Record<string, FarmStats> = {}
         for (const incentive of incentives) {
@@ -114,12 +73,10 @@ export function useFarmStats(
             }
         }
         return result
-    }, [pairs, stakeData, priceMap, incentives, rewardValueUsd, now])
+    }, [stakes, priceMap, incentives, rewardValueUsd, now])
 
     return {
         statsByIncentiveId,
-        isLoading: isLoadingPositions || isLoadingPrices || isLoadingStakes,
+        isLoading: isLoadingDeposits || isLoadingStakes || isLoadingPrices,
     }
 }
-
-export { EMPTY_STATS }
