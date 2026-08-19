@@ -89,9 +89,13 @@ const EMPTY_FILTER_COPY: Record<FarmOwnershipFilter, { title: string; descriptio
 
 export function MiningFarms({
     onStake,
+    onUnstake,
+    onAddLiquidity,
     onCreate,
 }: {
     onStake: (incentive: Incentive) => void
+    onUnstake: (incentive: Incentive) => void
+    onAddLiquidity: (incentive: Incentive) => void
     onCreate: () => void
 }) {
     const chainId = useChainId()
@@ -232,6 +236,8 @@ export function MiningFarms({
                                     incentive={incentive}
                                     stats={statsByIncentiveId[incentive.incentiveId]}
                                     onStake={onStake}
+                                    onUnstake={onUnstake}
+                                    onAddLiquidity={onAddLiquidity}
                                 />
                             ))}
                         </div>
@@ -242,6 +248,8 @@ export function MiningFarms({
                             statsByIncentiveId={statsByIncentiveId}
                             now={now}
                             onStake={onStake}
+                            onUnstake={onUnstake}
+                            onAddLiquidity={onAddLiquidity}
                             onConnect={() => setIsConnectModalOpen(true)}
                         />
                     )}

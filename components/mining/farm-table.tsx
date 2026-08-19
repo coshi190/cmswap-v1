@@ -1,6 +1,7 @@
 'use client'
 
 import { useAccount } from 'wagmi'
+import { Droplets, Minus } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -79,10 +80,14 @@ export function FarmTable({
     statsByIncentiveId,
     now,
     onStake,
+    onUnstake,
+    onAddLiquidity,
     onConnect,
 }: SharedTableProps & {
     statsByIncentiveId: Record<string, FarmStats>
     onStake: (incentive: Incentive) => void
+    onUnstake: (incentive: Incentive) => void
+    onAddLiquidity: (incentive: Incentive) => void
     onConnect: () => void
 }) {
     const { isConnected } = useAccount()
@@ -129,27 +134,53 @@ export function FarmTable({
                                 <TableCell className="p-3 px-4">
                                     <ScheduleCell incentive={incentive} now={now} />
                                 </TableCell>
-                                <TableCell className="p-3 px-4 text-right">
-                                    <Button
-                                        size="sm"
-                                        variant={status === 'active' ? 'default' : 'outline'}
-                                        disabled={isConnected && status !== 'active'}
-                                        onClick={() => {
-                                            if (!isConnected) {
-                                                onConnect()
-                                                return
-                                            }
-                                            onStake(incentive)
-                                        }}
-                                    >
-                                        {!isConnected
-                                            ? 'Connect'
-                                            : status === 'active'
-                                              ? 'Stake'
-                                              : status === 'pending'
-                                                ? 'Soon'
-                                                : 'Ended'}
-                                    </Button>
+                                <TableCell className="p-3 px-4">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                        <Button
+                                            size="sm"
+                                            variant={status === 'active' ? 'default' : 'outline'}
+                                            disabled={isConnected && status !== 'active'}
+                                            onClick={() => {
+                                                if (!isConnected) {
+                                                    onConnect()
+                                                    return
+                                                }
+                                                onStake(incentive)
+                                            }}
+                                        >
+                                            {!isConnected
+                                                ? 'Connect'
+                                                : status === 'active'
+                                                  ? 'Stake'
+                                                  : status === 'pending'
+                                                    ? 'Soon'
+                                                    : 'Ended'}
+                                        </Button>
+                                        {isConnected && (
+                                            <>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 w-8 shrink-0 p-0"
+                                                    title="Unstake &amp; claim"
+                                                    aria-label="Unstake from this farm"
+                                                    onClick={() => onUnstake(incentive)}
+                                                >
+                                                    <Minus />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 w-8 shrink-0 p-0"
+                                                    title="Add liquidity to this pool"
+                                                    aria-label="Add liquidity to this pool"
+                                                    onClick={() => onAddLiquidity(incentive)}
+                                                >
+                                                    <Droplets />
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )

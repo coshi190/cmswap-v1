@@ -1,4 +1,21 @@
-import type { Incentive, IncentiveKey } from '@/types/earn'
+import { TICK_SPACING, type Incentive, type IncentiveKey, type V3PoolData } from '@/types/earn'
+
+/**
+ * The farm's pool in the shape the liquidity dialogs take. Only identity is carried here — the
+ * dialog reads live pool state itself, so the price and liquidity fields start empty.
+ */
+export function incentiveToPoolData(incentive: Incentive): V3PoolData {
+    return {
+        address: incentive.pool,
+        token0: incentive.poolToken0,
+        token1: incentive.poolToken1,
+        fee: incentive.poolFee,
+        liquidity: 0n,
+        sqrtPriceX96: 0n,
+        tick: 0,
+        tickSpacing: TICK_SPACING[incentive.poolFee] ?? 60,
+    }
+}
 
 export function isIncentiveActive(key: IncentiveKey): boolean {
     const now = Math.floor(Date.now() / 1000)

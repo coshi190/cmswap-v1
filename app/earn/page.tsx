@@ -6,12 +6,14 @@ import { PoolsList } from '@/components/positions/pools'
 import { AddLiquidityDialog } from '@/components/positions/add-liquidity-dialog'
 import {
     CreateFarmDialog,
+    FarmUnstakeDialog,
     MiningFarms,
     MyFarms,
     MyPositions,
     StakeDialog,
     UnstakeDialog,
 } from '@/components/mining'
+import { incentiveToPoolData } from '@/services/mining/incentives'
 import type { Incentive, StakedPosition, V3PoolData } from '@/types/earn'
 
 function EarnContent() {
@@ -25,6 +27,8 @@ function EarnContent() {
     const [isStakeDialogOpen, setIsStakeDialogOpen] = useState(false)
     const [isUnstakeDialogOpen, setIsUnstakeDialogOpen] = useState(false)
     const [isCreateFarmOpen, setIsCreateFarmOpen] = useState(false)
+    const [unstakeFarm, setUnstakeFarm] = useState<Incentive | null>(null)
+    const [isFarmUnstakeOpen, setIsFarmUnstakeOpen] = useState(false)
 
     const queryClient = useQueryClient()
     const bumpRefresh = useCallback(() => {
@@ -43,12 +47,20 @@ function EarnContent() {
         setSelectedStakedPosition(staked)
         setIsUnstakeDialogOpen(true)
     }
+    const openFarmUnstakeDialog = (incentive: Incentive) => {
+        setUnstakeFarm(incentive)
+        setIsFarmUnstakeOpen(true)
+    }
     return (
         <div className="flex min-h-screen items-start justify-center p-4 pt-8">
             <div className="w-full max-w-5xl space-y-4">
                 <div className="space-y-6">
                     <MiningFarms
                         onStake={openStakeDialog}
+                        onUnstake={openFarmUnstakeDialog}
+                        onAddLiquidity={(incentive) =>
+                            openAddLiquidity(incentiveToPoolData(incentive))
+                        }
                         onCreate={() => setIsCreateFarmOpen(true)}
                     />
                     <MyPositions onUnstake={openUnstakeDialog} />
@@ -72,6 +84,12 @@ function EarnContent() {
                     open={isUnstakeDialogOpen}
                     stakedPosition={selectedStakedPosition}
                     onClose={() => setIsUnstakeDialogOpen(false)}
+                    onSuccess={bumpRefresh}
+                />
+                <FarmUnstakeDialog
+                    open={isFarmUnstakeOpen}
+                    incentive={unstakeFarm}
+                    onClose={() => setIsFarmUnstakeOpen(false)}
                     onSuccess={bumpRefresh}
                 />
                 <CreateFarmDialog

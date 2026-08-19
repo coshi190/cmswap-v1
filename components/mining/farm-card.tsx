@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
+import { Droplets, Minus } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -22,6 +23,8 @@ interface MiningFarmCardProps {
     incentive: Incentive
     stats?: FarmStats
     onStake: (incentive: Incentive) => void
+    onUnstake: (incentive: Incentive) => void
+    onAddLiquidity: (incentive: Incentive) => void
 }
 
 function formatUsd(value: number): string {
@@ -68,7 +71,13 @@ function Metric({
     )
 }
 
-export function MiningFarmCard({ incentive, stats, onStake }: MiningFarmCardProps) {
+export function MiningFarmCard({
+    incentive,
+    stats,
+    onStake,
+    onUnstake,
+    onAddLiquidity,
+}: MiningFarmCardProps) {
     const { isConnected } = useAccount()
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
 
@@ -168,20 +177,50 @@ export function MiningFarmCard({ incentive, stats, onStake }: MiningFarmCardProp
                     </div>
                 </div>
 
-                <Button
-                    className="w-full mt-4"
-                    variant={isDisabled ? 'outline' : 'default'}
-                    disabled={isDisabled}
-                    onClick={() => {
-                        if (!isConnected) {
-                            setIsConnectModalOpen(true)
-                            return
-                        }
-                        onStake(incentive)
-                    }}
-                >
-                    {buttonLabel}
-                </Button>
+                <div className="mt-4 flex gap-2">
+                    <Button
+                        className="flex-1"
+                        variant={isDisabled ? 'outline' : 'default'}
+                        disabled={isDisabled}
+                        onClick={() => {
+                            if (!isConnected) {
+                                setIsConnectModalOpen(true)
+                                return
+                            }
+                            onStake(incentive)
+                        }}
+                    >
+                        {buttonLabel}
+                    </Button>
+                    {isConnected && (
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0"
+                            title="Unstake &amp; claim"
+                            aria-label="Unstake from this farm"
+                            onClick={() => onUnstake(incentive)}
+                        >
+                            <Minus />
+                        </Button>
+                    )}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        title="Add liquidity to this pool"
+                        aria-label="Add liquidity to this pool"
+                        onClick={() => {
+                            if (!isConnected) {
+                                setIsConnectModalOpen(true)
+                                return
+                            }
+                            onAddLiquidity(incentive)
+                        }}
+                    >
+                        <Droplets />
+                    </Button>
+                </div>
             </CardContent>
             <ConnectModal open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen} />
         </Card>
