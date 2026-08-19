@@ -19,7 +19,7 @@ import { TICK_SPACING } from '@/types/earn'
 import { useUserPositions } from '@/hooks/useUserPositions'
 import { useDepositInfo } from '@/hooks/useStakedPositions'
 import { useStakePosition } from '@/hooks/useStaking'
-import { formatTokenAmount } from '@/lib/tokens'
+import { formatBalance } from '@/lib/tokens'
 import { formatTimeRemaining } from '@/services/mining/incentives'
 import { toastSuccess, toastError } from '@/lib/toast'
 import { markStaked } from '@/lib/optimistic-deposits'
@@ -250,9 +250,9 @@ function PositionOption({ position, isSelected }: PositionOptionProps) {
                     )}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                    {formatTokenAmount(position.amount0, position.token0Info.decimals)}{' '}
+                    {formatBalance(position.amount0, position.token0Info.decimals)}{' '}
                     {position.token0Info.symbol} +{' '}
-                    {formatTokenAmount(position.amount1, position.token1Info.decimals)}{' '}
+                    {formatBalance(position.amount1, position.token1Info.decimals)}{' '}
                     {position.token1Info.symbol}
                 </div>
             </div>
