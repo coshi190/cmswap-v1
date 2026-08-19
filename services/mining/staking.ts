@@ -1,8 +1,15 @@
-import { encodeFunctionData, encodeAbiParameters, type Address, type Hex } from 'viem'
+import { encodeFunctionData, encodeAbiParameters, keccak256, type Address, type Hex } from 'viem'
 import type { IncentiveKey, UnstakeParams } from '@/types/earn'
 import { UNISWAP_V3_STAKER_ABI } from '@coshi190/junoswap-sdk'
 
-export { computeIncentiveId } from '@coshi190/junoswap-sdk'
+/**
+ * The staker keys every incentive by `keccak256(abi.encode(key))`, which is the same encoding
+ * `safeTransferFrom` carries as its stake payload — so both paths share one encoder and a freshly
+ * created incentive can be identified before the indexer has seen it.
+ */
+export function computeIncentiveId(key: IncentiveKey): Hex {
+    return keccak256(encodeIncentiveKeyData(key))
+}
 
 export function encodeIncentiveKeyData(key: IncentiveKey): Hex {
     return encodeAbiParameters(
