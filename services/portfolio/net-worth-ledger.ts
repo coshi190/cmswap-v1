@@ -1,6 +1,6 @@
 import {
     downsample,
-    sanitizePricePoints,
+    makePriceAt,
     type NetWorthPoint,
     type PricePoint,
 } from '@/services/portfolio/net-worth-history'
@@ -76,23 +76,7 @@ function makeStepAt(steps: readonly BalanceStep[]): (t: number) => number {
 }
 
 export function makeNativePriceAt(points: readonly PricePoint[]): (t: number) => number {
-    if (points.length === 0) return () => 0
-    return (t: number) => {
-        if (t < points[0]!.timestamp) return points[0]!.price
-        let lo = 0
-        let hi = points.length - 1
-        let ans = points[0]!.price
-        while (lo <= hi) {
-            const mid = (lo + hi) >> 1
-            if (points[mid]!.timestamp <= t) {
-                ans = points[mid]!.price
-                lo = mid + 1
-            } else {
-                hi = mid - 1
-            }
-        }
-        return ans
-    }
+    return makePriceAt(points, 0)
 }
 
 interface ResolvedToken {
@@ -101,11 +85,10 @@ interface ResolvedToken {
 }
 
 export function buildLedgerNetWorthSeries(params: BuildLedgerParams): NetWorthPoint[] {
-    const { tokens, nativeUsdNow, windowStart, nowSec, netWorthNow } = params
+    const { tokens, nativeUsdPoints, nativeUsdNow, windowStart, nowSec, netWorthNow } = params
 
     if (netWorthNow <= 0 || !nativeUsdNow || nativeUsdNow <= 0) return []
 
-    const nativeUsdPoints = sanitizePricePoints(params.nativeUsdPoints)
     const nativeUsdAt = makeNativePriceAt(nativeUsdPoints)
 
     const gridTimes = new Set<number>([windowStart])
@@ -120,7 +103,7 @@ export function buildLedgerNetWorthSeries(params: BuildLedgerParams): NetWorthPo
             if (s.fromTs > windowStart && s.fromTs < nowSec) gridTimes.add(s.fromTs)
         }
 
-        const nativePoints = sanitizePricePoints(token.nativePricePoints)
+        const nativePoints = token.nativePricePoints
         const usable = token.priceKind === 'reconstructed' && nativePoints.length > 0
         const nativePriceAt = usable ? makeNativePriceAt(nativePoints) : null
         if (usable) {

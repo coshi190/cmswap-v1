@@ -3,13 +3,7 @@
 import { useMemo, useRef } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { formatUnits } from 'viem'
-import {
-    fetchBondingCurvePricesSince,
-    fetchV3PricesSince,
-    calculatePrice,
-    calculatePriceFromSqrtPrice,
-} from '@coshi190/junoswap-sdk'
-import { ponderClient, isPonderError } from '@/lib/ponder-client'
+import { fetchTokenPriceHistory } from '@/lib/price-history'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { isNativeToken } from '@/lib/wagmi'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
@@ -26,42 +20,9 @@ import {
     type PricePoint,
 } from '@/services/portfolio/net-worth-history'
 import type { UserSwapEvent } from '@/hooks/useUserSwapEvents'
-import type { PortfolioToken, TokenType } from '@/types/portfolio'
+import type { PortfolioToken } from '@/types/portfolio'
 
 const EMPTY_HISTORY: NetWorthPoint[] = []
-
-async function fetchNativePricePoints(
-    tokenAddr: string,
-    chainId: number,
-    tokenType: TokenType,
-    since: number
-): Promise<PricePoint[]> {
-    try {
-        if (tokenType === 'bonding_curve') {
-            const rows = await fetchBondingCurvePricesSince(ponderClient, { tokenAddr, since })
-            return rows.map((e) => ({
-                timestamp: e.timestamp,
-                price: calculatePrice({
-                    timestamp: e.timestamp,
-                    isBuy: e.isBuy === 1,
-                    amountIn: 0n,
-                    amountOut: 0n,
-                    reserveIn: BigInt(e.reserveIn),
-                    reserveOut: BigInt(e.reserveOut),
-                }),
-            }))
-        }
-
-        const rows = await fetchV3PricesSince(ponderClient, { tokenAddr, chainId, since })
-        return rows.map((e) => ({
-            timestamp: e.timestamp,
-            price: calculatePriceFromSqrtPrice(BigInt(e.sqrtPriceX96), e.tokenIsToken0 === 1),
-        }))
-    } catch (e) {
-        if (isPonderError(e)) return []
-        throw e
-    }
-}
 
 function classify(token: PortfolioToken['token'], chainId: number): PriceKind {
     if (isNativeToken(token.address)) return 'native'
@@ -115,11 +76,11 @@ export function useNetWorthHistory(params: UseNetWorthHistoryParams): NetWorthPo
                 windowStart,
             ],
             queryFn: () =>
-                fetchNativePricePoints(
-                    c.pt.token.address.toLowerCase(),
+                fetchTokenPriceHistory(
                     chainId,
-                    c.pt.tokenType,
-                    windowStart
+                    c.pt.token.address.toLowerCase(),
+                    windowStart,
+                    c.pt.tokenType === 'bonding_curve' ? 'bc' : 'v3'
                 ),
             enabled: supported,
             staleTime: 60_000,
