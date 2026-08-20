@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { NetWorthPoint } from '@/services/portfolio/net-worth-history'
+import type { NetWorthPoint } from '@coshi190/junoswap-sdk'
 
 const useMeasureEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 

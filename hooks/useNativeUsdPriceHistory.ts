@@ -2,12 +2,11 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchNativeUsdPriceHistory } from '@/lib/price-history'
+import { fetchNativeUsdPriceHistory, type PricePoint } from '@/lib/price-history'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { hasSettled } from '@/lib/query-status'
-import { makePriceAt, type PricePoint } from '@/services/portfolio/net-worth-history'
 
-export function useNativeUsdPriceHistory(chainId: number, fallbackPrice: number | null) {
+export function useNativeUsdPriceHistory(chainId: number) {
     const isSupportedChain = isLeaderboardSupportedChain(chainId)
 
     const { data, isLoading } = useQuery({
@@ -18,7 +17,6 @@ export function useNativeUsdPriceHistory(chainId: number, fallbackPrice: number 
     })
 
     const points = useMemo(() => data ?? [], [data])
-    const priceAt = useMemo(() => makePriceAt(points, fallbackPrice), [points, fallbackPrice])
 
-    return { points, priceAt, isLoading, isSettled: hasSettled(isSupportedChain, data) }
+    return { points, isLoading, isSettled: hasSettled(isSupportedChain, data) }
 }
