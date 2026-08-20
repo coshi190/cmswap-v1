@@ -105,7 +105,7 @@ export function PortfolioContent() {
     )
     const { data: swapEvents } = useUserSwapEvents(address, chainId)
     const { points: nativeUsdHistory, isSettled: isNativeUsdHistorySettled } =
-        useNativeUsdPriceHistory(chainId, nativeUsdPrice)
+        useNativeUsdPriceHistory(chainId)
     const { pnlByToken, totals: pnlTotals } = usePortfolioPnl(address, chainId, holdings)
 
     const portfolioTokens = useMemo<PortfolioToken[]>(() => {

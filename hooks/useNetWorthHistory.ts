@@ -2,35 +2,18 @@
 
 import { useMemo, useRef } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { formatUnits } from 'viem'
-import { fetchTokenPriceHistory } from '@/lib/price-history'
-import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
-import { isNativeToken } from '@/lib/wagmi'
-import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
-import { isStablecoin } from '@/hooks/useTokenPrices'
 import {
-    buildLedgerNetWorthSeries,
-    type BalanceDelta,
-    type LedgerToken,
-    type PriceKind,
-} from '@/services/portfolio/net-worth-ledger'
-import {
-    DAY_SECONDS,
+    computeNetWorthHistory,
+    needsPriceHistory,
     type NetWorthPoint,
-    type PricePoint,
-} from '@/services/portfolio/net-worth-history'
+} from '@coshi190/junoswap-sdk'
+import { fetchTokenPriceHistory, type PricePoint } from '@/lib/price-history'
+import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import type { UserSwapEvent } from '@/hooks/useUserSwapEvents'
 import type { PortfolioToken } from '@/types/portfolio'
 
 const EMPTY_HISTORY: NetWorthPoint[] = []
-
-function classify(token: PortfolioToken['token'], chainId: number): PriceKind {
-    if (isNativeToken(token.address)) return 'native'
-    const wrapped = INTERMEDIARY_TOKENS[chainId]?.wrappedNative
-    if (wrapped && token.address.toLowerCase() === wrapped.toLowerCase()) return 'native'
-    if (isStablecoin(token)) return 'stable'
-    return 'reconstructed'
-}
+const DAY_SECONDS = 86_400
 
 interface UseNetWorthHistoryParams {
     address: `0x${string}` | undefined
@@ -52,35 +35,26 @@ export function useNetWorthHistory(params: UseNetWorthHistoryParams): NetWorthPo
     const nowSec = useMemo(() => Math.floor(Date.now() / 60_000) * 60, [])
     const windowStart = nowSec - DAY_SECONDS
 
-    const classified = useMemo(
-        () =>
-            portfolioTokens.map((t) => ({
-                pt: t,
-                kind: classify(t.token, chainId),
-            })),
+    const reconstructable = useMemo(
+        () => portfolioTokens.filter((t) => needsPriceHistory(t.token.address, chainId)),
         [portfolioTokens, chainId]
     )
 
-    const reconstructable = useMemo(
-        () => classified.filter((c) => c.kind === 'reconstructed'),
-        [classified]
-    )
-
     const priceQueries = useQueries({
-        queries: reconstructable.map((c) => ({
+        queries: reconstructable.map((t) => ({
             queryKey: [
                 'nw-native-price',
                 chainId,
-                c.pt.token.address.toLowerCase(),
-                c.pt.tokenType,
+                t.token.address.toLowerCase(),
+                t.tokenType,
                 windowStart,
             ],
             queryFn: () =>
                 fetchTokenPriceHistory(
                     chainId,
-                    c.pt.token.address.toLowerCase(),
+                    t.token.address.toLowerCase(),
                     windowStart,
-                    c.pt.tokenType === 'bonding_curve' ? 'bc' : 'v3'
+                    t.tokenType === 'bonding_curve' ? 'bc' : 'v3'
                 ),
             enabled: supported,
             staleTime: 60_000,
@@ -89,85 +63,44 @@ export function useNetWorthHistory(params: UseNetWorthHistoryParams): NetWorthPo
 
     const arePricesLoading = supported && priceQueries.some((q) => q.data === undefined)
 
-    const nativePriceByToken = useMemo(() => {
+    const nativePricePointsByToken = useMemo(() => {
         const map = new Map<string, PricePoint[]>()
-        reconstructable.forEach((c, i) => {
-            map.set(c.pt.token.address.toLowerCase(), priceQueries[i]?.data ?? [])
+        reconstructable.forEach((t, i) => {
+            map.set(t.token.address.toLowerCase(), priceQueries[i]?.data ?? [])
         })
         return map
     }, [reconstructable, priceQueries])
-
-    const { deltasByToken, nativeDeltas } = useMemo(() => {
-        const byToken = new Map<string, UserSwapEvent[]>()
-        const nativeLeg: BalanceDelta[] = []
-        for (const e of swapEvents ?? []) {
-            if (e.timestamp < windowStart || e.timestamp >= nowSec) continue
-            const key = e.tokenAddr.toLowerCase()
-            const list = byToken.get(key) ?? []
-            list.push(e)
-            byToken.set(key, list)
-            const native = parseFloat(formatUnits(BigInt(e.isBuy ? e.amountIn : e.amountOut), 18))
-            nativeLeg.push({ timestamp: e.timestamp, delta: e.isBuy ? -native : native })
-        }
-        const decoded = new Map<string, BalanceDelta[]>()
-        for (const c of classified) {
-            const key = c.pt.token.address.toLowerCase()
-            const raw = byToken.get(key)
-            if (!raw) continue
-            const decimals = c.pt.token.decimals
-            decoded.set(
-                key,
-                raw.map((e) => {
-                    const tokenRaw = e.isBuy ? e.amountOut : e.amountIn
-                    const tokens = parseFloat(formatUnits(BigInt(tokenRaw), decimals))
-                    return { timestamp: e.timestamp, delta: e.isBuy ? tokens : -tokens }
-                })
-            )
-        }
-        return { deltasByToken: decoded, nativeDeltas: nativeLeg }
-    }, [swapEvents, classified, windowStart, nowSec])
-
-    const nativeTargetKey = useMemo(() => {
-        const nativeCoin = classified.find((c) => isNativeToken(c.pt.token.address))
-        const target = nativeCoin ?? classified.find((c) => c.kind === 'native')
-        return target?.pt.token.address.toLowerCase() ?? null
-    }, [classified])
 
     const isSettling = params.isInputLoading || arePricesLoading
 
     const series = useMemo(() => {
         if (!address || !supported || nativeUsdPrice === null || isSettling) return null
 
-        const tokens: LedgerToken[] = classified.map((c) => {
-            const key = c.pt.token.address.toLowerCase()
-            const deltas = deltasByToken.get(key) ?? []
-            return {
-                currentBalance: parseFloat(c.pt.formattedBalance) || 0,
-                deltas: key === nativeTargetKey ? [...deltas, ...nativeDeltas] : deltas,
-                priceKind: c.kind,
-                nativePricePoints: nativePriceByToken.get(key) ?? [],
-                priceUsdNow: c.pt.priceUsd ?? 0,
-            }
-        })
-
-        return buildLedgerNetWorthSeries({
-            tokens,
+        return computeNetWorthHistory({
+            chainId,
+            tokens: portfolioTokens.map((t) => ({
+                address: t.token.address,
+                decimals: t.token.decimals,
+                balance: parseFloat(t.formattedBalance) || 0,
+                priceUsd: t.priceUsd ?? 0,
+            })),
+            swapEvents: swapEvents ?? [],
             nativeUsdPoints,
             nativeUsdNow: nativeUsdPrice,
-            windowStart,
-            nowSec,
             netWorthNow: params.netWorthNow,
+            nowSec,
+            nativePricePointsByToken,
+            windowStart,
         })
     }, [
         address,
         supported,
         nativeUsdPrice,
         isSettling,
-        classified,
-        deltasByToken,
-        nativeDeltas,
-        nativeTargetKey,
-        nativePriceByToken,
+        chainId,
+        portfolioTokens,
+        swapEvents,
+        nativePricePointsByToken,
         nativeUsdPoints,
         windowStart,
         nowSec,
