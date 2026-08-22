@@ -42,6 +42,7 @@ interface TokenTradeCardProps {
     isGraduated: boolean
     poolAddress?: Address
     poolFee?: number
+    isPoolLoading?: boolean
 }
 
 function PercentButtons({ onSelect }: { onSelect: (pct: number) => void }) {
@@ -90,6 +91,7 @@ export function TokenTradeCard({
     isGraduated: _initialIsGraduated,
     poolAddress,
     poolFee,
+    isPoolLoading = false,
 }: TokenTradeCardProps) {
     const { address, isConnected } = useAccount()
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
@@ -539,7 +541,7 @@ export function TokenTradeCard({
         )
     }
 
-    if (isGraduated && !poolAddress) {
+    if (isGraduated && !poolAddress && !isPoolLoading) {
         return (
             <Card>
                 <CardContent className="p-4 sm:p-6">

@@ -1,6 +1,6 @@
 import { formatEther } from 'viem'
 import type { Address } from 'viem'
-import type { LaunchTokenDetail } from '@coshi190/junoswap-sdk'
+import type { LaunchTokenDetail, V3PoolRow } from '@coshi190/junoswap-sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import type { LaunchToken } from '@/types/launchpad'
@@ -63,4 +63,20 @@ export function formatCompact(num: number, decimals = 1): string {
     if (num < 1000000) return `${(num / 1000).toFixed(decimals)}K`
     if (num < 1000000000) return `${(num / 1000000).toFixed(decimals)}M`
     return `${(num / 1000000000).toFixed(decimals)}B`
+}
+
+export function findGraduatedPool(
+    pools: V3PoolRow[],
+    tokenAddr: string,
+    wrappedNative: string,
+    fee: number
+): V3PoolRow | undefined {
+    const token = tokenAddr.toLowerCase()
+    const native = wrappedNative.toLowerCase()
+    return pools.find((pool) => {
+        if (pool.fee !== fee) return false
+        const token0 = pool.token0.toLowerCase()
+        const token1 = pool.token1.toLowerCase()
+        return (token0 === token && token1 === native) || (token0 === native && token1 === token)
+    })
 }

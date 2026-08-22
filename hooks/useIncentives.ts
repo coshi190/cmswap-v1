@@ -7,7 +7,6 @@ import type { Address } from 'viem'
 import type { Incentive } from '@/types/earn'
 import {
     fetchIncentives,
-    fetchV3Pools,
     getV3StakerAddress,
     UNISWAP_V3_STAKER_ABI,
     type V3PoolRow,
@@ -16,6 +15,7 @@ import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { findTokenByAddress } from '@/lib/tokens'
 import { useV3Tokens } from '@/hooks/useV3Tokens'
+import { useV3Pools } from '@/hooks/useV3Pools'
 import {
     extractIncentiveCreatedAt,
     isIncentiveActive,
@@ -51,19 +51,7 @@ export function useIncentives(): {
         staleTime: 60_000,
     })
 
-    const { data: pools, isLoading: isLoadingPools } = useQuery({
-        queryKey: ['v3-pools-all', chainId],
-        queryFn: async () => {
-            try {
-                return await fetchV3Pools(ponderClient, { chainId })
-            } catch (e) {
-                if (isPonderError(e)) return []
-                throw e
-            }
-        },
-        enabled: isIndexed,
-        staleTime: 60_000,
-    })
+    const { pools, isLoading: isLoadingPools } = useV3Pools(chainId, isIndexed)
     const { tokens: v3Tokens, isLoading: isLoadingTokens } = useV3Tokens(chainId)
 
     const rows = useMemo(() => incentiveRows ?? [], [incentiveRows])
@@ -93,7 +81,7 @@ export function useIncentives(): {
 
     const poolByAddress = useMemo(() => {
         const map = new Map<string, V3PoolRow>()
-        for (const pool of pools ?? []) map.set(pool.address.toLowerCase(), pool)
+        for (const pool of pools) map.set(pool.address.toLowerCase(), pool)
         return map
     }, [pools])
 
