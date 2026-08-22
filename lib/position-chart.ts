@@ -1,4 +1,4 @@
-import { priceFromSqrtPriceX96 } from '@coshi190/junoswap-sdk'
+import { computePoolPrice, computeTickPrice } from '@coshi190/junoswap-sdk'
 
 export interface PoolSwapPoint {
     timestamp: number
@@ -19,7 +19,7 @@ export const RANGE_CHART_WINDOW_SEC = 30 * 86_400
 export const RANGE_CHART_BUCKET_SEC = 21_600
 
 export function tickToPriceNumber(tick: number, decimals0: number, decimals1: number): number {
-    return Math.pow(1.0001, tick) * Math.pow(10, decimals0 - decimals1)
+    return computeTickPrice({ tick, decimals0, decimals1 })
 }
 
 export function sqrtPriceX96ToPriceNumber(
@@ -33,7 +33,7 @@ export function sqrtPriceX96ToPriceNumber(
     } catch {
         return 0
     }
-    return priceFromSqrtPriceX96(sqrt, decimals0, decimals1)
+    return computePoolPrice({ sqrtPriceX96: sqrt, decimals0, decimals1 })
 }
 
 export function buildPoolPriceSeries(params: {

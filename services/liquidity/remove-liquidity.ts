@@ -5,7 +5,7 @@ import type {
     CollectCallParams,
 } from '@/types/earn'
 import { MAX_UINT128 } from '@/types/earn'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI, calculateDeadline } from '@coshi190/junoswap-sdk'
+import { NONFUNGIBLE_POSITION_MANAGER_ABI } from '@coshi190/junoswap-sdk'
 import { getWrappedNativeAddress } from '@/lib/tokens'
 import { shouldSkipUnwrap } from '@/lib/wagmi'
 
@@ -15,7 +15,7 @@ function buildDecreaseLiquidityParams(params: RemoveLiquidityParams): DecreaseLi
         liquidity: params.liquidity,
         amount0Min: params.amount0Min,
         amount1Min: params.amount1Min,
-        deadline: calculateDeadline(params.deadline),
+        deadline: params.deadline,
     }
 }
 

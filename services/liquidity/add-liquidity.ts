@@ -7,39 +7,41 @@ import type {
 } from '@/types/earn'
 import {
     NONFUNGIBLE_POSITION_MANAGER_ABI,
-    calculateMinAmounts,
-    calculateDeadline,
+    getTickSpacing,
+    invertSqrtPriceX96,
+    planAddLiquidity,
+    planIncreaseLiquidity,
     sortTokens,
-    nearestUsableTick,
 } from '@coshi190/junoswap-sdk'
-import { getTickSpacing } from '@/lib/liquidity-helpers'
 import { isNativeToken } from '@/lib/wagmi'
 import { getWrappedNativeAddress } from '@/lib/tokens'
 
 export function buildMintParams(params: AddLiquidityParams): MintCallParams {
-    const [token0, token1] = sortTokens(params.token0, params.token1)
-    const isToken0First = token0.address === params.token0.address
-
-    const amount0Desired = isToken0First ? params.amount0Desired : params.amount1Desired
-    const amount1Desired = isToken0First ? params.amount1Desired : params.amount0Desired
-
-    const amount0Min = 0n
-    const amount1Min = 0n
-
-    const tickSpacing = getTickSpacing(params.fee)
-    const tickLower = nearestUsableTick(params.tickLower, tickSpacing)
-    const tickUpper = nearestUsableTick(params.tickUpper, tickSpacing)
+    const plan = planAddLiquidity({
+        token0: params.token0,
+        token1: params.token1,
+        fee: params.fee,
+        tickSpacing: getTickSpacing(params.fee),
+        tickLower: params.tickLower,
+        tickUpper: params.tickUpper,
+        amount0Desired: params.amount0Desired,
+        amount1Desired: params.amount1Desired,
+        slippageBps: params.slippageTolerance,
+        deadlineMinutes: 0,
+    })
 
     return {
-        token0: token0.address,
-        token1: token1.address,
-        fee: params.fee,
-        tickLower,
-        tickUpper,
-        amount0Desired,
-        amount1Desired,
-        amount0Min,
-        amount1Min,
+        token0: plan.token0 as Address,
+        token1: plan.token1 as Address,
+        fee: plan.fee,
+        tickLower: plan.tickLower,
+        tickUpper: plan.tickUpper,
+        amount0Desired: plan.amount0Desired,
+        amount1Desired: plan.amount1Desired,
+        // Mint has always gone out without min amounts; slippageTolerance is applied on
+        // increase only. Tightening it here would change revert behaviour, not just shape.
+        amount0Min: 0n,
+        amount1Min: 0n,
         recipient: params.recipient,
         deadline: BigInt(params.deadline),
     }
@@ -48,19 +50,21 @@ export function buildMintParams(params: AddLiquidityParams): MintCallParams {
 export function buildIncreaseLiquidityParams(
     params: IncreaseLiquidityParams
 ): IncreaseLiquidityCallParams {
-    const { amount0Min, amount1Min } = calculateMinAmounts(
-        params.amount0Desired,
-        params.amount1Desired,
-        params.slippageTolerance
-    )
-
-    return {
+    const plan = planIncreaseLiquidity({
         tokenId: params.tokenId,
         amount0Desired: params.amount0Desired,
         amount1Desired: params.amount1Desired,
-        amount0Min,
-        amount1Min,
-        deadline: calculateDeadline(params.deadline),
+        slippageBps: params.slippageTolerance,
+        deadlineMinutes: params.deadline,
+    })
+
+    return {
+        tokenId: plan.tokenId,
+        amount0Desired: plan.amount0Desired,
+        amount1Desired: plan.amount1Desired,
+        amount0Min: plan.amount0Min,
+        amount1Min: plan.amount1Min,
+        deadline: plan.deadline,
     }
 }
 
@@ -152,8 +156,7 @@ export function buildPoolCreationMulticall(
     )
 
     const isReversed = sortedToken0.address.toLowerCase() !== params.token0.address.toLowerCase()
-    const Q96 = 2n ** 96n
-    const finalSqrtPriceX96 = isReversed ? (Q96 * Q96) / sqrtPriceX96 : sqrtPriceX96
+    const finalSqrtPriceX96 = isReversed ? invertSqrtPriceX96(sqrtPriceX96) : sqrtPriceX96
 
     const poolToken0 =
         token0IsNative && sortedToken0.address.toLowerCase() === params.token0.address.toLowerCase()

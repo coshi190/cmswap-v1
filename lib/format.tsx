@@ -64,9 +64,3 @@ export function formatChartPrice(value: number): string {
     const sig = String(digits).replace(/0+$/, '') || '0'
     return `0.${'0'.repeat(leadingZeros)}${sig}`
 }
-
-export function calculateApr(poolFee: number, tvl: number, volume30d: number): number | null {
-    if (!tvl || tvl <= 0 || !volume30d || volume30d <= 0) return null
-    const dailyAvgVolume = volume30d / 30
-    return ((dailyAvgVolume * (poolFee / 1_000_000)) / tvl) * 365 * 100
-}

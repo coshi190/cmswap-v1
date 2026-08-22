@@ -19,7 +19,7 @@ describe('services/liquidity/remove-liquidity', () => {
         liquidity: 1000000n,
         amount0Min: 50n,
         amount1Min: 75n,
-        deadline: 600,
+        deadline: 600n,
         collectFees: true,
     }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useChainId } from 'wagmi'
 import { ChevronDown, Search } from 'lucide-react'
 import {
@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TokenIconPair, TokenIconSkeleton } from '@/components/ui/token-icon'
 import { useAllPools } from '@/hooks/useAllPools'
-import { usePoolTvl } from '@/hooks/usePoolTvl'
 import { getDisplayToken } from '@/lib/tokens'
 import { formatFeeTier } from '@/lib/liquidity-helpers'
 import { formatTvl } from '@/lib/format'
@@ -39,8 +38,11 @@ export function FarmPoolPicker({ value, onChange }: FarmPoolPickerProps) {
     const chainId = useChainId()
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState('')
-    const { pools, isLoading } = useAllPools(chainId)
-    const { tvlByAddress } = usePoolTvl(pools, chainId)
+    const { pools, metricsByAddress, isLoading } = useAllPools(chainId)
+    const tvlOf = useCallback(
+        (addr: string) => metricsByAddress.get(addr.toLowerCase())?.tvlUsd ?? null,
+        [metricsByAddress]
+    )
 
     const sorted = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -52,12 +54,8 @@ export function FarmPoolPicker({ value, onChange }: FarmPoolPickerProps) {
                   )
               })
             : pools
-        return [...matched].sort(
-            (a, b) =>
-                (tvlByAddress[b.address.toLowerCase()] ?? 0) -
-                (tvlByAddress[a.address.toLowerCase()] ?? 0)
-        )
-    }, [pools, search, tvlByAddress])
+        return [...matched].sort((a, b) => (tvlOf(b.address) ?? 0) - (tvlOf(a.address) ?? 0))
+    }, [pools, search, tvlOf])
 
     const selectedLabel = value ? poolLabel(value) : null
 
@@ -136,7 +134,7 @@ export function FarmPoolPicker({ value, onChange }: FarmPoolPickerProps) {
                         <div className="space-y-1">
                             {sorted.map((pool) => {
                                 const { symbol0, symbol1 } = poolLabel(pool)
-                                const tvl = tvlByAddress[pool.address.toLowerCase()]
+                                const tvl = tvlOf(pool.address)
                                 const isSelected =
                                     value?.address.toLowerCase() === pool.address.toLowerCase()
                                 return (

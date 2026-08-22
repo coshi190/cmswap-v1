@@ -3,16 +3,16 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import {
     getV3Config,
-    FEE_TIERS,
-    tickToSqrtPriceX96,
-    priceToSqrtPriceX96,
-    sqrtPriceX96ToTick,
-    calculateAmount1FromAmount0,
-    calculateAmount0FromAmount1,
-    nearestUsableTick,
-    MIN_TICK,
-    MAX_TICK,
+    DEFAULT_FEE_TIER,
+    computeDependentAmount,
+    computeInitialSqrtPriceX96,
+    getFullRange,
+    getTickForPrice,
+    getTickSpacing,
+    listFeeTiers,
 } from '@coshi190/junoswap-sdk'
+import { getPresetTickRange } from '@/lib/range-presets'
+import { formatFeeTier } from '@/lib/liquidity-helpers'
 import type { Token } from '@/types/token'
 import { useAccount, useChainId } from 'wagmi'
 import { useRouter } from 'next/navigation'
@@ -29,19 +29,19 @@ import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { getChainMetadata } from '@/lib/wagmi'
 import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/lib/tokens'
-import { getTickSpacing, getPresetRange } from '@/lib/liquidity-helpers'
 import { useChainTokens } from '@/hooks/useChainTokens'
 import type { AddLiquidityParams, RangeConfig, V3PoolData } from '@/types/earn'
 import { DEFAULT_RANGE_CONFIG } from '@/types/earn'
 import { toastError } from '@/lib/toast'
 import { toast } from 'sonner'
 
-const FEE_OPTIONS = [
-    { value: FEE_TIERS.STABLE, label: '0.01%', description: 'Best for stable pairs' },
-    { value: FEE_TIERS.LOW, label: '0.05%', description: 'Best for stable pairs' },
-    { value: FEE_TIERS.MEDIUM, label: '0.3%', description: 'Best for most pairs' },
-    { value: FEE_TIERS.HIGH, label: '1%', description: 'Best for exotic pairs' },
-]
+const FEE_COPY: Record<number, string> = {
+    100: 'Best for stable pairs',
+    500: 'Best for stable pairs',
+    2500: 'Best for most pairs',
+    3000: 'Best for most pairs',
+    10000: 'Best for exotic pairs',
+}
 
 interface AddLiquidityDialogProps {
     open: boolean
@@ -64,7 +64,30 @@ export function AddLiquidityDialog({
 
     const [token0, setToken0] = useState<Token | null>(null)
     const [token1, setToken1] = useState<Token | null>(null)
-    const [fee, setFee] = useState(3000)
+    const feeTiers = useMemo(() => listFeeTiers(chainId), [chainId])
+
+    const feeOptions = useMemo(
+        () =>
+            feeTiers.map(({ fee: value }) => ({
+                value,
+                label: formatFeeTier(value),
+                description: FEE_COPY[value] ?? '',
+            })),
+        [feeTiers]
+    )
+
+    // The tier list is per chain and per DEX, so a fee carried over from another chain can fall
+    // outside it. Snap to the tier nearest the protocol default rather than leaving nothing selected.
+    const defaultFee = useMemo(() => {
+        if (feeTiers.length === 0) return DEFAULT_FEE_TIER
+        return feeTiers.reduce((best, tier) =>
+            Math.abs(tier.fee - DEFAULT_FEE_TIER) < Math.abs(best.fee - DEFAULT_FEE_TIER)
+                ? tier
+                : best
+        ).fee
+    }, [feeTiers])
+
+    const [fee, setFee] = useState<number>(DEFAULT_FEE_TIER)
     const [rangeConfig, setRangeConfig] = useState<RangeConfig>(DEFAULT_RANGE_CONFIG)
     const handledHashRef = useRef<string | null>(null)
     const [amount0, setAmount0] = useState('')
@@ -77,7 +100,7 @@ export function AddLiquidityDialog({
         if (open && !wasOpenRef.current) {
             setToken0(initialPool?.token0 ?? null)
             setToken1(initialPool?.token1 ?? null)
-            setFee(initialPool?.fee ?? 3000)
+            setFee(initialPool?.fee ?? defaultFee)
             setRangeConfig(DEFAULT_RANGE_CONFIG)
             setAmount0('')
             setAmount1('')
@@ -85,7 +108,11 @@ export function AddLiquidityDialog({
             setInitialPrice('')
         }
         wasOpenRef.current = open
-    }, [open, initialPool])
+    }, [open, initialPool, defaultFee])
+
+    useEffect(() => {
+        if (feeTiers.length > 0 && !feeTiers.some((tier) => tier.fee === fee)) setFee(defaultFee)
+    }, [feeTiers, fee, defaultFee])
     const { pool, isLoading: isLoadingPool } = usePool(token0, token1, fee, chainId)
     const { balance: balance0 } = useTokenBalance({ token: token0, address })
     const { balance: balance1 } = useTokenBalance({ token: token1, address })
@@ -93,13 +120,21 @@ export function AddLiquidityDialog({
         if (!initialPrice || !token0 || !token1) return null
         const priceNum = parseFloat(initialPrice)
         if (isNaN(priceNum) || priceNum <= 0) return null
-        return priceToSqrtPriceX96(initialPrice, token0.decimals, token1.decimals)
+        return computeInitialSqrtPriceX96({
+            price: initialPrice,
+            decimals0: token0.decimals,
+            decimals1: token1.decimals,
+        })
     }, [initialPrice, token0, token1])
 
     const derivedTick = useMemo(() => {
-        if (!initialSqrtPriceX96) return null
-        return sqrtPriceX96ToTick(initialSqrtPriceX96)
-    }, [initialSqrtPriceX96])
+        if (!initialPrice || !token0 || !token1 || !initialSqrtPriceX96) return null
+        return getTickForPrice({
+            price: initialPrice,
+            decimals0: token0.decimals,
+            decimals1: token1.decimals,
+        })
+    }, [initialPrice, token0, token1, initialSqrtPriceX96])
 
     const mintParams = useMemo<AddLiquidityParams | null>(() => {
         if (!token0 || !token1 || !address) return null
@@ -181,7 +216,7 @@ export function AddLiquidityDialog({
         const tickSpacing = pool.tickSpacing
         setRangeConfig({
             preset: 'common',
-            ...getPresetRange(pool.tick, tickSpacing, 'common'),
+            ...getPresetTickRange('common', pool.tick, tickSpacing),
             priceLower: '',
             priceUpper: '',
         })
@@ -190,11 +225,9 @@ export function AddLiquidityDialog({
 
     useEffect(() => {
         if (!pool && derivedTick !== null && token0 && token1) {
-            const tickSpacing = getTickSpacing(fee)
             setRangeConfig({
                 preset: 'full',
-                tickLower: nearestUsableTick(MIN_TICK, tickSpacing),
-                tickUpper: nearestUsableTick(MAX_TICK, tickSpacing),
+                ...getFullRange(getTickSpacing(fee)),
                 priceLower: '0',
                 priceUpper: '∞',
             })
@@ -209,10 +242,13 @@ export function AddLiquidityDialog({
         if (!sqrtPriceX96) return
         if (rangeConfig.tickLower >= rangeConfig.tickUpper) return
 
-        const sqrtPriceLowerX96 = tickToSqrtPriceX96(rangeConfig.tickLower)
-        const sqrtPriceUpperX96 = tickToSqrtPriceX96(rangeConfig.tickUpper)
-
         const isPoolReversed = token0.address.toLowerCase() !== pool.token0.address.toLowerCase()
+        const range = {
+            sqrtPriceX96,
+            tickLower: rangeConfig.tickLower,
+            tickUpper: rangeConfig.tickUpper,
+            invert: isPoolReversed,
+        }
 
         if (activeInput === 'token0') {
             if (!amount0) {
@@ -221,19 +257,11 @@ export function AddLiquidityDialog({
             }
             const amount0Parsed = parseTokenAmount(amount0, token0.decimals)
             if (amount0Parsed > 0n) {
-                const calculated = isPoolReversed
-                    ? calculateAmount0FromAmount1(
-                          sqrtPriceX96,
-                          sqrtPriceLowerX96,
-                          sqrtPriceUpperX96,
-                          amount0Parsed
-                      )
-                    : calculateAmount1FromAmount0(
-                          sqrtPriceX96,
-                          sqrtPriceLowerX96,
-                          sqrtPriceUpperX96,
-                          amount0Parsed
-                      )
+                const calculated = computeDependentAmount({
+                    ...range,
+                    amount: amount0Parsed,
+                    side: 'token0',
+                })
                 setAmount1(calculated > 0n ? formatTokenAmount(calculated, token1.decimals) : '')
             } else {
                 setAmount1('')
@@ -245,19 +273,11 @@ export function AddLiquidityDialog({
             }
             const amount1Parsed = parseTokenAmount(amount1, token1.decimals)
             if (amount1Parsed > 0n) {
-                const calculated = isPoolReversed
-                    ? calculateAmount1FromAmount0(
-                          sqrtPriceX96,
-                          sqrtPriceLowerX96,
-                          sqrtPriceUpperX96,
-                          amount1Parsed
-                      )
-                    : calculateAmount0FromAmount1(
-                          sqrtPriceX96,
-                          sqrtPriceLowerX96,
-                          sqrtPriceUpperX96,
-                          amount1Parsed
-                      )
+                const calculated = computeDependentAmount({
+                    ...range,
+                    amount: amount1Parsed,
+                    side: 'token1',
+                })
                 setAmount0(calculated > 0n ? formatTokenAmount(calculated, token0.decimals) : '')
             } else {
                 setAmount0('')
@@ -426,7 +446,7 @@ export function AddLiquidityDialog({
                         </div>
 
                         <div className="grid grid-cols-4 gap-2">
-                            {FEE_OPTIONS.map((option) => (
+                            {feeOptions.map((option) => (
                                 <button
                                     key={option.value}
                                     type="button"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { Token } from '@/types/token'
 import { cn } from '@/lib/utils'
 import { useAccount, useChainId } from 'wagmi'
@@ -22,11 +22,9 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ConnectModal } from '@/components/web3/connect-modal'
 import { getDefaultPairTokens, getDisplayToken } from '@/lib/tokens'
 import { useAllPools } from '@/hooks/useAllPools'
-import { usePoolTvl } from '@/hooks/usePoolTvl'
-import { usePoolVolume } from '@/hooks/usePoolVolume'
 import { formatFeeTier } from '@/lib/liquidity-helpers'
-import { formatTvl, formatApr, calculateApr, formatChartPrice } from '@/lib/format'
-import { priceFromSqrtPriceX96 } from '@coshi190/junoswap-sdk'
+import { formatTvl, formatApr, formatChartPrice } from '@/lib/format'
+import { computePoolPrice, type PoolMetrics } from '@coshi190/junoswap-sdk'
 import type { V3PoolData } from '@/types/earn'
 type SortKey = 'tvl' | 'apr' | 'vol1d' | 'vol30d'
 type SortDir = 'asc' | 'desc'
@@ -113,14 +111,14 @@ function PoolRow({
     const d1 = getDisplayToken(display1)
 
     // Pool price of the displayed base (d0) in units of the displayed quote (d1). sqrtPriceX96 is
-    // token1-per-token0, so flip when the display order is reversed from the pool's token order.
-    const rawPrice = priceFromSqrtPriceX96(
-        pool.sqrtPriceX96,
-        pool.token0.decimals,
-        pool.token1.decimals
-    )
+    // token1-per-token0, so invert when the display order is reversed from the pool's token order.
     const display0IsToken0 = display0.address.toLowerCase() === pool.token0.address.toLowerCase()
-    const price = display0IsToken0 ? rawPrice : rawPrice > 0 ? 1 / rawPrice : 0
+    const price = computePoolPrice({
+        sqrtPriceX96: pool.sqrtPriceX96,
+        decimals0: pool.token0.decimals,
+        decimals1: pool.token1.decimals,
+        invert: !display0IsToken0,
+    })
 
     return (
         <TableRow className="border-0">
@@ -239,28 +237,32 @@ function LoadingState() {
 
 function PoolsListContent({
     pools,
+    metricsByAddress,
     isLoading,
     onAddLiquidity,
 }: {
     pools: V3PoolData[]
+    metricsByAddress: Map<string, PoolMetrics>
     isLoading: boolean
     onAddLiquidity: (pool?: V3PoolData) => void
 }) {
     const { isConnected } = useAccount()
-    const chainId = useChainId()
-    const { tvlByAddress, isLoading: isLoadingTvl } = usePoolTvl(pools, chainId)
-    const { volumeByAddress, isLoading: isLoadingVol } = usePoolVolume(pools, chainId)
-    const aprByAddress = useMemo(() => {
-        const result: Record<string, number | null> = {}
-        for (const pool of pools) {
-            const addr = pool.address.toLowerCase()
-            const tvl = tvlByAddress[addr]
-            const volume = volumeByAddress[addr]
-            result[addr] = calculateApr(pool.fee, tvl ?? 0, volume?.volume30d ?? 0)
-        }
-        return result
-    }, [pools, tvlByAddress, volumeByAddress])
-    const isLoadingApr = isLoadingTvl || isLoadingVol
+    const tvlOf = useCallback(
+        (addr: string) => metricsByAddress.get(addr.toLowerCase())?.tvlUsd ?? null,
+        [metricsByAddress]
+    )
+    const volume1dOf = useCallback(
+        (addr: string) => metricsByAddress.get(addr.toLowerCase())?.volume1dUsd ?? null,
+        [metricsByAddress]
+    )
+    const volume30dOf = useCallback(
+        (addr: string) => metricsByAddress.get(addr.toLowerCase())?.volume30dUsd ?? null,
+        [metricsByAddress]
+    )
+    const aprOf = useCallback(
+        (addr: string) => metricsByAddress.get(addr.toLowerCase())?.feeAprPercent ?? null,
+        [metricsByAddress]
+    )
     const [sortKey, setSortKey] = useState<SortKey>('tvl')
     const [sortDir, setSortDir] = useState<SortDir>('desc')
     const handleSort = (key: SortKey) => {
@@ -288,25 +290,21 @@ function PoolsListContent({
             let cmp = 0
             switch (sortKey) {
                 case 'tvl':
-                    cmp = (tvlByAddress[aAddr] ?? 0) - (tvlByAddress[bAddr] ?? 0)
+                    cmp = (tvlOf(aAddr) ?? 0) - (tvlOf(bAddr) ?? 0)
                     break
                 case 'apr':
-                    cmp = (aprByAddress[aAddr] ?? 0) - (aprByAddress[bAddr] ?? 0)
+                    cmp = (aprOf(aAddr) ?? 0) - (aprOf(bAddr) ?? 0)
                     break
                 case 'vol1d':
-                    cmp =
-                        (volumeByAddress[aAddr]?.volume1d ?? 0) -
-                        (volumeByAddress[bAddr]?.volume1d ?? 0)
+                    cmp = (volume1dOf(aAddr) ?? 0) - (volume1dOf(bAddr) ?? 0)
                     break
                 case 'vol30d':
-                    cmp =
-                        (volumeByAddress[aAddr]?.volume30d ?? 0) -
-                        (volumeByAddress[bAddr]?.volume30d ?? 0)
+                    cmp = (volume30dOf(aAddr) ?? 0) - (volume30dOf(bAddr) ?? 0)
                     break
             }
             return sortDir === 'asc' ? cmp : -cmp
         })
-    }, [filteredPools, sortKey, sortDir, tvlByAddress, aprByAddress, volumeByAddress])
+    }, [filteredPools, sortKey, sortDir, tvlOf, aprOf, volume1dOf, volume30dOf])
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
     const header = (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -432,12 +430,15 @@ function PoolsListContent({
                                 <PoolRow
                                     key={pool.address}
                                     pool={pool}
-                                    tvlUsd={tvlByAddress[pool.address.toLowerCase()] ?? null}
-                                    isLoadingTvl={isLoadingTvl}
-                                    volume={volumeByAddress[pool.address.toLowerCase()] ?? null}
-                                    isLoadingVolume={isLoadingVol}
-                                    apr={aprByAddress[pool.address.toLowerCase()] ?? null}
-                                    isLoadingApr={isLoadingApr}
+                                    tvlUsd={tvlOf(pool.address)}
+                                    isLoadingTvl={isLoading}
+                                    volume={{
+                                        volume1d: volume1dOf(pool.address) ?? 0,
+                                        volume30d: volume30dOf(pool.address) ?? 0,
+                                    }}
+                                    isLoadingVolume={isLoading}
+                                    apr={aprOf(pool.address)}
+                                    isLoadingApr={isLoading}
                                     onConnect={() => setIsConnectModalOpen(true)}
                                     onAddLiquidity={onAddLiquidity}
                                 />
@@ -453,6 +454,13 @@ function PoolsListContent({
 
 export function PoolsList({ onAddLiquidity }: { onAddLiquidity: (pool?: V3PoolData) => void }) {
     const chainId = useChainId()
-    const { pools, isLoading } = useAllPools(chainId)
-    return <PoolsListContent pools={pools} isLoading={isLoading} onAddLiquidity={onAddLiquidity} />
+    const { pools, metricsByAddress, isLoading } = useAllPools(chainId)
+    return (
+        <PoolsListContent
+            pools={pools}
+            metricsByAddress={metricsByAddress}
+            isLoading={isLoading}
+            onAddLiquidity={onAddLiquidity}
+        />
+    )
 }

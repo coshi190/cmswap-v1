@@ -10,13 +10,7 @@ import { useIncreaseLiquidity } from '@/hooks/useLiquidity'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { usePool } from '@/hooks/usePools'
-import {
-    getV3Config,
-    tickToSqrtPriceX96,
-    calculateAmount1FromAmount0,
-    calculateAmount0FromAmount1,
-    isInRange,
-} from '@coshi190/junoswap-sdk'
+import { getV3Config, computeDependentAmount, isInRange } from '@coshi190/junoswap-sdk'
 import { getChainMetadata } from '@/lib/wagmi'
 import { parseTokenAmount, formatBalance, formatTokenAmount } from '@/lib/tokens'
 import { toastError } from '@/lib/toast'
@@ -109,20 +103,27 @@ export function IncreaseLiquidityDialog({
     useEffect(() => {
         if (!pool || !selectedPosition) return
         const sqrtPriceX96 = pool.sqrtPriceX96
-        const sqrtPriceLowerX96 = tickToSqrtPriceX96(selectedPosition.tickLower)
-        const sqrtPriceUpperX96 = tickToSqrtPriceX96(selectedPosition.tickUpper)
+        // Position rows come from the indexer in canonical pool order, so this is false today.
+        // Deriving it keeps the dependent amount correct if the position source ever changes.
+        const isPoolReversed =
+            selectedPosition.token0Info.address.toLowerCase() !== pool.token0.address.toLowerCase()
+        const range = {
+            sqrtPriceX96,
+            tickLower: selectedPosition.tickLower,
+            tickUpper: selectedPosition.tickUpper,
+            invert: isPoolReversed,
+        }
         if (activeInput === 'token0') {
             if (!amount0) {
                 setAmount1('')
                 return
             }
             if (amount0Parsed > 0n) {
-                const calculatedAmount1 = calculateAmount1FromAmount0(
-                    sqrtPriceX96,
-                    sqrtPriceLowerX96,
-                    sqrtPriceUpperX96,
-                    amount0Parsed
-                )
+                const calculatedAmount1 = computeDependentAmount({
+                    ...range,
+                    amount: amount0Parsed,
+                    side: 'token0',
+                })
                 setAmount1(
                     calculatedAmount1 > 0n
                         ? formatTokenAmount(calculatedAmount1, selectedPosition.token1Info.decimals)
@@ -137,12 +138,11 @@ export function IncreaseLiquidityDialog({
                 return
             }
             if (amount1Parsed > 0n) {
-                const calculatedAmount0 = calculateAmount0FromAmount1(
-                    sqrtPriceX96,
-                    sqrtPriceLowerX96,
-                    sqrtPriceUpperX96,
-                    amount1Parsed
-                )
+                const calculatedAmount0 = computeDependentAmount({
+                    ...range,
+                    amount: amount1Parsed,
+                    side: 'token1',
+                })
                 setAmount0(
                     calculatedAmount0 > 0n
                         ? formatTokenAmount(calculatedAmount0, selectedPosition.token0Info.decimals)
