@@ -4,7 +4,9 @@ import {
     formatKubRounded,
     formatTokenAmount,
     formatCompact,
+    findGraduatedPool,
 } from '@/services/launchpad/launchpad'
+import type { V3PoolRow } from '@coshi190/junoswap-sdk'
 
 describe('formatKub', () => {
     it('returns "0" for zero', () => {
@@ -84,5 +86,46 @@ describe('formatCompact', () => {
 
     it('uses B suffix with one decimal', () => {
         expect(formatCompact(1500000000)).toBe('1.5B')
+    })
+})
+
+describe('findGraduatedPool', () => {
+    const TOKEN = '0xaaaa000000000000000000000000000000000000'
+    const NATIVE = '0xbbbb000000000000000000000000000000000000'
+    const pool = (over: Partial<V3PoolRow>): V3PoolRow => ({
+        address: '0xpool',
+        token0: TOKEN,
+        token1: NATIVE,
+        fee: 10000,
+        tickSpacing: 200,
+        ...over,
+    })
+
+    it('matches the pair in canonical order', () => {
+        const target = pool({})
+        expect(findGraduatedPool([target], TOKEN, NATIVE, 10000)).toBe(target)
+    })
+
+    it('matches the pair with the tokens reversed', () => {
+        const target = pool({ token0: NATIVE, token1: TOKEN })
+        expect(findGraduatedPool([target], TOKEN, NATIVE, 10000)).toBe(target)
+    })
+
+    it('ignores casing on both sides', () => {
+        const target = pool({ token0: TOKEN.toUpperCase(), token1: NATIVE.toUpperCase() })
+        expect(findGraduatedPool([target], TOKEN.toUpperCase(), NATIVE, 10000)).toBe(target)
+    })
+
+    it('skips a pool on the same pair at another fee tier', () => {
+        expect(findGraduatedPool([pool({ fee: 3000 })], TOKEN, NATIVE, 10000)).toBeUndefined()
+    })
+
+    it('skips a pool that pairs the token with something else', () => {
+        const other = '0xcccc000000000000000000000000000000000000'
+        expect(findGraduatedPool([pool({ token1: other })], TOKEN, NATIVE, 10000)).toBeUndefined()
+    })
+
+    it('returns undefined for an empty list', () => {
+        expect(findGraduatedPool([], TOKEN, NATIVE, 10000)).toBeUndefined()
     })
 })

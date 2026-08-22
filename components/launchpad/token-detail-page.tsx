@@ -9,6 +9,7 @@ import { useGraduatedPoolPrice } from '@/hooks/useGraduatedPoolPrice'
 import type { DailyMetrics } from '@/services/launchpad/chart'
 import { useTokenList } from '@/hooks/useTokenList'
 import { useGraduatedPoolAddress } from '@/hooks/useGraduatedPoolAddress'
+import { FEE_TIERS } from '@coshi190/junoswap-sdk'
 import { formatAddress, formatTimeAgo, formatFullDate } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { TokenIcon } from '@/components/ui/token-icon'
@@ -46,9 +47,10 @@ export function TokenDetailPage({ tokenAddr }: TokenDetailPageProps) {
     } = useTokenReserves({ tokenAddr, isGraduated, chainId })
 
     const wrappedNative = INTERMEDIARY_TOKENS[chainId]?.wrappedNative
-    const { data: poolAddress } = useGraduatedPoolAddress(
+    const { poolAddress, isLoading: isPoolLoading } = useGraduatedPoolAddress(
         isGraduated ? tokenAddr : undefined,
-        wrappedNative as Address | undefined
+        wrappedNative as Address | undefined,
+        chainId
     )
 
     const { marketCap: liveGraduatedMarketCap } = useGraduatedPoolPrice({
@@ -339,7 +341,8 @@ export function TokenDetailPage({ tokenAddr }: TokenDetailPageProps) {
                             tokenDecimals={decimals}
                             isGraduated={isGraduated}
                             poolAddress={poolAddress}
-                            poolFee={isGraduated ? 10000 : undefined}
+                            poolFee={isGraduated ? FEE_TIERS.HIGH : undefined}
+                            isPoolLoading={isPoolLoading}
                         />
                         {nativeReserve !== undefined && graduationAmount !== undefined && (
                             <Card>
