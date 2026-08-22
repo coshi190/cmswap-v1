@@ -2,15 +2,16 @@
 
 import { useMemo, useRef, useCallback, useState } from 'react'
 import { Slider } from '@/components/ui/slider'
-import type { RangeConfig, RangePreset } from '@/types/earn'
-import { RANGE_PRESETS } from '@/types/earn'
-import { priceToTick, nearestUsableTick } from '@coshi190/junoswap-sdk'
+import type { RangeConfig } from '@/types/earn'
+import type { RangePreset } from '@/lib/range-presets'
 import {
-    getPresetRange,
-    tickToPrice,
-    calculateRangePercentage,
-    calculateSliderViewport,
-} from '@/lib/liquidity-helpers'
+    RANGE_PRESETS,
+    getPresetTickRange,
+    getRangePercentages,
+    getRangeViewport,
+} from '@/lib/range-presets'
+import { getTickForPrice, snapTickRange } from '@coshi190/junoswap-sdk'
+import { tickToPrice } from '@/lib/liquidity-helpers'
 
 const SLIDER_RESOLUTION = 10000
 
@@ -98,7 +99,8 @@ function InteractiveRangeBar({
         if (isDraggingRef.current && frozenViewportRef.current) {
             return frozenViewportRef.current
         }
-        const vp = calculateSliderViewport(config.tickLower, config.tickUpper, config.preset)
+        const range = getRangeViewport(config.tickLower, config.tickUpper, config.preset)
+        const vp = { lower: range.tickLower, upper: range.tickUpper }
         frozenViewportRef.current = vp
         return vp
     }, [config.tickLower, config.tickUpper, config.preset])
@@ -121,7 +123,7 @@ function InteractiveRangeBar({
 
     const rangePercent = useMemo(() => {
         if (config.tickLower >= config.tickUpper) return null
-        return calculateRangePercentage(currentTick, config.tickLower, config.tickUpper)
+        return getRangePercentages(currentTick, config.tickLower, config.tickUpper)
     }, [config.tickLower, config.tickUpper, currentTick])
 
     const handleSliderChange = useCallback(
@@ -134,12 +136,11 @@ function InteractiveRangeBar({
             const rawTickLower = viewport.lower + (v0 / SLIDER_RESOLUTION) * span
             const rawTickUpper = viewport.lower + (v1 / SLIDER_RESOLUTION) * span
 
-            const snappedLower = nearestUsableTick(Math.round(rawTickLower), tickSpacing)
-            let snappedUpper = nearestUsableTick(Math.round(rawTickUpper), tickSpacing)
-
-            if (snappedUpper <= snappedLower) {
-                snappedUpper = snappedLower + tickSpacing
-            }
+            const { tickLower: snappedLower, tickUpper: snappedUpper } = snapTickRange(
+                Math.round(rawTickLower),
+                Math.round(rawTickUpper),
+                tickSpacing
+            )
 
             const priceLower = tickToPrice(snappedLower, decimals0, decimals1)
             const priceUpper = tickToPrice(snappedUpper, decimals0, decimals1)
@@ -163,8 +164,12 @@ function InteractiveRangeBar({
     const handlePriceEdit = useCallback(
         (bound: 'lower' | 'upper', value: string) => {
             if (!value || isNaN(parseFloat(value))) return
-            const tick = priceToTick(value, decimals0, decimals1)
-            const alignedTick = nearestUsableTick(tick, tickSpacing)
+            const alignedTick = getTickForPrice({
+                price: value,
+                decimals0,
+                decimals1,
+                tickSpacing,
+            })
             const alignedPrice = tickToPrice(alignedTick, decimals0, decimals1)
             if (bound === 'lower') {
                 onChange({
@@ -275,7 +280,7 @@ export function RangeSelector({
     onChange,
 }: RangeSelectorProps) {
     const handlePresetSelect = (preset: RangePreset) => {
-        const { tickLower, tickUpper } = getPresetRange(currentTick, tickSpacing, preset)
+        const { tickLower, tickUpper } = getPresetTickRange(preset, currentTick, tickSpacing)
         const priceLower = tickToPrice(tickLower, decimals0, decimals1)
         const priceUpper = tickToPrice(tickUpper, decimals0, decimals1)
         onChange({

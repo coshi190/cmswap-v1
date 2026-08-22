@@ -1,4 +1,5 @@
-import { TICK_SPACING, type Incentive, type IncentiveKey, type V3PoolData } from '@/types/earn'
+import { getTickSpacing } from '@coshi190/junoswap-sdk'
+import type { Incentive, IncentiveKey, V3PoolData } from '@/types/earn'
 
 /**
  * The farm's pool in the shape the liquidity dialogs take. Only identity is carried here — the
@@ -13,7 +14,7 @@ export function incentiveToPoolData(incentive: Incentive): V3PoolData {
         liquidity: 0n,
         sqrtPriceX96: 0n,
         tick: 0,
-        tickSpacing: TICK_SPACING[incentive.poolFee] ?? 60,
+        tickSpacing: getTickSpacing(incentive.poolFee),
     }
 }
 

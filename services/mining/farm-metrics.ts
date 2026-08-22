@@ -1,8 +1,10 @@
+import { computePositionValueUsd } from '@coshi190/junoswap-sdk'
+
 export const SECONDS_PER_YEAR = 31_536_000
 
 /**
- * USD value of one position's underlying tokens. Returns undefined unless both sides are priced —
- * summing only the priced side would understate TVL, which in turn overstates APR.
+ * USD value of one position's underlying tokens. Null unless both sides are priced — summing only
+ * the priced side would understate TVL, which in turn overstates APR.
  */
 export function positionValueUsd(
     amount0: bigint,
@@ -11,18 +13,21 @@ export function positionValueUsd(
     amount1: bigint,
     decimals1: number,
     price1: number | undefined
-): number | undefined {
-    if (price0 === undefined || price1 === undefined) return undefined
-    const value0 = (Number(amount0) / 10 ** decimals0) * price0
-    const value1 = (Number(amount1) / 10 ** decimals1) * price1
-    if (!Number.isFinite(value0) || !Number.isFinite(value1)) return undefined
-    return value0 + value1
+): number | null {
+    return computePositionValueUsd({
+        amount0,
+        decimals0,
+        price0,
+        amount1,
+        decimals1,
+        price1,
+    })
 }
 
 export interface FarmAprInput {
     /** USD value of the reward still to be handed out. */
-    rewardValueUsd: number | undefined
-    stakedTvlUsd: number | undefined
+    rewardValueUsd: number | null | undefined
+    stakedTvlUsd: number | null | undefined
     startTime: number
     endTime: number
     now: number
@@ -40,8 +45,8 @@ export function computeFarmApr({
     endTime,
     now,
 }: FarmAprInput): number | undefined {
-    if (rewardValueUsd === undefined || rewardValueUsd <= 0) return undefined
-    if (stakedTvlUsd === undefined || stakedTvlUsd <= 0) return undefined
+    if (rewardValueUsd == null || rewardValueUsd <= 0) return undefined
+    if (stakedTvlUsd == null || stakedTvlUsd <= 0) return undefined
 
     const from = Math.max(now, startTime)
     const remainingSeconds = endTime - from

@@ -10,9 +10,9 @@ describe('positionValueUsd', () => {
         expect(positionValueUsd(2n * 10n ** 18n, 18, 1.5, 3_000_000n, 6, 1)).toBeCloseTo(6)
     })
 
-    it('returns undefined when either side is unpriced, rather than understating', () => {
-        expect(positionValueUsd(10n ** 18n, 18, 1, 10n ** 18n, 18, undefined)).toBeUndefined()
-        expect(positionValueUsd(10n ** 18n, 18, undefined, 10n ** 18n, 18, 1)).toBeUndefined()
+    it('returns null when either side is unpriced, rather than understating', () => {
+        expect(positionValueUsd(10n ** 18n, 18, 1, 10n ** 18n, 18, undefined)).toBeNull()
+        expect(positionValueUsd(10n ** 18n, 18, undefined, 10n ** 18n, 18, 1)).toBeNull()
     })
 
     it('handles an empty position', () => {

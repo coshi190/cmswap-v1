@@ -8,10 +8,10 @@ import {
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
     sortTokens,
+    getTickSpacing,
 } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import type { V3PoolData } from '@/types/earn'
-import { getTickSpacing } from '@/lib/liquidity-helpers'
 
 export function usePool(
     token0: Token | null,

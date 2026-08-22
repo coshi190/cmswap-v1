@@ -83,6 +83,26 @@ describe('services/liquidity/add-liquidity', () => {
             expect(result.amount1Desired).toBe(100n)
         })
 
+        it('mirrors an asymmetric range when token0 > token1', async () => {
+            const { buildMintParams } = await getModule()
+            const result = buildMintParams({
+                token0: tokenB,
+                token1: tokenA,
+                fee: 3000,
+                tickLower: -6000,
+                tickUpper: 3000,
+                amount0Desired: 100n,
+                amount1Desired: 200n,
+                slippageTolerance: 100,
+                deadline: 600,
+                recipient: '0x1111111111111111111111111111111111111111',
+            })
+            // The caller's range is quoted in their own token order. Reversing the pair without
+            // mirroring the bounds would mint against the wrong price range entirely.
+            expect(result.tickLower).toBe(-3000)
+            expect(result.tickUpper).toBe(6000)
+        })
+
         it('aligns ticks to nearest usable tick', async () => {
             const { buildMintParams } = await getModule()
             const result = buildMintParams({

@@ -1,3 +1,4 @@
+import type { RangePreset } from '@/lib/range-presets'
 import type { Address } from 'viem'
 import type { Token } from '@/types/token'
 export interface V3Position {
@@ -81,11 +82,12 @@ export interface RemoveLiquidityParams {
     liquidity: bigint
     amount0Min: bigint
     amount1Min: bigint
-    deadline: number
+    /** Absolute unix deadline, as produced by the SDK liquidity planners. */
+    deadline: bigint
     collectFees: boolean
 }
 
-export type RangePreset = 'full' | 'safe' | 'common' | 'narrow' | 'custom'
+export type { RangePreset }
 
 export interface RangeConfig {
     preset: RangePreset
@@ -93,13 +95,6 @@ export interface RangeConfig {
     tickUpper: number
     priceLower: string
     priceUpper: string
-}
-
-interface RangePresetConfig {
-    label: string
-    value: RangePreset
-    description: string
-    tickRange?: number // Percentage of ticks from current (e.g., 50 means ±50% from current)
 }
 
 export interface MintCallParams {
@@ -141,45 +136,6 @@ export interface CollectCallParams {
 }
 
 export const MAX_UINT128 = 2n ** 128n - 1n
-
-export const TICK_SPACING: Record<number, number> = {
-    100: 1, // 0.01%
-    500: 10, // 0.05%
-    2500: 50, // 0.25% (PancakeSwap)
-    3000: 60, // 0.3%
-    10000: 200, // 1%
-}
-
-export const RANGE_PRESETS: RangePresetConfig[] = [
-    {
-        label: 'Full Range',
-        value: 'full',
-        description: 'Earn fees at any price (like V2)',
-    },
-    {
-        label: 'Safe',
-        value: 'safe',
-        description: '±50% from current price',
-        tickRange: 50,
-    },
-    {
-        label: 'Common',
-        value: 'common',
-        description: '±20% from current price',
-        tickRange: 20,
-    },
-    {
-        label: 'Narrow',
-        value: 'narrow',
-        description: '±5% for stable pairs',
-        tickRange: 5,
-    },
-    {
-        label: 'Custom',
-        value: 'custom',
-        description: 'Set your own range',
-    },
-]
 
 export const DEFAULT_RANGE_CONFIG: RangeConfig = {
     preset: 'common',

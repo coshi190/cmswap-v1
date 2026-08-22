@@ -19,11 +19,9 @@ import { useStakedPositions } from '@/hooks/useStakedPositions'
 import { usePendingRewardsMultiple } from '@/hooks/useRewards'
 import { formatTokenAmount, getDisplayToken } from '@/lib/tokens'
 import { formatLiquidityAmount, formatRewardAmount } from '@/lib/format'
-import { MIN_TICK, MAX_TICK } from '@coshi190/junoswap-sdk'
-import { tickToPrice } from '@/lib/liquidity-helpers'
+import { isFullRange } from '@coshi190/junoswap-sdk'
+import { formatFeeTier, tickToPrice } from '@/lib/liquidity-helpers'
 import type { PositionWithTokens, StakedPosition } from '@/types/earn'
-
-const FULL_RANGE_TICK_TOLERANCE = 256
 
 interface PositionActions {
     onCollectFees: (position: PositionWithTokens) => void
@@ -68,9 +66,7 @@ function PositionCard({
         position.token0Info.decimals,
         position.token1Info.decimals
     )
-    const isFullRange =
-        position.tickLower <= MIN_TICK + FULL_RANGE_TICK_TOLERANCE &&
-        position.tickUpper >= MAX_TICK - FULL_RANGE_TICK_TOLERANCE
+    const fullRange = isFullRange(position.tickLower, position.tickUpper)
     return (
         <Card>
             <CardContent className="p-5">
@@ -88,7 +84,7 @@ function PositionCard({
                                 {t0.symbol} / {t1.symbol}
                             </span>
                             <Badge variant="outline" className="text-xs">
-                                {(position.fee / 10000).toFixed(2)}%
+                                {formatFeeTier(position.fee)}
                             </Badge>
                             {isStaked && (
                                 <Badge
@@ -276,7 +272,7 @@ function PositionCard({
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Price Range
                         </div>
-                        {isFullRange ? (
+                        {fullRange ? (
                             <div className="text-xs font-medium font-mono tracking-tight">
                                 Full Range
                             </div>
@@ -299,7 +295,7 @@ function PositionCard({
                             token1Decimals={position.token1Info.decimals}
                             inRange={position.inRange}
                             isClosed={isClosed}
-                            isFullRange={isFullRange}
+                            isFullRange={fullRange}
                         />
                     </div>
                 </div>

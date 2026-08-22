@@ -48,7 +48,7 @@ export function useFarmStats(
             )
             // One unpriced position makes the whole total a guess, so the farm reports no TVL
             // instead of a number that is quietly too low.
-            if (value === undefined) {
+            if (value === null) {
                 unpriced.add(stake.incentive.incentiveId)
                 continue
             }

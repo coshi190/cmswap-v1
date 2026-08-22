@@ -3,35 +3,39 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useQuery } from '@tanstack/react-query'
-import { fetchV3Pools, fetchV3PoolReserves } from '@coshi190/junoswap-sdk'
+import { fetchPoolMetrics, type PoolMetrics } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { getTokensForChain } from '@/lib/tokens'
-import { getTickSpacing } from '@/lib/liquidity-helpers'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'
 import { useV3Tokens } from '@/hooks/useV3Tokens'
 import type { V3PoolData } from '@/types/earn'
 const PONDER_INDEXED_CHAINS = new Set([25925, 96, 8899])
 
-export function useAllPools(chainId: number): { pools: V3PoolData[]; isLoading: boolean } {
+export function useAllPools(chainId: number): {
+    pools: V3PoolData[]
+    metricsByAddress: Map<string, PoolMetrics>
+    isLoading: boolean
+} {
     const isIndexed = PONDER_INDEXED_CHAINS.has(chainId)
 
     const staticTokens = useMemo(() => getTokensForChain(chainId), [chainId])
     const { tokens: graduatedTokens } = useGraduatedTokens(chainId)
     const { tokens: v3Tokens } = useV3Tokens(chainId)
 
-    const { data: ponderPools, isLoading: isLoadingPools } = useQuery({
-        queryKey: ['v3-pools-all', chainId],
+    const { data: metrics, isLoading } = useQuery({
+        queryKey: ['v3-pool-metrics', chainId],
         queryFn: async () => {
             try {
-                return await fetchV3Pools(ponderClient, { chainId })
+                return await fetchPoolMetrics(ponderClient, { chainId })
             } catch (e) {
                 if (isPonderError(e)) return []
                 throw e
             }
         },
         enabled: isIndexed,
-        staleTime: 60_000,
+        staleTime: 30_000,
+        refetchInterval: 30_000,
     })
 
     const tokenLookup = useMemo(() => {
@@ -56,14 +60,14 @@ export function useAllPools(chainId: number): { pools: V3PoolData[]; isLoading: 
 
     const getToken = useMemo(
         () =>
-            (addr: string): Token => {
+            (addr: string, fallbackSymbol: string, decimals: number): Token => {
                 const lc = addr.toLowerCase()
                 return (
                     tokenLookup.get(lc) ?? {
                         address: addr as Address,
-                        symbol: addr.slice(0, 6) + '...',
+                        symbol: fallbackSymbol || addr.slice(0, 6) + '...',
                         name: '',
-                        decimals: 18,
+                        decimals,
                         chainId,
                     }
                 )
@@ -71,63 +75,43 @@ export function useAllPools(chainId: number): { pools: V3PoolData[]; isLoading: 
         [tokenLookup, chainId]
     )
 
-    const poolList = useMemo(() => ponderPools ?? [], [ponderPools])
-    const poolAddresses = useMemo(() => poolList.map((p) => p.address.toLowerCase()), [poolList])
+    const metricsList = useMemo(() => metrics ?? [], [metrics])
 
-    const { data: reserveRows, isLoading: isLoadingState } = useQuery({
-        queryKey: ['v3-pool-reserves-all', chainId, poolAddresses],
-        queryFn: async () => {
-            try {
-                return await fetchV3PoolReserves(ponderClient, { chainId, poolAddresses })
-            } catch (e) {
-                if (isPonderError(e)) return []
-                throw e
-            }
-        },
-        enabled: poolAddresses.length > 0 && isIndexed,
-        staleTime: 30_000,
-        refetchInterval: 30_000,
-    })
-
-    const stateByAddress = useMemo(() => {
-        const map = new Map<string, { sqrtPriceX96: bigint; tick: number; liquidity: bigint }>()
-        for (const r of reserveRows ?? []) {
-            map.set(r.poolAddress.toLowerCase(), {
-                sqrtPriceX96: BigInt(r.sqrtPriceX96),
-                tick: r.tick ?? 0,
-                liquidity: BigInt(r.liquidity),
-            })
-        }
+    const metricsByAddress = useMemo(() => {
+        const map = new Map<string, PoolMetrics>()
+        for (const entry of metricsList) map.set(entry.address.toLowerCase(), entry)
         return map
-    }, [reserveRows])
+    }, [metricsList])
 
     const pools = useMemo<V3PoolData[]>(() => {
-        if (poolList.length === 0) return []
-        return poolList
-            .map((pool) => {
-                const state = stateByAddress.get(pool.address.toLowerCase())
-                if (!state || state.liquidity === 0n) return null
-
-                return {
-                    address: pool.address as Address,
-                    token0: getToken(pool.token0),
-                    token1: getToken(pool.token1),
-                    fee: pool.fee,
-                    liquidity: state.liquidity,
-                    sqrtPriceX96: state.sqrtPriceX96,
-                    tick: state.tick,
-                    tickSpacing: getTickSpacing(pool.fee),
-                } satisfies V3PoolData
-            })
-            .filter((p): p is V3PoolData => p !== null)
-    }, [poolList, stateByAddress, getToken])
+        return metricsList
+            .filter((pool) => pool.liquidity !== 0n)
+            .map(
+                (pool) =>
+                    ({
+                        address: pool.address as Address,
+                        token0: getToken(
+                            pool.token0.address,
+                            pool.token0.symbol,
+                            pool.token0.decimals
+                        ),
+                        token1: getToken(
+                            pool.token1.address,
+                            pool.token1.symbol,
+                            pool.token1.decimals
+                        ),
+                        fee: pool.fee,
+                        liquidity: pool.liquidity,
+                        sqrtPriceX96: pool.sqrtPriceX96,
+                        tick: pool.tick ?? 0,
+                        tickSpacing: pool.tickSpacing,
+                    }) satisfies V3PoolData
+            )
+    }, [metricsList, getToken])
 
     if (!isIndexed) {
-        return { pools: [], isLoading: false }
+        return { pools: [], metricsByAddress: new Map(), isLoading: false }
     }
 
-    return {
-        pools,
-        isLoading: isLoadingPools || isLoadingState,
-    }
+    return { pools, metricsByAddress, isLoading }
 }

@@ -17,9 +17,7 @@ import type {
 import {
     getV3Config,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
-    calculateMinAmounts,
-    tickToSqrtPriceX96,
-    getAmountsForLiquidity,
+    planRemoveLiquidity,
 } from '@coshi190/junoswap-sdk'
 import {
     buildMintParams,
@@ -244,31 +242,28 @@ export function useRemoveLiquidity(
     const dexConfig = getV3Config(chainId)
     const positionManager = dexConfig?.positionManager
     const isEnabled = !!position && !!recipient && !!positionManager && percentage > 0
-    const { liquidityToRemove, amount0Min, amount1Min } = useMemo(() => {
-        if (!position || percentage <= 0) {
-            return { liquidityToRemove: 0n, amount0Min: 0n, amount1Min: 0n }
-        }
-        const liquidityToRemove = (position.liquidity * BigInt(percentage)) / 100n
-        const sqrtPriceAX96 = tickToSqrtPriceX96(position.tickLower)
-        const sqrtPriceBX96 = tickToSqrtPriceX96(position.tickUpper)
-        const { amount0, amount1 } = getAmountsForLiquidity(
-            position.sqrtPriceX96,
-            sqrtPriceAX96,
-            sqrtPriceBX96,
-            liquidityToRemove
-        )
-        const { amount0Min, amount1Min } = calculateMinAmounts(amount0, amount1, slippageBps)
-        return { liquidityToRemove, amount0Min, amount1Min }
-    }, [position, percentage, slippageBps])
+    const plan = useMemo(() => {
+        if (!position || percentage <= 0) return null
+        return planRemoveLiquidity({
+            liquidity: position.liquidity,
+            percentage,
+            sqrtPriceX96: position.sqrtPriceX96,
+            tickLower: position.tickLower,
+            tickUpper: position.tickUpper,
+            slippageBps,
+            deadlineMinutes,
+        })
+    }, [position, percentage, slippageBps, deadlineMinutes])
+    const liquidityToRemove = plan?.liquidity ?? 0n
     const callData = useMemo(() => {
-        if (!position || !recipient || liquidityToRemove === 0n) return null
+        if (!position || !recipient || !plan || plan.liquidity === 0n) return null
         const data = buildRemoveWithCollectMulticall(
             {
                 tokenId: position.tokenId,
-                liquidity: liquidityToRemove,
-                amount0Min,
-                amount1Min,
-                deadline: deadlineMinutes,
+                liquidity: plan.liquidity,
+                amount0Min: plan.amount0Min,
+                amount1Min: plan.amount1Min,
+                deadline: plan.deadline,
                 collectFees: true,
             },
             recipient,
@@ -280,7 +275,7 @@ export function useRemoveLiquidity(
             functionName: 'multicall' as const,
             args: [data] as [Hex[]],
         }
-    }, [position, recipient, liquidityToRemove, amount0Min, amount1Min, deadlineMinutes, chainId])
+    }, [position, recipient, plan, chainId])
     const {
         data: simulationData,
         isLoading: isSimulating,
@@ -318,8 +313,8 @@ export function useRemoveLiquidity(
     return {
         remove,
         liquidityToRemove,
-        amount0Min,
-        amount1Min,
+        amount0Min: plan?.amount0Min ?? 0n,
+        amount1Min: plan?.amount1Min ?? 0n,
         isPreparing: isSimulating,
         isSimulating,
         isExecuting,
