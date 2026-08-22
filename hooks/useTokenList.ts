@@ -1,7 +1,13 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { isLaunchpadChain, fetchTokenList } from '@coshi190/junoswap-sdk'
+import {
+    isLaunchpadChain,
+    fetchLaunchTokens,
+    fetchTokenSnapshots,
+    LAUNCH_TOKEN_DETAIL_FIELDS,
+    TOKEN_SNAPSHOT_LIST_FIELDS,
+} from '@coshi190/junoswap-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderClient } from '@/lib/ponder-client'
 import { mapLaunchTokenItem } from '@/services/launchpad/launchpad'
@@ -35,12 +41,18 @@ export function useTokenList(): UseTokenListResult {
     } = useQuery({
         queryKey: ['launchpad-token-list', chainId],
         queryFn: async () => {
-            const data = await fetchTokenList(ponderClient, { chainId })
-            const tokens = data.tokens.map((t): LaunchToken => mapLaunchTokenItem(t, chainId))
+            const [rows, snapshots] = await Promise.all([
+                fetchLaunchTokens(ponderClient, { chainId }, LAUNCH_TOKEN_DETAIL_FIELDS, {
+                    orderBy: 'createdTime',
+                    orderDirection: 'desc',
+                }),
+                fetchTokenSnapshots(ponderClient, { chainId }, TOKEN_SNAPSHOT_LIST_FIELDS),
+            ])
+            const tokens = rows.map((t): LaunchToken => mapLaunchTokenItem(t, chainId))
             const now = Math.floor(Date.now() / 1000)
             const cutoff = now - 86400
             const snapshotMap = new Map<string, SnapshotData>()
-            for (const s of data.snapshots) {
+            for (const s of snapshots) {
                 const changePct = s.priceChange1dPct ? parseFloat(s.priceChange1dPct) : null
                 const isStale =
                     s.price1dAgoTimestamp == null ||

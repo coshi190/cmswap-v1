@@ -2,7 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { isLaunchpadChain, fetchCreatedTokens, fetchCreatorSnapshots } from '@coshi190/junoswap-sdk'
+import {
+    isLaunchpadChain,
+    fetchLaunchTokens,
+    fetchTokenSnapshots,
+    LAUNCH_TOKEN_DETAIL_FIELDS,
+    TOKEN_SNAPSHOT_CREATOR_FIELDS,
+} from '@coshi190/junoswap-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderClient } from '@/lib/ponder-client'
 import { mapLaunchTokenItem } from '@/services/launchpad/launchpad'
@@ -20,14 +26,19 @@ export function useCreatedTokens(address: Address | undefined): UseCreatedTokens
     const { data, isLoading } = useQuery({
         queryKey: ['created-tokens', chainId, address?.toLowerCase()],
         queryFn: async (): Promise<CreatedToken[]> => {
-            const creator = address!.toLowerCase()
-            const items = await fetchCreatedTokens(ponderClient, { chainId, creator })
+            const items = await fetchLaunchTokens(
+                ponderClient,
+                { chainId, creator: address! },
+                LAUNCH_TOKEN_DETAIL_FIELDS,
+                { orderBy: 'createdTime', orderDirection: 'desc' }
+            )
             if (items.length === 0) return []
 
-            const snapshots = await fetchCreatorSnapshots(ponderClient, {
-                chainId,
-                tokenAddrs: items.map((t) => t.tokenAddr.toLowerCase()),
-            })
+            const snapshots = await fetchTokenSnapshots(
+                ponderClient,
+                { chainId, tokenAddrs: items.map((t) => t.tokenAddr) },
+                TOKEN_SNAPSHOT_CREATOR_FIELDS
+            )
             const snapshotMap = new Map(snapshots.map((s) => [s.tokenAddr.toLowerCase(), s]))
 
             return items.map((t): CreatedToken => {
