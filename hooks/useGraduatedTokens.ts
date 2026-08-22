@@ -2,7 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { isLaunchpadChain, fetchGraduatedTokens } from '@coshi190/junoswap-sdk'
+import {
+    isLaunchpadChain,
+    fetchLaunchTokens,
+    LAUNCH_TOKEN_META_FIELDS,
+} from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
@@ -20,7 +24,12 @@ export function useGraduatedTokens(chainId: number): {
         queryKey: ['graduated-tokens', chainId],
         queryFn: async () => {
             try {
-                const items = await fetchGraduatedTokens(ponderClient, { chainId })
+                const items = await fetchLaunchTokens(
+                    ponderClient,
+                    { chainId, isGraduated: 1 },
+                    LAUNCH_TOKEN_META_FIELDS,
+                    { orderBy: 'graduatedAt', orderDirection: 'desc' }
+                )
                 return items
                     .map((raw) => applyLaunchpadTokenOverride(raw, chainId))
                     .map(

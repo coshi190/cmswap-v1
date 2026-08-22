@@ -11,7 +11,8 @@ import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import {
     isLaunchpadChain as isLaunchpadChainFn,
-    fetchBondingCurveTokens,
+    fetchLaunchTokens,
+    LAUNCH_TOKEN_META_FIELDS,
 } from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { hasSettled } from '@/lib/query-status'
@@ -47,7 +48,11 @@ export function useTokenDiscovery(chainId: number) {
         queryFn: async () => {
             if (!isLaunchpadChain) return []
             try {
-                const items = await fetchBondingCurveTokens(ponderClient, { chainId })
+                const items = await fetchLaunchTokens(
+                    ponderClient,
+                    { chainId, isGraduated: 0 },
+                    LAUNCH_TOKEN_META_FIELDS
+                )
                 return items
                     .map((raw) => applyLaunchpadTokenOverride(raw, chainId))
                     .map(

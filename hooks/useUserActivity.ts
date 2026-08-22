@@ -8,7 +8,8 @@ import {
     fetchUserV2Swaps,
     fetchUserTransfers,
     fetchUserAggSwaps,
-    fetchLaunchTokenMeta,
+    fetchLaunchTokens,
+    LAUNCH_TOKEN_META_FIELDS,
     fetchV3Tokens,
     isLaunchpadChain,
     isAggRouterChain,
@@ -52,7 +53,7 @@ function fetchAggEvents(sender: string, chainId: number, limit: number) {
 }
 
 async function fetchTokenMeta(chainId: number): Promise<Map<string, TokenMeta>> {
-    const rows = await fetchLaunchTokenMeta(ponderClient, { chainId })
+    const rows = await fetchLaunchTokens(ponderClient, { chainId }, LAUNCH_TOKEN_META_FIELDS)
     const map = new Map<string, TokenMeta>()
     for (const raw of rows) {
         const t = applyLaunchpadTokenOverride(raw, chainId)

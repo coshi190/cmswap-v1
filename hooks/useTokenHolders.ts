@@ -4,11 +4,20 @@ import { useQuery } from '@tanstack/react-query'
 import { usePublicClient } from 'wagmi'
 import type { Address } from 'viem'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
-import { ERC20_ABI, fetchTokenHolders, INITIAL_TOKEN_SUPPLY } from '@coshi190/junoswap-sdk'
+import {
+    ERC20_ABI,
+    fetchTokenHolders,
+    fetchTokenSnapshots,
+    INITIAL_TOKEN_SUPPLY,
+    TOKEN_HOLDER_ADDRESS_FIELDS,
+    TOKEN_SNAPSHOT_HOLDER_COUNT_FIELDS,
+} from '@coshi190/junoswap-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import type { HolderData } from '@/types/launchpad'
 
 export type { HolderData }
+
+const HOLDER_BALANCE_SCAN_LIMIT = 200
 
 async function fetchRealBalances(
     publicClient: NonNullable<ReturnType<typeof usePublicClient>>,
@@ -67,14 +76,22 @@ export function useTokenHolders(
         queryFn: async () => {
             if (!tokenAddr || !publicClient) return { holders: [], holderCount: 0 }
 
-            const result = await fetchTokenHolders(ponderClient, {
-                tokenAddr: tokenAddr.toLowerCase(),
-            })
-            const addresses = result.addresses as Address[]
-            const holderCount = result.holderCount ?? addresses.length
+            const [rows, snapshots] = await Promise.all([
+                fetchTokenHolders(ponderClient, { tokenAddr }, TOKEN_HOLDER_ADDRESS_FIELDS),
+                fetchTokenSnapshots(
+                    ponderClient,
+                    { tokenAddrs: [tokenAddr] },
+                    TOKEN_SNAPSHOT_HOLDER_COUNT_FIELDS
+                ),
+            ])
+            const addresses = [...new Set(rows.map((h) => h.address))] as Address[]
+            const holderCount = snapshots[0]?.holderCount ?? addresses.length
 
-            const allAddresses = [...new Set(addresses)] as Address[]
-            const holders = await fetchRealBalances(publicClient, tokenAddr, allAddresses)
+            const holders = await fetchRealBalances(
+                publicClient,
+                tokenAddr,
+                addresses.slice(0, HOLDER_BALANCE_SCAN_LIMIT)
+            )
 
             const realHolderCount = holders.filter((h) => h.balance > 0n).length
 

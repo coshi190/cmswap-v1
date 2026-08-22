@@ -1,4 +1,9 @@
-import { createPonderClient, fetchLaunchTokenOg } from '@coshi190/junoswap-sdk'
+import {
+    createPonderClient,
+    fetchLaunchTokens,
+    fetchNativeUsdPrice,
+    fetchTokenSnapshots,
+} from '@coshi190/junoswap-sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 
@@ -20,19 +25,33 @@ export async function fetchLaunchTokenMeta(address: string): Promise<LaunchToken
 
     try {
         const client = createPonderClient(`${ponderUrl}/graphql`)
-        const {
-            token,
-            snapshot,
-            nativeUsdPrice: rawUsd,
-        } = await fetchLaunchTokenOg(client, {
-            tokenAddr: address.toLowerCase(),
-        })
+        const tokenAddr = address.toLowerCase()
+
+        const [tokens, snapshots] = await Promise.all([
+            fetchLaunchTokens(client, { tokenAddrs: [tokenAddr] }, [
+                'tokenAddr',
+                'chainId',
+                'name',
+                'symbol',
+                'logo',
+                'description',
+                'isGraduated',
+            ]),
+            fetchTokenSnapshots(client, { tokenAddrs: [tokenAddr] }, [
+                'marketCapNative',
+                'priceChange1dPct',
+            ]),
+        ])
+
+        const token = tokens[0]
         if (!token) return null
+
+        const snapshot = snapshots[0]
+        const nativeUsdPrice = await fetchNativeUsdPrice(client, { chainId: token.chainId })
 
         const meta = applyLaunchpadTokenOverride(token, token.chainId)
 
         const marketCap = parseFloat(snapshot?.marketCapNative ?? '')
-        const nativeUsdPrice = parseFloat(rawUsd?.price ?? '')
 
         return {
             address,
@@ -45,8 +64,7 @@ export async function fetchLaunchTokenMeta(address: string): Promise<LaunchToken
             priceChange1dPct: snapshot?.priceChange1dPct
                 ? parseFloat(snapshot.priceChange1dPct)
                 : null,
-            nativeUsdPrice:
-                Number.isFinite(nativeUsdPrice) && nativeUsdPrice > 0 ? nativeUsdPrice : null,
+            nativeUsdPrice: nativeUsdPrice !== null && nativeUsdPrice > 0 ? nativeUsdPrice : null,
         }
     } catch {
         return null

@@ -3,7 +3,12 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchHolderBalances, fetchLaunchTokensByAddresses } from '@coshi190/junoswap-sdk'
+import {
+    fetchTokenHolders,
+    fetchLaunchTokens,
+    LAUNCH_TOKEN_CARD_FIELDS,
+    TOKEN_HOLDER_BALANCE_FIELDS,
+} from '@coshi190/junoswap-sdk'
 import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
@@ -23,9 +28,11 @@ export function usePortfolioTokens(chainId: number, userAddress?: Address) {
         queryFn: async () => {
             if (!userAddress || !isLaunchpadChain) return []
             try {
-                const holdings = await fetchHolderBalances(ponderClient, {
-                    address: userAddress.toLowerCase(),
-                })
+                const holdings = await fetchTokenHolders(
+                    ponderClient,
+                    { address: userAddress },
+                    TOKEN_HOLDER_BALANCE_FIELDS
+                )
                 return holdings
                     .filter((h) => BigInt(h.balance) > 0n)
                     .map((h) => h.tokenAddr as Address)
@@ -55,9 +62,11 @@ export function usePortfolioTokens(chainId: number, userAddress?: Address) {
             if (unknownAddrs.length === 0)
                 return new Map<string, { name: string; symbol: string; logo: string }>()
             try {
-                const rows = await fetchLaunchTokensByAddresses(ponderClient, {
-                    tokenAddrs: unknownAddrs.map((a) => a.toLowerCase()),
-                })
+                const rows = await fetchLaunchTokens(
+                    ponderClient,
+                    { tokenAddrs: unknownAddrs },
+                    LAUNCH_TOKEN_CARD_FIELDS
+                )
                 const map = new Map<string, { name: string; symbol: string; logo: string }>()
                 for (const raw of rows) {
                     const t = applyLaunchpadTokenOverride(raw, chainId)

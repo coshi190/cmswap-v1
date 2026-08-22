@@ -9,8 +9,8 @@ import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import {
     isLaunchpadChain,
-    fetchAllTokenHolders,
-    type LeaderboardHolder,
+    fetchTokenHolders,
+    TOKEN_HOLDER_ADDRESS_FIELDS,
 } from '@coshi190/junoswap-sdk'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
 import { useMultiBalances } from '@/hooks/useMultiBalances'
@@ -32,9 +32,10 @@ export interface TraderAgg {
 
 const PAGE_SIZE = 20
 
-async function fetchHolders(): Promise<LeaderboardHolder[]> {
+async function fetchHolders(chainId: number): Promise<string[]> {
     try {
-        return await fetchAllTokenHolders(ponderClient)
+        const rows = await fetchTokenHolders(ponderClient, { chainId }, TOKEN_HOLDER_ADDRESS_FIELDS)
+        return rows.map((h) => h.address)
     } catch (e) {
         if (isPonderError(e)) return []
         throw e
@@ -65,7 +66,7 @@ export function useLeaderboardTraders(
 
     const { data: holders, isLoading: isHoldersLoading } = useQuery({
         queryKey: ['leaderboard-holders', chainId],
-        queryFn: () => (isLaunchpadChain(chainId) ? fetchHolders() : Promise.resolve([])),
+        queryFn: () => (isLaunchpadChain(chainId) ? fetchHolders(chainId) : Promise.resolve([])),
         enabled: isSupportedChain,
         staleTime: 30_000,
         refetchInterval: 30_000,
@@ -81,7 +82,7 @@ export function useLeaderboardTraders(
 
     const uniqueAddresses = useMemo(() => {
         const addrs = new Set<string>()
-        for (const h of holders ?? []) addrs.add(h.address.toLowerCase())
+        for (const a of holders ?? []) addrs.add(a.toLowerCase())
         for (const t of traderStats ?? []) addrs.add(t.address.toLowerCase())
         return [...addrs] as Address[]
     }, [holders, traderStats])
