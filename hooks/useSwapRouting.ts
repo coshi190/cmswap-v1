@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { ProtocolType } from '@coshi190/junoswap-sdk'
+import { ProtocolType } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { RoutingResult, RouteQuote } from '@/types/routing'
 import type { Address } from 'viem'

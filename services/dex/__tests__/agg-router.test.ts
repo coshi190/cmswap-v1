@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { decodeAbiParameters, size, type Address } from 'viem'
-import { ProtocolType } from '@coshi190/junoswap-sdk'
+import { ProtocolType } from '@coshi190/juno-moneta-sdk'
 import type { RouteQuote } from '@/types/routing'
 
 const NATIVE = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' as Address
@@ -15,7 +15,7 @@ const REFERRER = '0x000000000000000000000000000000000000CAFE' as Address
 const SKIP_UNWRAP_CHAIN = 96
 const UNWRAP_CHAIN = 8899
 
-vi.mock('@coshi190/junoswap-sdk', async (importOriginal) => ({
+vi.mock('@coshi190/juno-moneta-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     ProtocolType: { V2: 'v2', V3: 'v3' },
     getV2Config: vi.fn((_chainId: number, dexId: string) =>

@@ -1,4 +1,4 @@
-import { computePoolPrice, computeTickPrice } from '@coshi190/junoswap-sdk'
+import { computePoolPrice, computeTickPrice } from '@coshi190/juno-moneta-sdk'
 
 export interface PoolSwapPoint {
     timestamp: number

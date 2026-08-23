@@ -3,7 +3,7 @@
 import { useChainId } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchPoolPriceHistory, fetchPoolPriceAnchor } from '@coshi190/junoswap-sdk'
+import { fetchPoolPriceHistory, fetchPoolPriceAnchor } from '@coshi190/juno-moneta-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import { RANGE_CHART_WINDOW_SEC } from '@/lib/position-chart'
 import type { PoolSwapPoint } from '@/lib/position-chart'

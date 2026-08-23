@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount, useChainId } from 'wagmi'
-import { fetchReferralRewards, type ReferredTrader } from '@coshi190/junoswap-sdk'
+import { fetchReferralRewards, type ReferredTrader } from '@coshi190/juno-moneta-sdk'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 

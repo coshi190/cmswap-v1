@@ -9,7 +9,7 @@ import {
     UNISWAP_V3_POOL_ABI,
     sortTokens,
     getTickSpacing,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { V3PoolData } from '@/types/earn'
 

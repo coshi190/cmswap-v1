@@ -14,7 +14,7 @@ import {
     isLaunchpadChain,
     isAggRouterChain,
     NATIVE_TOKEN_ADDRESS,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import { findTokenByAddress, getTokensForChain, findWrappedNativeAddress } from '@/lib/tokens'

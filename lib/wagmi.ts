@@ -88,4 +88,4 @@ export function getChainMetadata(chainId: number) {
     return chainMetadata[chainId as keyof typeof chainMetadata]
 }
 
-export { isNativeToken, shouldSkipUnwrap } from '@coshi190/junoswap-sdk'
+export { isNativeToken, shouldSkipUnwrap } from '@coshi190/juno-moneta-sdk'

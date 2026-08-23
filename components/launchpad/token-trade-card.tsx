@@ -22,12 +22,12 @@ import {
     getBondingCurveAddress,
     getV3Config,
     getDefaultDexForChain,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { isValidNumberInput } from '@/lib/utils'
 import { formatKub, formatTokenAmount } from '@/services/launchpad/launchpad'
-import { isReadyToGraduate, calculateGraduationTarget } from '@coshi190/junoswap-sdk'
+import { isReadyToGraduate, calculateGraduationTarget } from '@coshi190/juno-moneta-sdk'
 import { calculateMinOutput } from '@/services/dex/slippage'
 import { toastSuccess, toastError } from '@/lib/toast'
 import { getChainMetadata } from '@/lib/wagmi'

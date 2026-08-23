@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchTokenBondingCurveSwaps, fetchTokenV3Swaps } from '@coshi190/junoswap-sdk'
+import { fetchTokenBondingCurveSwaps, fetchTokenV3Swaps } from '@coshi190/juno-moneta-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import type { SwapEventData } from '@/types/launchpad'

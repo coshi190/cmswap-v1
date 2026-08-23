@@ -10,7 +10,7 @@ import {
     getV3StakerAddress,
     UNISWAP_V3_STAKER_ABI,
     type V3PoolRow,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { findTokenByAddress } from '@/lib/tokens'

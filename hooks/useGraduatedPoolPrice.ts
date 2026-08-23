@@ -6,7 +6,7 @@ import {
     UNISWAP_V3_POOL_ABI,
     calculatePriceFromSqrtPrice,
     TOTAL_SUPPLY,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 
 interface UseGraduatedPoolPriceParams {
     poolAddress?: Address

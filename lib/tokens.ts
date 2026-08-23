@@ -6,7 +6,7 @@ import {
     getSwapAddress,
     getWrapOperation as getWrapOperationBySdk,
     isNativeToken,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { kubTestnet, jbc, bitkub, worldchain, base, bsc } from './wagmi'
 import { resolveLaunchpadLogo } from './logo'

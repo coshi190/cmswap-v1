@@ -107,7 +107,7 @@ services/mining/staking.ts           encodeIncentiveKeyData, buildUnstakeAndWith
 
 types/earn.ts                        IncentiveKey, Incentive, StakedPosition, V3PoolData
 lib/optimistic-deposits.ts           pattern สำหรับ optimistic UI ระหว่างรอ indexer
-@coshi190/junoswap-sdk               getV3StakerAddress, UNISWAP_V3_STAKER_ABI, computeIncentiveId,
+@coshi190/juno-moneta-sdk            getV3StakerAddress, UNISWAP_V3_STAKER_ABI, computeIncentiveId,
                                      fetchIncentives, fetchV3Pools, fetchV3Tokens
 ```
 
@@ -241,7 +241,7 @@ function endIncentive(IncentiveKey memory key) external returns (uint256 refund)
 
 ### 4.3 สิ่งที่ต้องเช็คก่อนเริ่ม
 
-- [ ] `UNISWAP_V3_STAKER_ABI` ใน `@coshi190/junoswap-sdk` **มี `createIncentive` / `endIncentive` / `maxIncentiveDuration` / `maxIncentiveStartLeadTime` ครบไหม** — ถ้าไม่มีต้อง PR เพิ่มที่ SDK ก่อน (หรือประกาศ ABI fragment ในไฟล์ hook แบบที่ `useStaking.ts` ทำกับ `SAFE_TRANSFER_FROM_ABI`)
+- [ ] `UNISWAP_V3_STAKER_ABI` ใน `@coshi190/juno-moneta-sdk` **มี `createIncentive` / `endIncentive` / `maxIncentiveDuration` / `maxIncentiveStartLeadTime` ครบไหม** — ถ้าไม่มีต้อง PR เพิ่มที่ SDK ก่อน (หรือประกาศ ABI fragment ในไฟล์ hook แบบที่ `useStaking.ts` ทำกับ `SAFE_TRANSFER_FROM_ABI`)
 - [ ] Ponder indexer handle event `IncentiveCreated` แล้วหรือยัง — `fetchIncentives()` คืน `reward`/`refundee`/`startTime`/`endTime` อยู่แล้ว แปลว่าน่าจะมี แต่ต้องยืนยัน **latency** ว่ากี่วินาที
 - [ ] chain ไหนบ้างที่ `getV3StakerAddress()` คืนค่า — chain ที่ไม่มี staker ต้องซ่อนปุ่ม Create
 
@@ -253,7 +253,7 @@ function endIncentive(IncentiveKey memory key) external returns (uint256 refund)
 
 | # | งาน | ไฟล์ |
 |---|---|---|
-| 0.1 | ยืนยัน ABI ครบ (§4.3) ถ้าขาด → เพิ่มใน SDK หรือประกาศ local fragment | `@coshi190/junoswap-sdk` / `hooks/useCreateIncentive.ts` |
+| 0.1 | ยืนยัน ABI ครบ (§4.3) ถ้าขาด → เพิ่มใน SDK หรือประกาศ local fragment | `@coshi190/juno-moneta-sdk` / `hooks/useCreateIncentive.ts` |
 | 0.2 | เขียน `useStakerLimits()` อ่าน `maxIncentiveDuration` + `maxIncentiveStartLeadTime` | `hooks/useStakerLimits.ts` |
 | 0.3 | ทดสอบ createIncentive มือเปล่าบน KUB testnet (25925) หา gas + latency ของ indexer | — |
 
@@ -439,7 +439,7 @@ export function useCreateIncentive(input: CreateIncentiveInput | null): {
 
 ### ต้องตรวจนอก repo
 
-- [ ] `@coshi190/junoswap-sdk` — ABI ครบไหม (§4.3)
+- [ ] `@coshi190/juno-moneta-sdk` — ABI ครบไหม (§4.3)
 - [ ] Ponder indexer — `IncentiveCreated` + latency
 
 ---

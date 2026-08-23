@@ -9,7 +9,7 @@ import {
     useWriteContract,
 } from 'wagmi'
 import type { Address, Hex } from 'viem'
-import { getV3StakerAddress } from '@coshi190/junoswap-sdk'
+import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
 import { useNowSeconds } from '@/hooks/useNowSeconds'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'

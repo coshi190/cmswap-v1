@@ -13,7 +13,7 @@ import {
     isLaunchpadChain as isLaunchpadChainFn,
     fetchLaunchTokens,
     LAUNCH_TOKEN_META_FIELDS,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { hasSettled } from '@/lib/query-status'
 import { useGraduatedTokens } from '@/hooks/useGraduatedTokens'

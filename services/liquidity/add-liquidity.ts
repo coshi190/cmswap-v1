@@ -12,7 +12,7 @@ import {
     planAddLiquidity,
     planIncreaseLiquidity,
     sortTokens,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { isNativeToken } from '@/lib/wagmi'
 import { getWrappedNativeAddress } from '@/lib/tokens'
 

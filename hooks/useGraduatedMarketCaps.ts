@@ -9,7 +9,7 @@ import {
     UNISWAP_V3_POOL_ABI,
     calculatePriceFromSqrtPrice,
     TOTAL_SUPPLY,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 
 const GRADUATED_FEE_TIER = 10000

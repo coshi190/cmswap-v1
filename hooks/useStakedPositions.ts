@@ -9,7 +9,7 @@ import {
     getV3StakerAddress,
     UNISWAP_V3_STAKER_ABI,
     fetchPositionsByTokenIds,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 export function useStakedPositions(
     positions: PositionWithTokens[],

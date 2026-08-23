@@ -6,7 +6,7 @@ import {
     isLaunchpadChain,
     fetchLaunchTokens,
     LAUNCH_TOKEN_META_FIELDS,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'

@@ -48,7 +48,7 @@ bun run start    # Start production server
 ## Repos
 
 This repo is the frontend. The contracts, the indexer, and the shared chain layer
-(`@coshi190/junoswap-sdk` — ABIs, addresses, DEX config) live in
+(`@coshi190/juno-moneta-sdk` — ABIs, addresses, DEX config) live in
 [junoswap-core](https://github.com/coshi190/junoswap-core).
 
 ---

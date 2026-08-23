@@ -8,7 +8,7 @@ import {
     fetchTokenSnapshots,
     LAUNCH_TOKEN_DETAIL_FIELDS,
     TOKEN_SNAPSHOT_CREATOR_FIELDS,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { ponderClient } from '@/lib/ponder-client'
 import { mapLaunchTokenItem } from '@/services/launchpad/launchpad'

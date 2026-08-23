@@ -1,6 +1,6 @@
 import { formatEther } from 'viem'
 import type { Address } from 'viem'
-import type { LaunchTokenDetail, V3PoolRow } from '@coshi190/junoswap-sdk'
+import type { LaunchTokenDetail, V3PoolRow } from '@coshi190/juno-moneta-sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import type { LaunchToken } from '@/types/launchpad'

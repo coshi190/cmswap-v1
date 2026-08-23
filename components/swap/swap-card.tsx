@@ -11,7 +11,7 @@ import {
     ProtocolType,
     getAggRouterAddress,
     isAggRouterChain,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,7 +26,7 @@ import { useSwapExecution } from '@/hooks/useSwapExecution'
 import { useAggRouterSwapExecution } from '@/hooks/useAggRouterSwapExecution'
 import { useSplitRoute } from '@/hooks/useSplitRoute'
 import { useCrossDexRoute } from '@/hooks/useCrossDexRoute'
-import { splitClearsMargin } from '@coshi190/junoswap-sdk'
+import { splitClearsMargin } from '@coshi190/juno-moneta-sdk'
 import {
     splitToPlan,
     crossDexToPlan,

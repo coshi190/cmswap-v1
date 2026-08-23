@@ -1,7 +1,7 @@
 import type { SwapUrlParams, ParsedSwapUrlParams } from '@/types/swap'
 import type { Token } from '@/types/token'
 import type { Address } from 'viem'
-import { NATIVE_TOKEN_ADDRESS, isNativeToken } from '@coshi190/junoswap-sdk'
+import { NATIVE_TOKEN_ADDRESS, isNativeToken } from '@coshi190/juno-moneta-sdk'
 import { findTokenByAddress, isValidTokenAddress } from './tokens'
 
 export function parseSwapSearchParams(searchParams: URLSearchParams): SwapUrlParams {

@@ -2,7 +2,7 @@
 
 import { useChainId } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
-import { fetchNativeUsdPrice } from '@coshi190/junoswap-sdk'
+import { fetchNativeUsdPrice } from '@coshi190/juno-moneta-sdk'
 import { NATIVE_USD_STABLE } from '@/lib/routing-config'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'

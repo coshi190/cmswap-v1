@@ -6,7 +6,7 @@ import {
     BONDING_CURVE_JUNOSWAP_CHAIN_ID,
     getBondingCurveAddress,
     isLaunchpadChain,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Address } from 'viem'
 
 const LaunchpadChainContext = createContext<number | undefined>(undefined)

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchBondingCurveHistory, fetchV3History } from '@coshi190/junoswap-sdk'
+import { fetchBondingCurveHistory, fetchV3History } from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 import { ponderClient } from '@/lib/ponder-client'

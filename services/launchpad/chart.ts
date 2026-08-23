@@ -9,9 +9,9 @@ import {
     calculatePreSwapPrice,
     calculatePriceFromSqrtPrice,
     type CurveSwapEvent as SwapEvent,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 
-export type { CurveSwapEvent as SwapEvent } from '@coshi190/junoswap-sdk'
+export type { CurveSwapEvent as SwapEvent } from '@coshi190/juno-moneta-sdk'
 
 function calculateVolume(event: SwapEvent): number {
     return event.isBuy
