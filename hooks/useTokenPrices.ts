@@ -8,9 +8,9 @@ import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { hasSettled } from '@/lib/query-status'
 import {
     isLaunchpadChain as isLaunchpadChainFn,
-    fetchTokenSnapshotsByAddresses,
+    fetchTokenSnapshots,
     fetchV3TokenSnapshots,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { TokenType } from '@/types/portfolio'
 
@@ -52,9 +52,11 @@ export function useTokenPrices(
         queryFn: async () => {
             if (!isLaunchpadChain || bondingCurveAddresses.length === 0) return []
             try {
-                return await fetchTokenSnapshotsByAddresses(ponderClient, {
-                    tokenAddrs: bondingCurveAddresses,
-                })
+                return await fetchTokenSnapshots(
+                    ponderClient,
+                    { tokenAddrs: bondingCurveAddresses },
+                    ['tokenAddr', 'lastPriceUsd']
+                )
             } catch (e) {
                 if (isPonderError(e)) return []
                 throw e

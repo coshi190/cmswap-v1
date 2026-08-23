@@ -15,7 +15,7 @@ import {
     getV3StakerAddress,
     UNISWAP_V3_STAKER_ABI,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import {
     encodeIncentiveKeyData,
     buildUnstakeAndWithdrawMulticall,

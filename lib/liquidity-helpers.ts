@@ -1,4 +1,4 @@
-import { computePoolPrice, computeTickPrice } from '@coshi190/junoswap-sdk'
+import { computePoolPrice, computeTickPrice } from '@coshi190/juno-moneta-sdk'
 
 /** Fee tiers are hundredths of a bip, so 3000 renders as '0.30%'. */
 export function formatFeeTier(fee: number): string {

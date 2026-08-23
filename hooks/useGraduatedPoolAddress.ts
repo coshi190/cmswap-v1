@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import type { Address } from 'viem'
-import { FEE_TIERS } from '@coshi190/junoswap-sdk'
+import { FEE_TIERS } from '@coshi190/juno-moneta-sdk'
 import { useV3Pools } from '@/hooks/useV3Pools'
 import { findGraduatedPool } from '@/services/launchpad/launchpad'
 

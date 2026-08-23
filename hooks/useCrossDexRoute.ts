@@ -3,7 +3,7 @@
 import { usePublicClient } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { type Address } from 'viem'
-import { getCrossDexQuote, type CrossDexLeg } from '@coshi190/junoswap-sdk'
+import { getCrossDexQuote, type CrossDexLeg } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { getIntermediaryTokens } from '@/lib/routing-config'
 

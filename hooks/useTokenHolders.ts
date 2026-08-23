@@ -11,7 +11,7 @@ import {
     INITIAL_TOKEN_SUPPLY,
     TOKEN_HOLDER_ADDRESS_FIELDS,
     TOKEN_SNAPSHOT_HOLDER_COUNT_FIELDS,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import type { HolderData } from '@/types/launchpad'
 

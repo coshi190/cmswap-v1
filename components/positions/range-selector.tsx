@@ -10,7 +10,7 @@ import {
     getRangePercentages,
     getRangeViewport,
 } from '@/lib/range-presets'
-import { getTickForPrice, snapTickRange } from '@coshi190/junoswap-sdk'
+import { getTickForPrice, snapTickRange } from '@coshi190/juno-moneta-sdk'
 import { tickToPrice } from '@/lib/liquidity-helpers'
 
 const SLIDER_RESOLUTION = 10000

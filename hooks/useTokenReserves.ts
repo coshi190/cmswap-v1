@@ -6,7 +6,7 @@ import {
     BONDING_CURVE_JUNOSWAP_ABI,
     BONDING_CURVE_JUNOSWAP_CHAIN_ID,
     getBondingCurveAddress,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 const VIRTUAL_AMOUNT = 3400n * 10n ** 18n
 
 interface UseTokenReservesParams {

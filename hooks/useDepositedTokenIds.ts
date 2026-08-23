@@ -4,7 +4,7 @@ import { useMemo, useCallback, useSyncExternalStore } from 'react'
 import { useChainId } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import { fetchDepositsByOwner } from '@coshi190/junoswap-sdk'
+import { fetchDepositsByOwner } from '@coshi190/juno-moneta-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import {
     applyOptimisticDeposits,

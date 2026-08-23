@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import type { Address } from 'viem'
 import { useQuery } from '@tanstack/react-query'
-import { fetchPoolMetrics, type PoolMetrics } from '@coshi190/junoswap-sdk'
+import { fetchPoolMetrics, type PoolMetrics } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { getTokensForChain } from '@/lib/tokens'

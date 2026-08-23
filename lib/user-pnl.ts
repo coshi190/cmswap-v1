@@ -1,4 +1,4 @@
-import type { TokenPnl, PortfolioPnlTotals } from '@coshi190/junoswap-sdk'
+import type { TokenPnl, PortfolioPnlTotals } from '@coshi190/juno-moneta-sdk'
 import { getJson, ponderBaseUrl } from '@/lib/indexer-http'
 
 export interface UserPnlResponse {

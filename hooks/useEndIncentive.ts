@@ -8,7 +8,7 @@ import {
     useWriteContract,
 } from 'wagmi'
 import type { Hex } from 'viem'
-import { getV3StakerAddress } from '@coshi190/junoswap-sdk'
+import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
 import { canEndIncentive } from '@/services/mining/incentives'
 import type { Incentive } from '@/types/earn'
 

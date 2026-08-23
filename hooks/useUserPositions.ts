@@ -11,7 +11,7 @@ import {
     type DescribedPosition,
     type PositionInput,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { TOKEN_LISTS } from '@/lib/tokens'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'

@@ -17,7 +17,7 @@ import {
     isSqrtPriceWithinTolerance,
     PRICE_TOLERANCE_BPS,
     calculateGraduationSqrtPriceX96,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
 

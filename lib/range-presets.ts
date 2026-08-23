@@ -4,7 +4,7 @@ import {
     getFullRange,
     snapTickRange,
     type TickRange,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 
 const TICK_BASE = 1.0001
 const VIEWPORT_HALF_SPAN = Math.ceil(6050 * 1.2)

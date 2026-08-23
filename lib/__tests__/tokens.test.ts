@@ -14,7 +14,7 @@ import {
     getWrapOperation,
 } from '@/lib/tokens'
 
-vi.mock('@coshi190/junoswap-sdk', async (importOriginal) => ({
+vi.mock('@coshi190/juno-moneta-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     ERC20_ABI: [],
 }))

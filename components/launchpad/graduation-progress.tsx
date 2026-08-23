@@ -6,7 +6,7 @@ import {
     calculateStableGraduationProgress,
     calculateExactGraduationReserve,
     isReadyToGraduate,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { Button } from '@/components/ui/button'
 
 interface GraduationProgressProps {

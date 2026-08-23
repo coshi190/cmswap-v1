@@ -3,7 +3,7 @@ import {
     fetchLaunchTokens,
     fetchNativeUsdPrice,
     fetchTokenSnapshots,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 

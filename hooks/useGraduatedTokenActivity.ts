@@ -9,7 +9,7 @@ import {
     fetchTokenV3Swaps,
     calculatePrice,
     calculatePriceFromSqrtPrice,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import {
     aggregatePricePoints,

@@ -1,4 +1,4 @@
-import { computePositionValueUsd } from '@coshi190/junoswap-sdk'
+import { computePositionValueUsd } from '@coshi190/juno-moneta-sdk'
 
 export const SECONDS_PER_YEAR = 31_536_000
 

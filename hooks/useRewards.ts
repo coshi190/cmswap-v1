@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useReadContract, useReadContracts, useChainId } from 'wagmi'
 import type { IncentiveKey, StakedPosition } from '@/types/earn'
-import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/junoswap-sdk'
+import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
 export function usePendingRewards(
     incentiveKey: IncentiveKey | null,
     tokenId: bigint | undefined

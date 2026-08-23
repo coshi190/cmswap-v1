@@ -19,7 +19,7 @@ import { useStakedPositions } from '@/hooks/useStakedPositions'
 import { usePendingRewardsMultiple } from '@/hooks/useRewards'
 import { formatTokenAmount, getDisplayToken } from '@/lib/tokens'
 import { formatLiquidityAmount, formatRewardAmount } from '@/lib/format'
-import { isFullRange } from '@coshi190/junoswap-sdk'
+import { isFullRange } from '@coshi190/juno-moneta-sdk'
 import { formatFeeTier, tickToPrice } from '@/lib/liquidity-helpers'
 import type { PositionWithTokens, StakedPosition } from '@/types/earn'
 

@@ -7,7 +7,7 @@ import {
     ProtocolType,
     computePriceImpactPercent,
     getRoutePriceImpact,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { RouteQuote } from '@/types/routing'
 import { getWrapOperation } from '@/lib/tokens'

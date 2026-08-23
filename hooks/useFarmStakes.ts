@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useChainId, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/junoswap-sdk'
+import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
 import type { StakerDeposit } from '@/hooks/useStakerDeposits'
 import type { Incentive, PositionWithTokens, StakedPosition } from '@/types/earn'
 

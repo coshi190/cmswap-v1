@@ -7,7 +7,7 @@ import {
     isNativeToken,
     resolveSwapPath,
     shouldSkipUnwrap,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 
 export interface Hop {
     factory: Address

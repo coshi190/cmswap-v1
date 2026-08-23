@@ -18,7 +18,7 @@ import {
     getV3Config,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
     planRemoveLiquidity,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import {
     buildMintParams,
     buildMintWithNativeMulticall,

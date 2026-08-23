@@ -10,7 +10,7 @@ import {
     getTickForPrice,
     getTickSpacing,
     listFeeTiers,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { getPresetTickRange } from '@/lib/range-presets'
 import { formatFeeTier } from '@/lib/liquidity-helpers'
 import type { Token } from '@/types/token'

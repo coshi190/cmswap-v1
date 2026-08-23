@@ -6,7 +6,7 @@ import {
     getV3Config,
     resolveSwapPath,
     type CrossDexLeg,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { legToHops, type Leg, type ResolvedHop } from './agg-router'
 import type { SplitAllocation } from '@/types/routing'
 

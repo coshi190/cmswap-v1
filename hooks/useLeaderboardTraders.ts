@@ -11,7 +11,7 @@ import {
     isLaunchpadChain,
     fetchTokenHolders,
     TOKEN_HOLDER_ADDRESS_FIELDS,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { useTokenDiscovery } from '@/hooks/useTokenDiscovery'
 import { useMultiBalances } from '@/hooks/useMultiBalances'
 import { useTokenPrices } from '@/hooks/useTokenPrices'

@@ -1,5 +1,5 @@
 import type { Address } from 'viem'
-import { ProtocolType } from '@coshi190/junoswap-sdk'
+import { ProtocolType } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { SwapRoute } from './routing'
@@ -15,7 +15,7 @@ export interface SwapParams {
     fees?: number[] // Fee tiers for V3 multi-hop (length = path.length - 1)
 }
 
-import type { QuoteResult } from '@coshi190/junoswap-sdk'
+import type { QuoteResult } from '@coshi190/juno-moneta-sdk'
 
 export type { QuoteResult }
 

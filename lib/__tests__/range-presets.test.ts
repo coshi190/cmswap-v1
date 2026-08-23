@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MAX_TICK, MIN_TICK, getFullRange } from '@coshi190/junoswap-sdk'
+import { MAX_TICK, MIN_TICK, getFullRange } from '@coshi190/juno-moneta-sdk'
 import {
     DELTA_BY_PRESET,
     getPresetTickRange,

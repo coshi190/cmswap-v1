@@ -29,7 +29,7 @@ import {
     paginate,
     sortFarms,
 } from '@/services/mining/farm-list'
-import { getV3StakerAddress } from '@coshi190/junoswap-sdk'
+import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
 import type {
     FarmOwnershipFilter,
     FarmSortKey,

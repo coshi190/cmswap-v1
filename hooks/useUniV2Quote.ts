@@ -10,7 +10,7 @@ import {
     wrapQuoteResult,
     ProtocolType,
     type V2QuoteOutcome,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { QuoteResult } from '@/types/swap'

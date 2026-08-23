@@ -8,7 +8,7 @@ import {
     fetchNativeUsdPriceSnapshots,
     fetchTokenCandles,
     fetchV3History,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { Timeframe, CandlestickData } from '@/types/chart'
 import { TIMEFRAME_DURATIONS } from '@/types/chart'

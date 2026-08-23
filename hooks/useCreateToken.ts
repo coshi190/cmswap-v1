@@ -10,7 +10,7 @@ import {
     calculateBuyOutput,
     INITIAL_TOKEN_SUPPLY,
     parseTokenAddressFromLogs,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
 import { calculateMinOutput } from '@/services/dex/slippage'
 import { useSwapStore } from '@/store/swap-store'

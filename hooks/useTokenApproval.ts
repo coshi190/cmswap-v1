@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { zeroAddress, type Address } from 'viem'
-import { getDexConfig, getProtocolSpender, ERC20_ABI } from '@coshi190/junoswap-sdk'
+import { getDexConfig, getProtocolSpender, ERC20_ABI } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { buildInfiniteApprovalParams, needsApproval, getAllowanceFunctionName } from '@/lib/tokens'
 import { useSwapStore } from '@/store/swap-store'

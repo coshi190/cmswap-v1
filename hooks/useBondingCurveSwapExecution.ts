@@ -15,7 +15,7 @@ import {
     ERC20_ABI,
     calculateBuyOutput,
     calculateSellOutput,
-} from '@coshi190/junoswap-sdk'
+} from '@coshi190/juno-moneta-sdk'
 import { getAllowanceFunctionName } from '@/lib/tokens'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
 import { calculateMinOutput } from '@/services/dex/slippage'

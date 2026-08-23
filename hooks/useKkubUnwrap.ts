@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import type { Address } from 'viem'
 import { maxUint256, zeroAddress } from 'viem'
-import { ERC20_ABI } from '@coshi190/junoswap-sdk'
+import { ERC20_ABI } from '@coshi190/juno-moneta-sdk'
 import { getWrappedNativeAddress } from '@/lib/tokens'
 import { shouldSkipUnwrap } from '@/lib/wagmi'
 
