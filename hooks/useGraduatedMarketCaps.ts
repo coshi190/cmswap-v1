@@ -1,83 +1,46 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useReadContracts } from 'wagmi'
+import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
-import {
-    getV3Config,
-    UNISWAP_V3_FACTORY_ABI,
-    UNISWAP_V3_POOL_ABI,
-    calculatePriceFromSqrtPrice,
-    TOTAL_SUPPLY,
-} from '@coshi190/juno-moneta-sdk'
-import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
+import { fetchV3TokenSnapshots, TOTAL_SUPPLY } from '@coshi190/juno-moneta-sdk'
+import { ponderClient, isPonderError } from '@/lib/ponder-client'
 
-const GRADUATED_FEE_TIER = 10000
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-
-// Live on-chain market caps for graduated tokens, batched via multicall — keeps
-// list-page mcaps in sync with the same slot0 source the chart/detail page use,
-// instead of the indexer's periodically-updated snapshot.
+// Market caps for graduated tokens from the indexer's per-swap V3 snapshot. A pool's
+// sqrtPriceX96 only moves on Swap, so lastPriceNative is the same number slot0() would
+// return, just lagged by indexing — and this shares its request with useTokenPriceMap
+// instead of firing a getPool + slot0 multicall pair per token.
 export function useGraduatedMarketCaps(
     tokenAddresses: Address[],
     chainId: number
 ): Map<string, number> {
-    const v3Config = getV3Config(chainId)
-    const wrappedNative = INTERMEDIARY_TOKENS[chainId]?.wrappedNative
-
-    const { data: poolAddressResults } = useReadContracts({
-        contracts: tokenAddresses.map((addr) => ({
-            address: v3Config?.factory as Address,
-            abi: UNISWAP_V3_FACTORY_ABI,
-            functionName: 'getPool' as const,
-            args: [addr, wrappedNative as Address, GRADUATED_FEE_TIER] as const,
-            chainId,
-        })),
-        query: { enabled: tokenAddresses.length > 0 && !!v3Config && !!wrappedNative },
-    })
-
-    const pools = useMemo(() => {
-        if (!poolAddressResults) return []
-        return tokenAddresses
-            .map((addr, i) => ({
-                tokenAddr: addr,
-                poolAddress: poolAddressResults[i]?.result as Address | undefined,
-            }))
-            .filter(
-                (p): p is { tokenAddr: Address; poolAddress: Address } =>
-                    !!p.poolAddress && p.poolAddress.toLowerCase() !== ZERO_ADDRESS
-            )
-    }, [poolAddressResults, tokenAddresses])
-
-    const { data: slot0Results } = useReadContracts({
-        contracts: pools.map((p) => ({
-            address: p.poolAddress,
-            abi: UNISWAP_V3_POOL_ABI,
-            functionName: 'slot0' as const,
-            chainId,
-        })),
-        query: { enabled: pools.length > 0 },
+    const { data: snapshots } = useQuery({
+        queryKey: ['v3-token-snapshots', chainId],
+        queryFn: async () => {
+            try {
+                return await fetchV3TokenSnapshots(ponderClient, { chainId })
+            } catch (e) {
+                if (isPonderError(e)) return []
+                throw e
+            }
+        },
+        staleTime: 30_000,
     })
 
     return useMemo(() => {
         const result = new Map<string, number>()
-        if (!slot0Results || !wrappedNative) return result
+        if (!snapshots || tokenAddresses.length === 0) return result
 
-        pools.forEach((pool, i) => {
-            const slot0 = slot0Results[i]?.result as
-                | [bigint, number, number, number, number, number, boolean]
-                | undefined
-            if (!slot0) return
-            const sqrtPriceX96 = slot0[0]
-            if (!sqrtPriceX96 || sqrtPriceX96 <= 0n) return
+        const wanted = new Set(tokenAddresses.map((a) => a.toLowerCase()))
 
-            const tokenIsToken0 = pool.tokenAddr.toLowerCase() < wrappedNative.toLowerCase()
-            const price = calculatePriceFromSqrtPrice(sqrtPriceX96, tokenIsToken0)
-            if (price <= 0) return
-
-            result.set(pool.tokenAddr.toLowerCase(), price * TOTAL_SUPPLY)
-        })
+        for (const s of snapshots) {
+            const tokenAddr = s.tokenAddr.toLowerCase()
+            if (!wanted.has(tokenAddr)) continue
+            const price = parseFloat(s.lastPriceNative ?? '0')
+            if (!(price > 0)) continue
+            result.set(tokenAddr, price * TOTAL_SUPPLY)
+        }
 
         return result
-    }, [slot0Results, pools, wrappedNative])
+    }, [snapshots, tokenAddresses])
 }
