@@ -1,5 +1,6 @@
 import { http, createConfig } from 'wagmi'
 import { cookieStorage, createStorage } from 'wagmi'
+import { walletConnect } from 'wagmi/connectors'
 import { bsc, bitkub, jbc, base, worldchain } from 'wagmi/chains'
 
 export { bsc, bitkub, jbc, base, worldchain }
@@ -30,6 +31,12 @@ const rpcUrls = {
 
 export const wagmiConfig = createConfig({
     chains: supportedChains,
+    connectors: [
+        walletConnect({
+            projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
+            showQrModal: true,
+        }),
+    ],
     transports: {
         [bsc.id]: http(rpcUrls[bsc.id], { batch: true }),
         [bitkub.id]: http(rpcUrls[bitkub.id], { batch: true }),
