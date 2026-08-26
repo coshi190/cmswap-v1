@@ -9,10 +9,10 @@ import {
     BONDING_CURVE_JUNOSWAP_ABI,
     calculateBuyOutput,
     INITIAL_TOKEN_SUPPLY,
-    parseTokenAddressFromLogs,
 } from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
 import { calculateMinOutput } from '@/services/dex/slippage'
+import { findEventArgs } from '@/services/launchpad/receipt'
 import { useSwapStore } from '@/store/swap-store'
 import type { CreateTokenForm } from '@/types/launchpad'
 
@@ -161,7 +161,12 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
         if (!publicClient) return null
         try {
             const receipt = await publicClient.getTransactionReceipt({ hash })
-            return parseTokenAddressFromLogs(receipt.logs, bondingCurveAddress)
+            const args = findEventArgs<{ tokenAddr: Address }>(receipt.logs, {
+                abi: BONDING_CURVE_JUNOSWAP_ABI,
+                eventName: 'Creation',
+                address: bondingCurveAddress,
+            })
+            return args?.tokenAddr ?? null
         } catch {
             return null
         }
