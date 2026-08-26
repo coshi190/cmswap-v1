@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useWriteContract, usePublicClient, useAccount } from 'wagmi'
 import type { Address } from 'viem'
-import { maxUint256, maxUint128, decodeEventLog, parseEther } from 'viem'
+import { maxUint256, maxUint128, parseEther } from 'viem'
 import {
     BONDING_CURVE_JUNOSWAP_ABI,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
@@ -20,6 +20,7 @@ import {
 } from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
 import { INTERMEDIARY_TOKENS } from '@/lib/routing-config'
+import { findEventArgs } from '@/services/launchpad/receipt'
 
 type PoolStatus = 'no_pool' | 'not_initialized' | 'correct' | 'wrong'
 
@@ -410,24 +411,12 @@ export function useGraduate({
                     const mintReceipt = await publicClient.getTransactionReceipt({
                         hash: mintHash,
                     })
-                    tokenId = null
-                    for (const log of mintReceipt.logs) {
-                        if (log.address.toLowerCase() === positionManager.toLowerCase()) {
-                            try {
-                                const decoded = decodeEventLog({
-                                    abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
-                                    data: log.data,
-                                    topics: log.topics,
-                                })
-                                if (decoded.eventName === 'IncreaseLiquidity') {
-                                    tokenId = (decoded.args as { tokenId: bigint }).tokenId
-                                    break
-                                }
-                            } catch {
-                                // skip non-matching logs
-                            }
-                        }
-                    }
+                    const mintArgs = findEventArgs<{ tokenId: bigint }>(mintReceipt.logs, {
+                        abi: NONFUNGIBLE_POSITION_MANAGER_ABI,
+                        eventName: 'IncreaseLiquidity',
+                        address: positionManager,
+                    })
+                    tokenId = mintArgs?.tokenId ?? null
                     if (!tokenId) throw new Error('Failed to get position tokenId from mint')
                 }
 
