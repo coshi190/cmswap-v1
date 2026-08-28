@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useReadContract, useReadContracts, useChainId } from 'wagmi'
 import type { IncentiveKey, StakedPosition } from '@/types/earn'
 import { ProtocolType, getDexConfig, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
+import { calculateRewardRate } from '@/services/mining/create-incentive'
 export function usePendingRewards(
     incentiveKey: IncentiveKey | null,
     tokenId: bigint | undefined
@@ -47,8 +48,15 @@ export function usePendingRewards(
     }
 }
 
+/**
+ * Rewards accrue continuously on-chain at a rate that depends on the position's live share of the
+ * pool's in-range liquidity (not just other stakers), so there's no fixed "daily rate" to read.
+ * Instead this tracks a reward/timestamp baseline per position and derives the rate from how much
+ * accrued between polls, extrapolated to a day.
+ */
 export function usePendingRewardsMultiple(stakedPositions: StakedPosition[]): {
     rewards: Map<string, bigint> // Map of tokenId-incentiveId to reward
+    dailyRates: Map<string, number> // Map of tokenId-incentiveId to estimated SHK/day
     isLoading: boolean
     refetch: () => void
 } {
@@ -81,18 +89,38 @@ export function usePendingRewardsMultiple(stakedPositions: StakedPosition[]): {
             staleTime: 10_000,
         },
     })
-    const rewards = useMemo(() => {
+    const baselinesRef = useRef(new Map<string, { reward: bigint; timestampMs: number }>())
+
+    const { rewards, dailyRates } = useMemo(() => {
         const rewardMap = new Map<string, bigint>()
-        if (!data) return rewardMap
+        const rateMap = new Map<string, number>()
+        if (!data) return { rewards: rewardMap, dailyRates: rateMap }
+        const now = Date.now()
         stakedPositions.forEach((sp, index) => {
             const result = data[index]?.result as [bigint, bigint] | undefined
+            const reward = result?.[0] ?? 0n
             const key = `${sp.tokenId.toString()}-${sp.incentiveId}`
-            rewardMap.set(key, result?.[0] ?? 0n)
+            rewardMap.set(key, reward)
+
+            const baseline = baselinesRef.current.get(key)
+            if (!baseline) {
+                baselinesRef.current.set(key, { reward, timestampMs: now })
+                return
+            }
+            const elapsedSeconds = (now - baseline.timestampMs) / 1000
+            const rate = calculateRewardRate(
+                reward - baseline.reward,
+                sp.incentive.rewardTokenInfo.decimals,
+                elapsedSeconds
+            ).perDay
+            if (rate > 0) rateMap.set(key, rate)
         })
-        return rewardMap
+        return { rewards: rewardMap, dailyRates: rateMap }
     }, [data, stakedPositions])
+
     return {
         rewards,
+        dailyRates,
         isLoading,
         refetch,
     }

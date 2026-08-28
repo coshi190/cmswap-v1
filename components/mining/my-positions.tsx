@@ -16,7 +16,8 @@ import { useWithdrawPosition } from '@/hooks/useStaking'
 import { useNowSeconds } from '@/hooks/useNowSeconds'
 import { clampPage, getFarmStatusAt, getTotalPages, paginate } from '@/services/mining/farm-list'
 import { formatRelativeTime } from '@/lib/duration'
-import { formatRewardAmount } from '@/lib/format'
+import { formatRewardAmount, formatRateAmount } from '@/lib/format'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { formatFeeTier } from '@/lib/liquidity-helpers'
 import { formatBalance, getDisplayToken } from '@/lib/tokens'
 import { getChainMetadata } from '@/lib/wagmi'
@@ -82,11 +83,13 @@ function PositionAmounts({ position }: { position: PositionWithTokens }) {
 function StakedPositionCard({
     staked,
     pendingReward,
+    dailyRate,
     now,
     onUnstake,
 }: {
     staked: StakedPosition
     pendingReward: bigint
+    dailyRate: number | undefined
     now: number
     onUnstake: (staked: StakedPosition) => void
 }) {
@@ -117,10 +120,29 @@ function StakedPositionCard({
                         </span>
                     </div>
                     <div className="flex items-baseline justify-between gap-3">
-                        <span className="text-muted-foreground">Unclaimed</span>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="text-muted-foreground underline decoration-dotted underline-offset-2">
+                                    Unclaimed
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-64 normal-case">
+                                Your share of the farm&apos;s reward, based on your liquidity as a
+                                fraction of the pool&apos;s total in-range liquidity — other LPs in
+                                this price range reduce your share even if they aren&apos;t staked.
+                            </TooltipContent>
+                        </Tooltip>
                         <span className="font-mono font-semibold tabular-nums">
                             {formatRewardAmount(pendingReward, incentive.rewardTokenInfo.decimals)}{' '}
                             {rewardToken.symbol}
+                        </span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-muted-foreground">Daily reward</span>
+                        <span className="text-right text-xs text-muted-foreground tabular-nums">
+                            {dailyRate
+                                ? `≈ ${formatRateAmount(dailyRate, rewardToken.symbol)} / day`
+                                : '—'}
                         </span>
                     </div>
                     <div className="flex items-baseline justify-between gap-3">
@@ -228,7 +250,7 @@ export function MyPositions({ onUnstake }: { onUnstake: (staked: StakedPosition)
         [stakes, owner]
     )
     const stakedPositions = useMemo(() => myStakes.map(toStakedPosition), [myStakes])
-    const { rewards } = usePendingRewardsMultiple(stakedPositions)
+    const { rewards, dailyRates } = usePendingRewardsMultiple(stakedPositions)
 
     const idlePositions = useMemo(() => {
         if (!owner) return []
@@ -280,6 +302,7 @@ export function MyPositions({ onUnstake }: { onUnstake: (staked: StakedPosition)
                             key={entry.key}
                             staked={entry.staked}
                             pendingReward={rewards.get(entry.key) ?? 0n}
+                            dailyRate={dailyRates.get(entry.key)}
                             now={now}
                             onUnstake={onUnstake}
                         />
