@@ -25,6 +25,7 @@ import {
     Share2,
     CreditCard,
     Droplet,
+    Bot,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
@@ -77,6 +78,9 @@ export function AccountDropdown({ children }: { children: React.ReactNode }) {
     }
     const handleFaucet = () => {
         window.open('https://faucet.kubchain.com/', '_blank', 'noopener,noreferrer')
+    }
+    const handleAutoDca = () => {
+        window.open('https://www.starportspace.xyz/dca', '_blank', 'noopener,noreferrer')
     }
     const handleDisconnect = () => {
         disconnect()
@@ -170,6 +174,14 @@ export function AccountDropdown({ children }: { children: React.ReactNode }) {
                         >
                             <Send className="h-4 w-4" aria-hidden="true" />
                             <span>Send</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={handleAutoDca}
+                            className="flex items-center gap-3 cursor-pointer"
+                            aria-label="Auto DCA"
+                        >
+                            <Bot className="h-4 w-4" aria-hidden="true" />
+                            <span>Auto DCA</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => setIsReferralOpen(true)}
