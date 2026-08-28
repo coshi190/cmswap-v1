@@ -47,6 +47,11 @@ export function formatRewardAmount(value: bigint, decimals: number): string {
     return num.toFixed(leadingZeros + 3)
 }
 
+export function formatRateAmount(amount: number, symbol: string): string {
+    const digits = amount >= 100 ? 0 : amount >= 1 ? 2 : 6
+    return `${amount.toLocaleString('en-US', { maximumFractionDigits: digits })} ${symbol}`
+}
+
 export function formatChartPrice(value: number): string {
     if (!Number.isFinite(value) || value === 0) return '0'
     if (value >= 1000) return value.toFixed(2)
