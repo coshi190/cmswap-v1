@@ -24,6 +24,7 @@ interface UseUniV3QuoteResult {
     isError: boolean
     error: Error | null
     fee: number | null
+    priceImpact: number | undefined
     primaryDexId: DEXType | null
 }
 
@@ -112,6 +113,7 @@ export function useUniV3Quote({
         isError: !!quoteError || hasNoPool,
         error,
         fee: outcome?.fee ?? null,
+        priceImpact: outcome?.priceImpact,
         primaryDexId: pinnedDexId ?? outcome?.dexId ?? null,
     }
 }
