@@ -17,6 +17,8 @@ import { useCreateIncentive } from '@/hooks/useCreateIncentive'
 import { useStakerLimits } from '@/hooks/useStakerLimits'
 import { useNowSeconds } from '@/hooks/useNowSeconds'
 import { useV3Tokens } from '@/hooks/useV3Tokens'
+import { useBurnedPoolLiquidity } from '@/hooks/useBurnedPoolLiquidity'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
     calculateRewardRate,
     createEmptyIncentiveForm,
@@ -26,6 +28,7 @@ import {
 } from '@/services/mining/create-incentive'
 import { formatDateTime, formatDuration, formatRelativeTime, SECONDS_PER_DAY } from '@/lib/duration'
 import { formatBalance, formatTokenAmount, getTokensForChain } from '@/lib/tokens'
+import { formatRateAmount } from '@/lib/format'
 import { getChainMetadata, isNativeToken } from '@/lib/wagmi'
 import { toastError, toastSuccess } from '@/lib/toast'
 import type { CreateIncentiveForm, V3PoolData } from '@/types/earn'
@@ -40,18 +43,13 @@ interface CreateFarmDialogProps {
     onSuccess?: () => void
 }
 
-function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
+function SummaryRow({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
     return (
         <div className="flex items-baseline justify-between gap-4 text-sm">
             <span className="text-muted-foreground">{label}</span>
             <span className="text-right font-medium tabular-nums">{value}</span>
         </div>
     )
-}
-
-function formatRate(amount: number, symbol: string): string {
-    const digits = amount >= 100 ? 0 : amount >= 1 ? 2 : 6
-    return `${amount.toLocaleString('en-US', { maximumFractionDigits: digits })} ${symbol}`
 }
 
 export function CreateFarmDialog({ open, initialPool, onClose, onSuccess }: CreateFarmDialogProps) {
@@ -144,6 +142,25 @@ export function CreateFarmDialog({ open, initialPool, onClose, onSuccess }: Crea
         form.durationSeconds
     )
     const showHourlyRate = form.durationSeconds > 0 && form.durationSeconds < 2 * SECONDS_PER_DAY
+
+    const poolKey = useMemo(
+        () =>
+            form.pool
+                ? {
+                      token0: form.pool.token0.address,
+                      token1: form.pool.token1.address,
+                      fee: form.pool.fee,
+                  }
+                : null,
+        [form.pool]
+    )
+    const { burnedLiquidity } = useBurnedPoolLiquidity(poolKey)
+    const actualRate = useMemo(() => {
+        if (!form.pool || burnedLiquidity <= 0n || form.pool.liquidity <= 0n) return null
+        const stakeable = form.pool.liquidity - burnedLiquidity
+        const fraction = stakeable > 0n ? Number(stakeable) / Number(form.pool.liquidity) : 0
+        return { perDay: rate.perDay * fraction, perHour: rate.perHour * fraction }
+    }, [form.pool, burnedLiquidity, rate])
     const blocking = primaryError(errors)
     const isBusy = isApproving || isPreparing || isExecuting || isConfirming
 
@@ -296,14 +313,46 @@ export function CreateFarmDialog({ open, initialPool, onClose, onSuccess }: Crea
                                                 size="xs"
                                             />
                                             {showHourlyRate
-                                                ? `${formatRate(rate.perHour, rewardToken.symbol)} / hour`
-                                                : `${formatRate(rate.perDay, rewardToken.symbol)} / day`}
+                                                ? `${formatRateAmount(rate.perHour, rewardToken.symbol)} / hour`
+                                                : `${formatRateAmount(rate.perDay, rewardToken.symbol)} / day`}
                                         </span>
                                     ) : (
                                         '—'
                                     )
                                 }
                             />
+                            {actualRate && rewardToken && (
+                                <SummaryRow
+                                    label={
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span className="underline decoration-dotted underline-offset-2">
+                                                    Actual reward
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-64 normal-case">
+                                                This pool has burned LP from a graduated launchpad
+                                                token. That liquidity can never be staked, so its
+                                                share of the reward rate above will go unclaimed and
+                                                return to you when the farm ends — this is the rate
+                                                stakers can actually earn.
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    }
+                                    value={
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <TokenIcon
+                                                src={rewardToken.logo}
+                                                symbol={rewardToken.symbol}
+                                                size="xs"
+                                            />
+                                            {showHourlyRate
+                                                ? `${formatRateAmount(actualRate.perHour, rewardToken.symbol)} / hour`
+                                                : `${formatRateAmount(actualRate.perDay, rewardToken.symbol)} / day`}
+                                        </span>
+                                    }
+                                />
+                            )}
                         </div>
 
                         <p className="rounded-xl bg-muted/30 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
