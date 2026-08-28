@@ -2,11 +2,8 @@
 
 import { useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import {
-    BONDING_CURVE_JUNOSWAP_ABI,
-    BONDING_CURVE_JUNOSWAP_CHAIN_ID,
-    getBondingCurveAddress,
-} from '@coshi190/juno-moneta-sdk'
+import { BONDING_CURVE_JUNOSWAP_ABI, getBondingCurveDeployment } from '@coshi190/juno-moneta-sdk'
+import { DEFAULT_LAUNCHPAD_CHAIN_ID } from '@/hooks/useLaunchpadChainId'
 const VIRTUAL_AMOUNT = 3400n * 10n ** 18n
 
 interface UseTokenReservesParams {
@@ -28,9 +25,9 @@ interface UseTokenReservesResult {
 export function useTokenReserves({
     tokenAddr,
     isGraduated: isGraduatedProp,
-    chainId = BONDING_CURVE_JUNOSWAP_CHAIN_ID,
+    chainId = DEFAULT_LAUNCHPAD_CHAIN_ID,
 }: UseTokenReservesParams): UseTokenReservesResult {
-    const bondingCurveAddress = getBondingCurveAddress(chainId)
+    const bondingCurveAddress = getBondingCurveDeployment(chainId)?.address
     const skip = !tokenAddr || !!isGraduatedProp || !bondingCurveAddress
     const reserveArgs: [`0x${string}`] | undefined =
         tokenAddr && !isGraduatedProp ? [tokenAddr] : undefined

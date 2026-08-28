@@ -5,6 +5,8 @@ import { useWriteContract, usePublicClient, useAccount } from 'wagmi'
 import type { Address } from 'viem'
 import { maxUint256, maxUint128, parseEther } from 'viem'
 import {
+    ProtocolType,
+    getDexConfig,
     BONDING_CURVE_JUNOSWAP_ABI,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
     UNISWAP_V3_FACTORY_ABI,
@@ -12,7 +14,6 @@ import {
     UNISWAP_V3_SWAP_ROUTER_ABI,
     WETH9_ABI,
     ERC20_ABI,
-    getV3Config,
     isReadyToGraduate,
     isSqrtPriceWithinTolerance,
     PRICE_TOLERANCE_BPS,
@@ -81,7 +82,7 @@ export function useGraduate({
     const { chainId, address: bondingCurveAddress } = useLaunchpadContract()
     const publicClient = usePublicClient({ chainId })
     const { address } = useAccount()
-    const v3Config = getV3Config(chainId)
+    const v3Config = getDexConfig(chainId, undefined, ProtocolType.V3)
     const wrappedNative = INTERMEDIARY_TOKENS[chainId]?.wrappedNative as Address | undefined
 
     const { writeContractAsync } = useWriteContract()

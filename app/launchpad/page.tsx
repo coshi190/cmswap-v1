@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { TokenList } from '@/components/launchpad/token-list'
 import { CreateTokenDialog } from '@/components/launchpad/create-token-dialog'
 import { ActivityTicker } from '@/components/launchpad/activity-feed'
-import { isLaunchpadChain } from '@coshi190/juno-moneta-sdk'
+import { getBondingCurveDeployment } from '@coshi190/juno-moneta-sdk'
 import { bitkub } from '@/lib/wagmi'
 import { Plus, Search } from 'lucide-react'
 
@@ -67,7 +67,7 @@ function LaunchpadContent() {
     const chainId = useChainId()
     const { switchChain } = useSwitchChain()
 
-    if (!isLaunchpadChain(chainId)) {
+    if (getBondingCurveDeployment(chainId) === undefined) {
         return (
             <div className="mx-auto px-4 max-w-[1700px] py-6 sm:px-6 lg:px-8">
                 <div className="flex min-h-[60vh] items-center justify-center">

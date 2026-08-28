@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useChainId, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
 import type { StakerDeposit } from '@/hooks/useStakerDeposits'
 import type { Incentive, PositionWithTokens, StakedPosition } from '@/types/earn'
 
@@ -27,7 +27,7 @@ export function useFarmStakes(
     isLoading: boolean
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
 
     const pairs = useMemo(() => {
         if (deposits.length === 0 || incentives.length === 0) return []

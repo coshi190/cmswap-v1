@@ -4,7 +4,13 @@ import { useMemo } from 'react'
 import { usePublicClient } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { zeroAddress, type Address } from 'viem'
-import { getV3Quotes, wrapQuoteResult, type V3QuoteOutcome } from '@coshi190/juno-moneta-sdk'
+import {
+    getV3Quotes,
+    getDexConfig,
+    wrapQuoteResult,
+    ProtocolType,
+    type V3QuoteOutcome,
+} from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { QuoteResult } from '@/types/swap'
@@ -38,7 +44,10 @@ export function useUniV3Quote({
     const chainId = tokenIn?.chainId ?? tokenOut?.chainId ?? 1
     const client = usePublicClient({ chainId })
 
-    const pinnedDexId = Array.isArray(dexId) ? (dexId[0] ?? null) : (dexId ?? null)
+    const pinnedDexId = useMemo(() => {
+        const first = Array.isArray(dexId) ? (dexId[0] ?? null) : (dexId ?? null)
+        return first && getDexConfig(chainId, first, ProtocolType.V3) ? first : null
+    }, [dexId, chainId])
 
     const wrapOperation = useMemo(() => getWrapOperation(tokenIn, tokenOut), [tokenIn, tokenOut])
 

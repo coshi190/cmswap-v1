@@ -1,9 +1,8 @@
 import type { Address } from 'viem'
 import type { RouteQuote } from '@/types/routing'
 import {
+    getDexConfig,
     ProtocolType,
-    getV2Config,
-    getV3Config,
     resolveSwapPath,
     type CrossDexLeg,
 } from '@coshi190/juno-moneta-sdk'
@@ -23,9 +22,11 @@ export interface AggregatorPlan {
 
 function routeToResolvedHops(rq: RouteQuote, chainId: number): ResolvedHop[] {
     const isV3 = rq.protocolType === ProtocolType.V3
-    const cfg = isV3 ? getV3Config(chainId, rq.dexId) : getV2Config(chainId, rq.dexId)
+    const cfg = isV3
+        ? getDexConfig(chainId, rq.dexId, ProtocolType.V3)
+        : getDexConfig(chainId, rq.dexId, ProtocolType.V2)
     if (!cfg?.factory) throw new Error(`no factory for ${rq.dexId} on chain ${chainId}`)
-    const wnative = isV3 ? undefined : getV2Config(chainId, rq.dexId)?.wnative
+    const wnative = isV3 ? undefined : getDexConfig(chainId, rq.dexId, ProtocolType.V2)?.wnative
     const path = resolveSwapPath(rq.route.path, chainId, wnative)
 
     const hops: ResolvedHop[] = []

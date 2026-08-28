@@ -3,7 +3,11 @@
 import { useMemo } from 'react'
 import { useChainId, useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
-import { NONFUNGIBLE_POSITION_MANAGER_ABI, getV3Config } from '@coshi190/juno-moneta-sdk'
+import {
+    NONFUNGIBLE_POSITION_MANAGER_ABI,
+    ProtocolType,
+    getDexConfig,
+} from '@coshi190/juno-moneta-sdk'
 
 export const BURN_ADDRESS: Address = '0x000000000000000000000000000000000000dEaD'
 
@@ -47,7 +51,7 @@ export function useBurnedPoolLiquidity(pool: PoolKey | null): {
     isLoading: boolean
 } {
     const chainId = useChainId()
-    const positionManager = getV3Config(chainId)?.positionManager
+    const positionManager = getDexConfig(chainId, undefined, ProtocolType.V3)?.positionManager
 
     const { data: balance, isLoading: isLoadingBalance } = useReadContract({
         address: positionManager,

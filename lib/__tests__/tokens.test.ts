@@ -102,7 +102,7 @@ describe('lib/tokens', () => {
     })
 
     describe('findWrappedNativeAddress', () => {
-        // Wrapped-native now comes from the SDK's WRAPPED_NATIVE_ADDRESSES, while the token
+        // Wrapped-native now comes from the SDK's getWrappedNativeAddress, while the token
         // list still carries its own copy at index 1. If the two ever disagree, swaps route
         // through the wrong wrapper, so pin them together for every chain we ship.
         it.each(Object.keys(TOKEN_LISTS))('agrees with the token list on chain %s', (chainId) => {

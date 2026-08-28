@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import {
-    isLaunchpadChain,
+    getBondingCurveDeployment,
     fetchLaunchTokens,
     fetchTokenSnapshots,
     LAUNCH_TOKEN_DETAIL_FIELDS,
@@ -32,7 +32,7 @@ interface UseTokenListResult {
 
 export function useTokenList(): UseTokenListResult {
     const chainId = useLaunchpadChainId()
-    const supported = isLaunchpadChain(chainId)
+    const supported = getBondingCurveDeployment(chainId) !== undefined
 
     const {
         data: result,

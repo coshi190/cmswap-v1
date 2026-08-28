@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import {
-    isLaunchpadChain,
+    getBondingCurveDeployment,
     fetchLaunchTokens,
     LAUNCH_TOKEN_META_FIELDS,
 } from '@coshi190/juno-moneta-sdk'
@@ -18,7 +18,7 @@ export function useGraduatedTokens(chainId: number): {
     isLoading: boolean
     isSettled: boolean
 } {
-    const launchpadChain = isLaunchpadChain(chainId)
+    const launchpadChain = getBondingCurveDeployment(chainId) !== undefined
 
     const { data: tokens, isLoading } = useQuery({
         queryKey: ['graduated-tokens', chainId],

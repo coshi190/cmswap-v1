@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { zeroAddress, type Address } from 'viem'
-import { getDexConfig, getProtocolSpender, ERC20_ABI } from '@coshi190/juno-moneta-sdk'
+import { getDexConfig, ProtocolType, ERC20_ABI } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { buildInfiniteApprovalParams, needsApproval, getAllowanceFunctionName } from '@/lib/tokens'
 import { useSwapStore } from '@/store/swap-store'
@@ -36,7 +36,8 @@ export function useTokenApproval({
 }: UseTokenApprovalParams): UseTokenApprovalResult {
     const { selectedDex } = useSwapStore()
     const dexConfig = token ? getDexConfig(token.chainId, selectedDex) : undefined
-    const defaultSpender = dexConfig ? getProtocolSpender(dexConfig) : undefined
+    const defaultSpender =
+        dexConfig?.protocolType === ProtocolType.V3 ? dexConfig.swapRouter : dexConfig?.router
     const spender = spenderOverride || defaultSpender
     const isTokenNative = token ? isNativeToken(token.address) : false
     const { data: allowance = 0n, refetch: refetchAllowance } = useReadContract({

@@ -29,7 +29,7 @@ import {
     paginate,
     sortFarms,
 } from '@/services/mining/farm-list'
-import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig } from '@coshi190/juno-moneta-sdk'
 import type {
     FarmOwnershipFilter,
     FarmSortKey,
@@ -100,7 +100,7 @@ export function MiningFarms({
 }) {
     const chainId = useChainId()
     const { isConnected } = useAccount()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const now = useNowSeconds()
 
     const { incentives, isLoading } = useIncentives()

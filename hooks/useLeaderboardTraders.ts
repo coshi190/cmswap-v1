@@ -8,7 +8,7 @@ import { isNativeToken } from '@/lib/wagmi'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { isLeaderboardSupportedChain } from '@/lib/leaderboard-utils'
 import {
-    isLaunchpadChain,
+    getBondingCurveDeployment,
     fetchTokenHolders,
     TOKEN_HOLDER_ADDRESS_FIELDS,
 } from '@coshi190/juno-moneta-sdk'
@@ -66,7 +66,10 @@ export function useLeaderboardTraders(
 
     const { data: holders, isLoading: isHoldersLoading } = useQuery({
         queryKey: ['leaderboard-holders', chainId],
-        queryFn: () => (isLaunchpadChain(chainId) ? fetchHolders(chainId) : Promise.resolve([])),
+        queryFn: () =>
+            getBondingCurveDeployment(chainId) !== undefined
+                ? fetchHolders(chainId)
+                : Promise.resolve([]),
         enabled: isSupportedChain,
         staleTime: 30_000,
         refetchInterval: 30_000,
