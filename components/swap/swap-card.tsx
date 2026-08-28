@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input'
 import { useSwapStore } from '@/store/swap-store'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { useMultiDexQuotes } from '@/hooks/useMultiDexQuotes'
-import { useRoutePriceImpact } from '@/hooks/useRoutePriceImpact'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSwapExecution } from '@/hooks/useSwapExecution'
 import { useAggRouterSwapExecution } from '@/hooks/useAggRouterSwapExecution'
@@ -139,6 +138,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
             isError: quoteData?.isError ?? false,
             error: quoteData?.error ?? null,
             fee: quoteData?.fee,
+            priceImpact: quoteData?.priceImpact,
         }
     }, [dexQuotes, selectedDex])
     const selectedDexRoute = useMemo(() => {
@@ -171,7 +171,14 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
     const wrapOp = useMemo(() => {
         return getWrapOperation(tokenIn, tokenOut)
     }, [tokenIn, tokenOut])
-    const { quote, isLoading: isQuoteLoading, isError, error, fee: quoteFee } = selectedDexQuote
+    const {
+        quote,
+        isLoading: isQuoteLoading,
+        isError,
+        error,
+        fee: quoteFee,
+        priceImpact,
+    } = selectedDexQuote
     const effectiveQuote = quote
     const shouldShowError = useMemo(() => {
         return isError && !effectiveQuote
@@ -179,13 +186,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
     const isWrapUnwrap = !!wrapOp
     const wrapOperation = wrapOp
     const fee = quoteFee ?? 3000
-    const { priceImpact } = useRoutePriceImpact({
-        route: displayRoute,
-        tokenIn,
-        tokenOut,
-        amountIn: amountInBigInt,
-        enabled: !isWrapUnwrap,
-    })
     const prevQuoteAmountOutRef = useRef<bigint | null>(null)
     const prevIsLoadingRef = useRef<boolean>(false)
 

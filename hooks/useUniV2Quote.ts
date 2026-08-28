@@ -29,6 +29,7 @@ interface DexQuoteResult {
     isLoading: boolean
     isError: boolean
     error: Error | null
+    priceImpact?: number
 }
 
 interface UseUniV2QuoteResult {
@@ -126,6 +127,7 @@ export function useUniV2Quote({
                     isLoading: false,
                     isError: false,
                     error: null,
+                    priceImpact: outcome.priceImpact,
                 }
             }
         }

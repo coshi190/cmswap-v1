@@ -27,6 +27,7 @@ export interface DexQuote {
     error: Error | null
     protocolType: ProtocolType.V2 | ProtocolType.V3
     fee?: number // For V3 protocols
+    priceImpact?: number
     route?: SwapRoute // Route information for multi-hop swaps
     isMultiHop?: boolean
 }
