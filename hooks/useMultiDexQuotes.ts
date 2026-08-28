@@ -2,13 +2,7 @@
 
 import { useMemo } from 'react'
 import { useChainId } from 'wagmi'
-import {
-    getSupportedDexs,
-    getDexConfig,
-    isV2Config,
-    isV3Config,
-    ProtocolType,
-} from '@coshi190/juno-moneta-sdk'
+import { getSupportedDexs, ProtocolType } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { DEXType } from '@/lib/dex-meta'
 import type { DexQuote } from '@/types/swap'
@@ -50,15 +44,8 @@ export function useMultiDexQuotes({
         enabled,
         preferMultiHop: true,
     })
-    const supportedDexs = getSupportedDexs(chainId)
-    const v3Dexs = supportedDexs.filter((dexId) => {
-        const config = getDexConfig(chainId, dexId)
-        return config && isV3Config(config)
-    })
-    const v2Dexs = supportedDexs.filter((dexId) => {
-        const config = getDexConfig(chainId, dexId)
-        return config && isV2Config(config)
-    })
+    const v3Dexs = getSupportedDexs(chainId, ProtocolType.V3)
+    const v2Dexs = getSupportedDexs(chainId, ProtocolType.V2)
     const v3Result = useUniV3Quote({
         tokenIn,
         tokenOut,

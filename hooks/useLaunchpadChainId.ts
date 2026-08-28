@@ -2,12 +2,11 @@
 
 import { createContext, createElement, useContext, type ReactNode } from 'react'
 import { useChainId } from 'wagmi'
-import {
-    BONDING_CURVE_JUNOSWAP_CHAIN_ID,
-    getBondingCurveAddress,
-    isLaunchpadChain,
-} from '@coshi190/juno-moneta-sdk'
+import { getBondingCurveDeployment } from '@coshi190/juno-moneta-sdk'
 import type { Address } from 'viem'
+import { kubTestnet } from '@/lib/wagmi'
+
+export const DEFAULT_LAUNCHPAD_CHAIN_ID: number = kubTestnet.id
 
 const LaunchpadChainContext = createContext<number | undefined>(undefined)
 
@@ -25,10 +24,10 @@ export function useLaunchpadChainId(): number {
     const override = useContext(LaunchpadChainContext)
     const chainId = useChainId()
     if (override !== undefined) return override
-    return isLaunchpadChain(chainId) ? chainId : BONDING_CURVE_JUNOSWAP_CHAIN_ID
+    return getBondingCurveDeployment(chainId) !== undefined ? chainId : DEFAULT_LAUNCHPAD_CHAIN_ID
 }
 
 export function useLaunchpadContract(): { chainId: number; address: Address | undefined } {
     const chainId = useLaunchpadChainId()
-    return { chainId, address: getBondingCurveAddress(chainId) }
+    return { chainId, address: getBondingCurveDeployment(chainId)?.address }
 }

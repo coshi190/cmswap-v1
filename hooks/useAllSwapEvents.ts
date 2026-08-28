@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useChainId } from 'wagmi'
 import type { Address } from 'viem'
-import { isLaunchpadChain, fetchRecentSwaps } from '@coshi190/juno-moneta-sdk'
+import { getBondingCurveDeployment, fetchRecentSwaps } from '@coshi190/juno-moneta-sdk'
 import { ponderClient } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
@@ -11,7 +11,7 @@ import type { EnrichedSwapEvent } from '@/types/launchpad'
 
 export function useAllSwapEvents() {
     const chainId = useChainId()
-    const supported = isLaunchpadChain(chainId)
+    const supported = getBondingCurveDeployment(chainId) !== undefined
 
     const {
         data: events = [],

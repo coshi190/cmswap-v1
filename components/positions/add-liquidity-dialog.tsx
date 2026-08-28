@@ -2,17 +2,16 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import {
-    getV3Config,
-    DEFAULT_FEE_TIER,
+    ProtocolType,
+    getDexConfig,
     computeDependentAmount,
     computeInitialSqrtPriceX96,
     getFullRange,
     getTickForPrice,
     getTickSpacing,
-    listFeeTiers,
 } from '@coshi190/juno-moneta-sdk'
 import { getPresetTickRange } from '@/lib/range-presets'
-import { formatFeeTier } from '@/lib/liquidity-helpers'
+import { defaultFeeTier, formatFeeTier, v3FeeTiers } from '@/lib/liquidity-helpers'
 import type { Token } from '@/types/token'
 import { useAccount, useChainId } from 'wagmi'
 import { useRouter } from 'next/navigation'
@@ -59,16 +58,16 @@ export function AddLiquidityDialog({
     const { address } = useAccount()
     const chainId = useChainId()
     const router = useRouter()
-    const dexConfig = getV3Config(chainId)
+    const dexConfig = getDexConfig(chainId, undefined, ProtocolType.V3)
     const { tokens: allTokens } = useChainTokens(chainId)
 
     const [token0, setToken0] = useState<Token | null>(null)
     const [token1, setToken1] = useState<Token | null>(null)
-    const feeTiers = useMemo(() => listFeeTiers(chainId), [chainId])
+    const feeTiers = useMemo(() => v3FeeTiers(chainId), [chainId])
 
     const feeOptions = useMemo(
         () =>
-            feeTiers.map(({ fee: value }) => ({
+            feeTiers.map((value) => ({
                 value,
                 label: formatFeeTier(value),
                 description: FEE_COPY[value] ?? '',
@@ -76,18 +75,9 @@ export function AddLiquidityDialog({
         [feeTiers]
     )
 
-    // The tier list is per chain and per DEX, so a fee carried over from another chain can fall
-    // outside it. Snap to the tier nearest the protocol default rather than leaving nothing selected.
-    const defaultFee = useMemo(() => {
-        if (feeTiers.length === 0) return DEFAULT_FEE_TIER
-        return feeTiers.reduce((best, tier) =>
-            Math.abs(tier.fee - DEFAULT_FEE_TIER) < Math.abs(best.fee - DEFAULT_FEE_TIER)
-                ? tier
-                : best
-        ).fee
-    }, [feeTiers])
+    const defaultFee = useMemo(() => defaultFeeTier(chainId), [chainId])
 
-    const [fee, setFee] = useState<number>(DEFAULT_FEE_TIER)
+    const [fee, setFee] = useState<number>(defaultFee)
     const [rangeConfig, setRangeConfig] = useState<RangeConfig>(DEFAULT_RANGE_CONFIG)
     const handledHashRef = useRef<string | null>(null)
     const [amount0, setAmount0] = useState('')
@@ -111,7 +101,7 @@ export function AddLiquidityDialog({
     }, [open, initialPool, defaultFee])
 
     useEffect(() => {
-        if (feeTiers.length > 0 && !feeTiers.some((tier) => tier.fee === fee)) setFee(defaultFee)
+        if (feeTiers.length > 0 && !feeTiers.includes(fee)) setFee(defaultFee)
     }, [feeTiers, fee, defaultFee])
     const { pool, isLoading: isLoadingPool } = usePool(token0, token1, fee, chainId)
     const { balance: balance0 } = useTokenBalance({ token: token0, address })

@@ -10,7 +10,7 @@ import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { resolveLaunchpadLogo } from '@/lib/logo'
 import { applyLaunchpadTokenOverride } from '@/lib/launchpad-token-config'
 import {
-    isLaunchpadChain as isLaunchpadChainFn,
+    getBondingCurveDeployment,
     fetchLaunchTokens,
     LAUNCH_TOKEN_META_FIELDS,
 } from '@coshi190/juno-moneta-sdk'
@@ -23,7 +23,7 @@ import type { TokenType } from '@/types/portfolio'
 export function useTokenDiscovery(chainId: number) {
     const staticTokens = useMemo(() => getTokensForChain(chainId), [chainId])
     const { tokens: graduatedTokens, isSettled: isGraduatedSettled } = useGraduatedTokens(chainId)
-    const isLaunchpadChain = isLaunchpadChainFn(chainId)
+    const isLaunchpadChain = getBondingCurveDeployment(chainId) !== undefined
     const { tokens: v3Rows, isSettled: isV3Settled } = useV3Tokens(chainId)
 
     const v3Tokens = useMemo(

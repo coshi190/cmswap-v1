@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react'
 import { useAccount, useChainId, useReadContracts } from 'wagmi'
 import { zeroAddress, type Address } from 'viem'
-import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
 import { useUserPositions } from '@/hooks/useUserPositions'
 import type { PositionWithTokens } from '@/types/earn'
 
@@ -28,7 +28,7 @@ export function useStakerDeposits(): {
 } {
     const chainId = useChainId()
     const { address } = useAccount()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
 
     const stakerHeld = useUserPositions(stakerAddress, chainId)
     const walletHeld = useUserPositions(address, chainId)

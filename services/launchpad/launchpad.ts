@@ -65,6 +65,9 @@ export function formatCompact(num: number, decimals = 1): string {
     return `${(num / 1000000000).toFixed(decimals)}B`
 }
 
+/** Launchpad tokens graduate into the 1% V3 pool. */
+export const GRADUATED_POOL_FEE = 10000
+
 export function findGraduatedPool(
     pools: V3PoolRow[],
     tokenAddr: string,

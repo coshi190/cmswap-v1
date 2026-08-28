@@ -16,12 +16,11 @@ import { useUniV3Quote } from '@/hooks/useUniV3Quote'
 import { useGraduate } from '@/hooks/useGraduate'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import {
+    getDexConfig,
     ERC20_ABI,
     NATIVE_TOKEN_ADDRESS,
     ProtocolType,
-    getBondingCurveAddress,
-    getV3Config,
-    getDefaultDexForChain,
+    getBondingCurveDeployment,
 } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
@@ -101,7 +100,7 @@ export function TokenTradeCard({
     const { settings, setSlippage, setDeadlineMinutes } = useSwapStore()
 
     const chainId = useLaunchpadChainId()
-    const bondingCurveAddress = getBondingCurveAddress(chainId)
+    const bondingCurveAddress = getBondingCurveDeployment(chainId)?.address
 
     const walletChainId = useChainId()
     const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
@@ -195,7 +194,7 @@ export function TokenTradeCard({
     })
 
     const slippageBps = Math.round(settings.slippage * 100)
-    const launchpadDex = getDefaultDexForChain(chainId)
+    const launchpadDex = 'junoswap'
     const nativeToken = useMemo<Token>(() => {
         const native = getDefaultPairTokens(chainId).nativeTokens[0]
         if (native) return native
@@ -291,7 +290,7 @@ export function TokenTradeCard({
         [v3SellExpectedOut, slippageBps]
     )
 
-    const v3Config = getV3Config(chainId)
+    const v3Config = getDexConfig(chainId, undefined, ProtocolType.V3)
     const sellSpender = isGraduated
         ? (v3Config?.swapRouter ?? bondingCurveAddress)
         : bondingCurveAddress

@@ -7,7 +7,7 @@ import { isNativeToken } from '@/lib/wagmi'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
 import { hasSettled } from '@/lib/query-status'
 import {
-    isLaunchpadChain as isLaunchpadChainFn,
+    getBondingCurveDeployment,
     fetchTokenSnapshots,
     fetchV3TokenSnapshots,
 } from '@coshi190/juno-moneta-sdk'
@@ -22,7 +22,7 @@ export function useTokenPrices(
     nativeUsdPrice: number | null,
     getTokenType: (token: Token) => TokenType
 ) {
-    const isLaunchpadChain = isLaunchpadChainFn(chainId)
+    const isLaunchpadChain = getBondingCurveDeployment(chainId) !== undefined
 
     const bondingCurveAddresses = useMemo(
         () =>

@@ -107,7 +107,7 @@ services/mining/staking.ts           encodeIncentiveKeyData, buildUnstakeAndWith
 
 types/earn.ts                        IncentiveKey, Incentive, StakedPosition, V3PoolData
 lib/optimistic-deposits.ts           pattern สำหรับ optimistic UI ระหว่างรอ indexer
-@coshi190/juno-moneta-sdk            getV3StakerAddress, UNISWAP_V3_STAKER_ABI, computeIncentiveId,
+@coshi190/juno-moneta-sdk            getDexConfig (.staker), UNISWAP_V3_STAKER_ABI, computeIncentiveId,
                                      fetchIncentives, fetchV3Pools, fetchV3Tokens
 ```
 
@@ -243,7 +243,7 @@ function endIncentive(IncentiveKey memory key) external returns (uint256 refund)
 
 - [ ] `UNISWAP_V3_STAKER_ABI` ใน `@coshi190/juno-moneta-sdk` **มี `createIncentive` / `endIncentive` / `maxIncentiveDuration` / `maxIncentiveStartLeadTime` ครบไหม** — ถ้าไม่มีต้อง PR เพิ่มที่ SDK ก่อน (หรือประกาศ ABI fragment ในไฟล์ hook แบบที่ `useStaking.ts` ทำกับ `SAFE_TRANSFER_FROM_ABI`)
 - [ ] Ponder indexer handle event `IncentiveCreated` แล้วหรือยัง — `fetchIncentives()` คืน `reward`/`refundee`/`startTime`/`endTime` อยู่แล้ว แปลว่าน่าจะมี แต่ต้องยืนยัน **latency** ว่ากี่วินาที
-- [ ] chain ไหนบ้างที่ `getV3StakerAddress()` คืนค่า — chain ที่ไม่มี staker ต้องซ่อนปุ่ม Create
+- [ ] chain ไหนบ้างที่ `getDexConfig(chainId, undefined, ProtocolType.V3)?.staker` คืนค่า — chain ที่ไม่มี staker ต้องซ่อนปุ่ม Create
 
 ---
 

@@ -1,9 +1,8 @@
 import { encodeAbiParameters, type Address, type Hex } from 'viem'
 import type { RouteQuote } from '@/types/routing'
 import {
+    getDexConfig,
     ProtocolType,
-    getV2Config,
-    getV3Config,
     isNativeToken,
     resolveSwapPath,
     shouldSkipUnwrap,
@@ -41,12 +40,14 @@ export function routeToHops(routeQuote: RouteQuote, chainId: number): Hop[] {
     const { route, dexId, protocolType } = routeQuote
     const isV3 = protocolType === ProtocolType.V3
 
-    const config = isV3 ? getV3Config(chainId, dexId) : getV2Config(chainId, dexId)
+    const config = isV3
+        ? getDexConfig(chainId, dexId, ProtocolType.V3)
+        : getDexConfig(chainId, dexId, ProtocolType.V2)
     if (!config?.factory) {
         throw new Error(`no ${protocolType} factory for ${dexId} on chain ${chainId}`)
     }
 
-    const wnative = isV3 ? undefined : getV2Config(chainId, dexId)?.wnative
+    const wnative = isV3 ? undefined : getDexConfig(chainId, dexId, ProtocolType.V2)?.wnative
     const path = resolveSwapPath(route.path, chainId, wnative)
     if (path.length < 2) throw new Error('route path needs at least two tokens')
 

@@ -4,7 +4,8 @@ import { useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
 import type { Address } from 'viem'
 import {
-    getV3Config,
+    ProtocolType,
+    getDexConfig,
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
     sortTokens,
@@ -25,7 +26,7 @@ export function usePool(
     error: Error | null
 } {
     const effectiveChainId = chainId ?? token0?.chainId ?? token1?.chainId ?? 1
-    const dexConfig = getV3Config(effectiveChainId)
+    const dexConfig = getDexConfig(effectiveChainId, undefined, ProtocolType.V3)
     const [sortedToken0, sortedToken1] = useMemo(() => {
         if (!token0 || !token1) return [null, null]
         return sortTokens(token0, token1)

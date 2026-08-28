@@ -18,12 +18,11 @@ const UNWRAP_CHAIN = 8899
 vi.mock('@coshi190/juno-moneta-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     ProtocolType: { V2: 'v2', V3: 'v3' },
-    getV2Config: vi.fn((_chainId: number, dexId: string) =>
-        dexId === 'udonswap' ? { factory: V2_FACTORY } : undefined
-    ),
-    getV3Config: vi.fn((_chainId: number, dexId: string) =>
-        dexId === 'junoswap' ? { factory: V3_FACTORY } : undefined
-    ),
+    getDexConfig: vi.fn((_chainId: number, dexId: string, protocol?: string) => {
+        if (protocol === 'v2') return dexId === 'udonswap' ? { factory: V2_FACTORY } : undefined
+        if (protocol === 'v3') return dexId === 'junoswap' ? { factory: V3_FACTORY } : undefined
+        return undefined
+    }),
 }))
 
 const getModule = () => import('@/services/dex/agg-router')

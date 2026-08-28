@@ -15,7 +15,8 @@ import type {
     PositionDetails,
 } from '@/types/earn'
 import {
-    getV3Config,
+    ProtocolType,
+    getDexConfig,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
     planRemoveLiquidity,
 } from '@coshi190/juno-moneta-sdk'
@@ -35,7 +36,7 @@ import { getWrappedNativeAddress } from '@/lib/tokens'
 
 export function useAddLiquidity(params: AddLiquidityParams | null, skipSimulation?: boolean) {
     const chainId = useChainId()
-    const dexConfig = getV3Config(chainId)
+    const dexConfig = getDexConfig(chainId, undefined, ProtocolType.V3)
     const positionManager = dexConfig?.positionManager
     const isEnabled = !!params && !!positionManager
     const { callData, value } = useMemo(() => {
@@ -128,7 +129,7 @@ export function useIncreaseLiquidity(
     skipSimulation?: boolean
 ) {
     const chainId = useChainId()
-    const dexConfig = getV3Config(chainId)
+    const dexConfig = getDexConfig(chainId, undefined, ProtocolType.V3)
     const positionManager = dexConfig?.positionManager
     const isEnabled = tokenId !== undefined && !!positionManager && !!position
     const hasNativeToken = useMemo(() => {
@@ -239,7 +240,7 @@ export function useRemoveLiquidity(
     deadlineMinutes: number = 20
 ) {
     const chainId = useChainId()
-    const dexConfig = getV3Config(chainId)
+    const dexConfig = getDexConfig(chainId, undefined, ProtocolType.V3)
     const positionManager = dexConfig?.positionManager
     const isEnabled = !!position && !!recipient && !!positionManager && percentage > 0
     const plan = useMemo(() => {
@@ -332,7 +333,7 @@ export function useCollectFees(
     recipient: Address | undefined
 ) {
     const chainId = useChainId()
-    const dexConfig = getV3Config(chainId)
+    const dexConfig = getDexConfig(chainId, undefined, ProtocolType.V3)
     const positionManager = dexConfig?.positionManager
     const isEnabled = !!position && !!recipient && !!positionManager
     const callData = useMemo(() => {

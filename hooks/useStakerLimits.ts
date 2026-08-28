@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useChainId, useReadContracts } from 'wagmi'
-import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig } from '@coshi190/juno-moneta-sdk'
 import { FALLBACK_STAKER_LIMITS } from '@/services/mining/create-incentive'
 import type { StakerLimits } from '@/types/earn'
 
@@ -34,7 +34,7 @@ export function useStakerLimits(): {
     isFallback: boolean
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
 
     const { data, isLoading } = useReadContracts({
         contracts: [

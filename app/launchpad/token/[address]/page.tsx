@@ -6,7 +6,7 @@ import { useChainId, useSwitchChain } from 'wagmi'
 import { isAddress } from 'viem'
 import { toast } from 'sonner'
 import { getChainMetadata } from '@/lib/wagmi'
-import { isLaunchpadChain } from '@coshi190/juno-moneta-sdk'
+import { getBondingCurveDeployment } from '@coshi190/juno-moneta-sdk'
 import { parseChainId } from '@/lib/swap-params'
 import { LaunchpadChainProvider, useLaunchpadChainId } from '@/hooks/useLaunchpadChainId'
 import { Button } from '@/components/ui/button'
@@ -41,7 +41,9 @@ function TokenPageContent() {
     const urlChain = parseChainId(searchParams.get('chain') ?? undefined)
     const fallbackChainId = useLaunchpadChainId()
     const activeChainId =
-        urlChain !== null && isLaunchpadChain(urlChain) ? urlChain : fallbackChainId
+        urlChain !== null && getBondingCurveDeployment(urlChain) !== undefined
+            ? urlChain
+            : fallbackChainId
     const { switchChain } = useSwitchChain()
     const promptedRef = useRef(false)
     useEffect(() => {

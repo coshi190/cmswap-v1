@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import {
-    isLaunchpadChain,
+    getBondingCurveDeployment,
     fetchLaunchTokens,
     fetchTokenSnapshots,
     LAUNCH_TOKEN_DETAIL_FIELDS,
@@ -21,7 +21,7 @@ interface UseCreatedTokensResult {
 
 export function useCreatedTokens(address: Address | undefined): UseCreatedTokensResult {
     const chainId = useLaunchpadChainId()
-    const supported = isLaunchpadChain(chainId)
+    const supported = getBondingCurveDeployment(chainId) !== undefined
 
     const { data, isLoading } = useQuery({
         queryKey: ['created-tokens', chainId, address?.toLowerCase()],

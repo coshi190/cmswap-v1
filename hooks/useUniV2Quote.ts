@@ -6,7 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { zeroAddress, type Address } from 'viem'
 import {
     getV2Quotes,
-    resolveDexIds,
+    getSupportedDexs,
+    getDexConfig,
     wrapQuoteResult,
     ProtocolType,
     type V2QuoteOutcome,
@@ -48,10 +49,12 @@ export function useUniV2Quote({
     const chainId = tokenIn?.chainId ?? tokenOut?.chainId ?? 1
     const client = usePublicClient({ chainId })
 
-    const requestedDexIds = useMemo(
-        () => (tokenIn ? resolveDexIds(chainId, ProtocolType.V2, dexId) : []),
-        [dexId, tokenIn, chainId]
-    )
+    const requestedDexIds = useMemo(() => {
+        if (!tokenIn) return []
+        const ids =
+            dexId === undefined ? getSupportedDexs(chainId, ProtocolType.V2) : [dexId].flat()
+        return ids.filter((id) => !!getDexConfig(chainId, id, ProtocolType.V2))
+    }, [dexId, tokenIn, chainId])
     const primaryDexId = requestedDexIds[0] ?? null
 
     const wrapOperation = useMemo(() => getWrapOperation(tokenIn, tokenOut), [tokenIn, tokenOut])

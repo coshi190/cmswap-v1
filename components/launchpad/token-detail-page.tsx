@@ -9,7 +9,7 @@ import { useGraduatedPoolPrice } from '@/hooks/useGraduatedPoolPrice'
 import type { DailyMetrics } from '@/services/launchpad/chart'
 import { useTokenList } from '@/hooks/useTokenList'
 import { useGraduatedPoolAddress } from '@/hooks/useGraduatedPoolAddress'
-import { FEE_TIERS } from '@coshi190/juno-moneta-sdk'
+import { GRADUATED_POOL_FEE } from '@/services/launchpad/launchpad'
 import { formatAddress, formatTimeAgo, formatFullDate } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { TokenIcon } from '@/components/ui/token-icon'
@@ -341,7 +341,7 @@ export function TokenDetailPage({ tokenAddr }: TokenDetailPageProps) {
                             tokenDecimals={decimals}
                             isGraduated={isGraduated}
                             poolAddress={poolAddress}
-                            poolFee={isGraduated ? FEE_TIERS.HIGH : undefined}
+                            poolFee={isGraduated ? GRADUATED_POOL_FEE : undefined}
                             isPoolLoading={isPoolLoading}
                         />
                         {nativeReserve !== undefined && graduationAmount !== undefined && (

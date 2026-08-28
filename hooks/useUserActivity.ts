@@ -11,8 +11,8 @@ import {
     fetchLaunchTokens,
     LAUNCH_TOKEN_META_FIELDS,
     fetchV3Tokens,
-    isLaunchpadChain,
-    isAggRouterChain,
+    getBondingCurveDeployment,
+    getAggRouterDeployment,
     NATIVE_TOKEN_ADDRESS,
 } from '@coshi190/juno-moneta-sdk'
 import { ponderClient, isPonderError } from '@/lib/ponder-client'
@@ -88,7 +88,7 @@ export function useUserActivity(
     typeFilter: 'all' | 'buy' | 'sell' = 'all'
 ) {
     const isSupportedChain = isLeaderboardSupportedChain(chainId)
-    const hasLaunchpad = isLaunchpadChain(chainId)
+    const hasLaunchpad = getBondingCurveDeployment(chainId) !== undefined
 
     return useQuery({
         queryKey: ['user-activity', address, chainId, page, typeFilter],
@@ -119,7 +119,7 @@ export function useUserActivity(
                     hasLaunchpad
                         ? fetchTransferEvents(sender, chainId, PAGE_SIZE + 50)
                         : Promise.resolve([]),
-                    isAggRouterChain(chainId)
+                    getAggRouterDeployment(chainId) !== undefined
                         ? fetchAggEvents(sender, chainId, PAGE_SIZE + 50)
                         : Promise.resolve([]),
                 ])

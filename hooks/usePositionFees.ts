@@ -6,7 +6,11 @@ import { usePublicClient } from 'wagmi'
 import type { Address } from 'viem'
 import type { V3Position } from '@/types/earn'
 import { MAX_UINT128 } from '@/types/earn'
-import { getV3Config, NONFUNGIBLE_POSITION_MANAGER_ABI } from '@coshi190/juno-moneta-sdk'
+import {
+    ProtocolType,
+    getDexConfig,
+    NONFUNGIBLE_POSITION_MANAGER_ABI,
+} from '@coshi190/juno-moneta-sdk'
 export interface PositionFees {
     fees0: bigint
     fees1: bigint
@@ -22,7 +26,7 @@ export function usePositionFees(
     refetch: () => void
 } {
     const publicClient = usePublicClient({ chainId })
-    const positionManager = getV3Config(chainId)?.positionManager
+    const positionManager = getDexConfig(chainId, undefined, ProtocolType.V3)?.positionManager
 
     const fallbacks = useMemo(() => {
         const map = new Map<string, PositionFees>()

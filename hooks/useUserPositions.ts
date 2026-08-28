@@ -6,7 +6,8 @@ import { useReadContract, useChainId, usePublicClient } from 'wagmi'
 import type { Address } from 'viem'
 import type { V3Position, PositionWithTokens, PositionDetails } from '@/types/earn'
 import {
-    getV3Config,
+    ProtocolType,
+    getDexConfig,
     fetchPositions,
     type DescribedPosition,
     type PositionInput,
@@ -236,7 +237,7 @@ export function usePositionDetails(
 } {
     const currentChainId = useChainId()
     const effectiveChainId = chainId ?? currentChainId
-    const dexConfig = getV3Config(effectiveChainId)
+    const dexConfig = getDexConfig(effectiveChainId, undefined, ProtocolType.V3)
     const positionManager = dexConfig?.positionManager
     const tokenMap = useTokenMap(effectiveChainId)
 

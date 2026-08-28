@@ -7,7 +7,8 @@ import type { Address } from 'viem'
 import type { Incentive } from '@/types/earn'
 import {
     fetchIncentives,
-    getV3StakerAddress,
+    ProtocolType,
+    getDexConfig,
     UNISWAP_V3_STAKER_ABI,
     type V3PoolRow,
 } from '@coshi190/juno-moneta-sdk'
@@ -31,7 +32,7 @@ export function useIncentives(): {
 } {
     const chainId = useChainId()
     const isIndexed = PONDER_INDEXED_CHAINS.has(chainId)
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
 
     const {
         data: incentiveRows,

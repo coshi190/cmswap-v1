@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useWaitForTransactionReceipt, useSimulateContract, useSendTransaction } from 'wagmi'
 import { encodeFunctionData, type Address } from 'viem'
-import { AGG_ROUTER_JUNOSWAP_ABI, getAggRouterAddress } from '@coshi190/juno-moneta-sdk'
+import { AGG_ROUTER_JUNOSWAP_ABI, getAggRouterDeployment } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import type { SwapResult } from '@/types/swap'
 import { buildAggregateParams, buildLegs, type Leg } from '@/services/dex/agg-router'
@@ -50,7 +50,7 @@ export function useAggRouterSwapExecution({
 }: UseAggRouterSwapExecutionParams): UseAggRouterSwapExecutionResult {
     const referrer = useReferrer()
     const chainId = tokenIn.chainId
-    const router = getAggRouterAddress(chainId)
+    const router = getAggRouterDeployment(chainId)?.address
     const isNativeInput = isNativeToken(tokenIn.address as Address)
 
     const call = useMemo(() => {

@@ -5,12 +5,9 @@ import { useAccount, useChainId } from 'wagmi'
 import { parseUnits, zeroAddress, type Address } from 'viem'
 import {
     getDexConfig,
-    isV2Config,
-    getDefaultDexForChain,
     getSupportedDexs,
     ProtocolType,
-    getAggRouterAddress,
-    isAggRouterChain,
+    getAggRouterDeployment,
 } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
 import { Button } from '@/components/ui/button'
@@ -37,6 +34,7 @@ import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { useChainTokens } from '@/hooks/useChainTokens'
 import { calculateMinOutput } from '@/services/dex/slippage'
+import { defaultFeeTier } from '@/lib/liquidity-helpers'
 import {
     formatBalance,
     formatTokenAmount,
@@ -90,15 +88,15 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         setAggPredictedOut,
     } = useSwapStore()
     const dexConfig = getDexConfig(chainId, selectedDex)
-    const isV2Protocol = dexConfig && isV2Config(dexConfig)
+    const isV2Protocol = dexConfig?.protocolType === ProtocolType.V2
     const hasInitializedTokensRef = useRef(false)
     const supportedDexs = useMemo(() => getSupportedDexs(chainId), [chainId])
     useEffect(() => {
-        const defaultDex = getDefaultDexForChain(chainId)
-        if (!supportedDexs.includes(selectedDex)) {
-            setSelectedDex(defaultDex)
+        const fallback = supportedDexs[0]
+        if (fallback && !supportedDexs.includes(selectedDex)) {
+            setSelectedDex(fallback)
         }
-    }, [chainId, supportedDexs, selectedDex, setSelectedDex])
+    }, [supportedDexs, selectedDex, setSelectedDex])
     const {
         balance: balanceInValue,
         isLoading: isLoadingBalanceIn,
@@ -185,7 +183,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
     }, [isError, effectiveQuote])
     const isWrapUnwrap = !!wrapOp
     const wrapOperation = wrapOp
-    const fee = quoteFee ?? 3000
+    const fee = quoteFee ?? defaultFeeTier(chainId)
     const prevQuoteAmountOutRef = useRef<bigint | null>(null)
     const prevIsLoadingRef = useRef<boolean>(false)
 
@@ -220,7 +218,8 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         amountInBigInt,
     ])
     const isSameTokenSwap = isSameToken(tokenIn, tokenOut)
-    const aggEligible = isAggRouterChain(chainId) && !isWrapUnwrap && settings.autoSelectBestDex
+    const aggEligible =
+        getAggRouterDeployment(chainId) !== undefined && !isWrapUnwrap && settings.autoSelectBestDex
     const splitRoute = useSplitRoute({
         tokenIn,
         tokenOut,
@@ -298,7 +297,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         token: tokenIn ?? tokens[0]!,
         owner: address,
         amountToApprove: amountInBigInt,
-        spender: useAggPath ? getAggRouterAddress(chainId) : undefined,
+        spender: useAggPath ? getAggRouterDeployment(chainId)?.address : undefined,
     })
     const needsApprovalCheck = useMemo(() => {
         if (wrapOp === 'wrap') return false

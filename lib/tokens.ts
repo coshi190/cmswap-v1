@@ -2,9 +2,9 @@ import type { Address } from 'viem'
 import {
     ERC20_ABI,
     NATIVE_TOKEN_ADDRESS,
-    WRAPPED_NATIVE_ADDRESSES,
     getSwapAddress,
     getWrapOperation as getWrapOperationBySdk,
+    getWrappedNativeAddress as getWrappedNativeAddressBySdk,
     isNativeToken,
 } from '@coshi190/juno-moneta-sdk'
 import type { Token } from '@/types/token'
@@ -165,7 +165,7 @@ export function isValidTokenAddress(address: string): boolean {
 }
 
 export function findWrappedNativeAddress(chainId: number): Address | undefined {
-    return WRAPPED_NATIVE_ADDRESSES[chainId]
+    return getWrappedNativeAddressBySdk(chainId)
 }
 
 export function getWrappedNativeAddress(chainId: number): Address {

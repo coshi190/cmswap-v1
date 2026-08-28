@@ -6,7 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import type { StakedPosition, Incentive, DepositInfo, PositionWithTokens } from '@/types/earn'
 import {
-    getV3StakerAddress,
+    ProtocolType,
+    getDexConfig,
     UNISWAP_V3_STAKER_ABI,
     fetchPositionsByTokenIds,
 } from '@coshi190/juno-moneta-sdk'
@@ -22,7 +23,7 @@ export function useStakedPositions(
     refetch: () => void
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const tokenIdKey = useMemo(() => positions.map((p) => p.tokenId.toString()), [positions])
     const {
         data: depositRows,
@@ -134,7 +135,7 @@ export function useDepositInfo(tokenId: bigint | undefined): {
     isLoading: boolean
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const { data, isLoading } = useReadContracts({
         contracts: [
             {

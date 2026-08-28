@@ -2,9 +2,8 @@
 
 import { useMemo } from 'react'
 import type { Address } from 'viem'
-import { FEE_TIERS } from '@coshi190/juno-moneta-sdk'
 import { useV3Pools } from '@/hooks/useV3Pools'
-import { findGraduatedPool } from '@/services/launchpad/launchpad'
+import { findGraduatedPool, GRADUATED_POOL_FEE } from '@/services/launchpad/launchpad'
 
 export function useGraduatedPoolAddress(
     tokenAddr: Address | undefined,
@@ -15,7 +14,7 @@ export function useGraduatedPoolAddress(
 
     const poolAddress = useMemo(() => {
         if (!tokenAddr || !wrappedNative) return undefined
-        const pool = findGraduatedPool(pools, tokenAddr, wrappedNative, FEE_TIERS.HIGH)
+        const pool = findGraduatedPool(pools, tokenAddr, wrappedNative, GRADUATED_POOL_FEE)
         return pool?.address as Address | undefined
     }, [pools, tokenAddr, wrappedNative])
 

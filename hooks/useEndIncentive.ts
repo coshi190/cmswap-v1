@@ -8,7 +8,7 @@ import {
     useWriteContract,
 } from 'wagmi'
 import type { Hex } from 'viem'
-import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig } from '@coshi190/juno-moneta-sdk'
 import { canEndIncentive } from '@/services/mining/incentives'
 import type { Incentive } from '@/types/earn'
 
@@ -49,7 +49,7 @@ export function useEndIncentive(incentive: Incentive | null): {
     hash: Hex | undefined
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const isEligible = !!incentive && canEndIncentive(incentive)
 
     const args = useMemo(() => {

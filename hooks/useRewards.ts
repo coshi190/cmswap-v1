@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useReadContract, useReadContracts, useChainId } from 'wagmi'
 import type { IncentiveKey, StakedPosition } from '@/types/earn'
-import { getV3StakerAddress, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig, UNISWAP_V3_STAKER_ABI } from '@coshi190/juno-moneta-sdk'
 export function usePendingRewards(
     incentiveKey: IncentiveKey | null,
     tokenId: bigint | undefined
@@ -14,7 +14,7 @@ export function usePendingRewards(
     refetch: () => void
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const isEnabled = !!incentiveKey && tokenId !== undefined && !!stakerAddress
     const { data, isLoading, refetch } = useReadContract({
         address: stakerAddress,
@@ -53,7 +53,7 @@ export function usePendingRewardsMultiple(stakedPositions: StakedPosition[]): {
     refetch: () => void
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const contracts = useMemo(() => {
         if (!stakerAddress || stakedPositions.length === 0) return []
         return stakedPositions.map((sp) => ({

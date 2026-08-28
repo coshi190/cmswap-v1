@@ -9,7 +9,7 @@ import {
     useWriteContract,
 } from 'wagmi'
 import type { Address, Hex } from 'viem'
-import { getV3StakerAddress } from '@coshi190/juno-moneta-sdk'
+import { ProtocolType, getDexConfig } from '@coshi190/juno-moneta-sdk'
 import { useNowSeconds } from '@/hooks/useNowSeconds'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
@@ -80,7 +80,7 @@ export function useCreateIncentive(
     const { address } = useAccount()
     const chainId = useChainId()
     const now = useNowSeconds()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
 
     const { balance } = useTokenBalance({ token: form.rewardToken, address })
 

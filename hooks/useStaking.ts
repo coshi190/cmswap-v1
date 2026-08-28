@@ -11,8 +11,8 @@ import {
 import type { Address } from 'viem'
 import type { IncentiveKey, PositionWithTokens } from '@/types/earn'
 import {
-    getV3Config,
-    getV3StakerAddress,
+    ProtocolType,
+    getDexConfig,
     UNISWAP_V3_STAKER_ABI,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
 } from '@coshi190/juno-moneta-sdk'
@@ -53,8 +53,8 @@ export function useStakePosition(
     hash: `0x${string}` | undefined
 } {
     const chainId = useChainId()
-    const dexConfig = getV3Config(chainId)
-    const stakerAddress = getV3StakerAddress(chainId)
+    const dexConfig = getDexConfig(chainId, undefined, ProtocolType.V3)
+    const stakerAddress = dexConfig?.staker
     const positionManager = dexConfig?.positionManager
     const isEnabled =
         !!position && !!incentiveKey && !!owner && !!stakerAddress && !!positionManager
@@ -165,7 +165,7 @@ export function useUnstakePositions(
     hash: `0x${string}` | undefined
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const multicallData = useMemo(() => {
         if (!incentiveKey || !recipient || tokenIds.length === 0) return null
         return buildUnstakeManyAndWithdrawMulticall(tokenIds, incentiveKey, recipient)
@@ -225,7 +225,7 @@ export function useWithdrawPosition(
     hash: `0x${string}` | undefined
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const isEnabled = tokenId !== undefined && !!recipient && !!stakerAddress
     const {
         data: simulation,
@@ -279,7 +279,7 @@ export function useUnstakePosition(
     hash: `0x${string}` | undefined
 } {
     const chainId = useChainId()
-    const stakerAddress = getV3StakerAddress(chainId)
+    const stakerAddress = getDexConfig(chainId, undefined, ProtocolType.V3)?.staker
     const isEnabled = tokenId !== undefined && !!incentiveKey && !!recipient && !!stakerAddress
     const multicallData = useMemo(() => {
         if (!isEnabled || !incentiveKey || !recipient || tokenId === undefined) {

@@ -13,12 +13,11 @@ const JUNO_FACTORY = '0x090C6E5fF29251B1eF9EC31605Bdd13351eA316C' as Address
 vi.mock('@coshi190/juno-moneta-sdk', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     ProtocolType: { V2: 'v2', V3: 'v3' },
-    getV2Config: vi.fn((_c: number, dexId: string) =>
-        dexId === 'udonswap' ? { factory: UDON_FACTORY } : undefined
-    ),
-    getV3Config: vi.fn((_c: number, dexId: string) =>
-        dexId === 'junoswap' ? { factory: JUNO_FACTORY } : undefined
-    ),
+    getDexConfig: vi.fn((_c: number, dexId: string, protocol?: string) => {
+        if (protocol === 'v2') return dexId === 'udonswap' ? { factory: UDON_FACTORY } : undefined
+        if (protocol === 'v3') return dexId === 'junoswap' ? { factory: JUNO_FACTORY } : undefined
+        return undefined
+    }),
 }))
 
 const getModule = () => import('@/services/dex/agg-plan')
