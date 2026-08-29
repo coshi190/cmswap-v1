@@ -22,14 +22,7 @@ import { useSwapExecution } from '@/hooks/useSwapExecution'
 import { useAggRouterSwapExecution } from '@/hooks/useAggRouterSwapExecution'
 import { useSplitRoute } from '@/hooks/useSplitRoute'
 import { useCrossDexRoute } from '@/hooks/useCrossDexRoute'
-import { splitClearsMargin } from '@coshi190/juno-moneta-sdk'
-import {
-    splitToPlan,
-    crossDexToPlan,
-    bestPlan,
-    planToLegs,
-    describePlan,
-} from '@/services/dex/agg-plan'
+import { splitClearsMargin, pickAggregatePlan } from '@coshi190/juno-moneta-sdk'
 import { useTokenApproval } from '@/hooks/useTokenApproval'
 import { useSwapUrlSync } from '@/hooks/useSwapUrlSync'
 import { useChainTokens } from '@/hooks/useChainTokens'
@@ -233,13 +226,30 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         amountIn: amountInBigInt,
         enabled: aggEligible,
     })
-    const aggPlan = useMemo(() => {
-        const splitPlan = splitRoute.allocation ? splitToPlan(splitRoute.allocation, chainId) : null
-        const crossPlan = crossDex.leg
-            ? crossDexToPlan(crossDex.leg, amountInBigInt, splitRoute.aggFeeBps)
-            : null
-        return bestPlan(splitPlan, crossPlan)
-    }, [splitRoute.allocation, splitRoute.aggFeeBps, crossDex.leg, amountInBigInt, chainId])
+    const symbolOf = useMemo(() => {
+        const byAddr = new Map(tokens.map((t) => [t.address.toLowerCase(), t.symbol]))
+        return (addr: Address) => byAddr.get(addr.toLowerCase()) ?? `${addr.slice(0, 6)}…`
+    }, [tokens])
+    const agg = useMemo(
+        () =>
+            pickAggregatePlan({
+                chainId,
+                amountIn: amountInBigInt,
+                aggFeeBps: splitRoute.aggFeeBps,
+                allocation: splitRoute.allocation,
+                crossDexLeg: crossDex.leg,
+                symbolOf,
+            }),
+        [
+            chainId,
+            amountInBigInt,
+            splitRoute.aggFeeBps,
+            splitRoute.allocation,
+            crossDex.leg,
+            symbolOf,
+        ]
+    )
+    const aggPlan = agg?.plan ?? null
     const bestSingleOut = allRoutes[0]?.quote.amountOut ?? null
     const liveUseAgg =
         aggEligible &&
@@ -250,10 +260,6 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
     useEffect(() => {
         setPinnedUseAgg(null)
     }, [amountInBigInt, tokenIn?.address, tokenOut?.address, chainId])
-    const aggLegs = useMemo(
-        () => (useAggPath && aggPlan ? planToLegs(aggPlan) : null),
-        [useAggPath, aggPlan]
-    )
     const amountOutMinimum = useMemo(() => {
         if (useAggPath && aggPlan && tokenOut) {
             return calculateMinOutput(aggPlan.predictedNetOut, Math.floor(settings.slippage * 100))
@@ -272,14 +278,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         }
         return '0'
     }, [useAggPath, aggPlan, effectiveQuote, isQuoteLoading, shouldShowError, tokenOut])
-    const symbolOf = useMemo(() => {
-        const byAddr = new Map(tokens.map((t) => [t.address.toLowerCase(), t.symbol]))
-        return (addr: Address) => byAddr.get(addr.toLowerCase()) ?? `${addr.slice(0, 6)}…`
-    }, [tokens])
-    const planLegs = useMemo(
-        () => (useAggPath && aggPlan ? describePlan(aggPlan, symbolOf) : null),
-        [useAggPath, aggPlan, symbolOf]
-    )
+    const planLegs = useAggPath && agg ? agg.legs : null
     useEffect(() => {
         const nextKind = useAggPath && aggPlan ? aggPlan.kind : null
         const nextOut = useAggPath && aggPlan ? aggPlan.predictedNetOut : null
@@ -325,7 +324,7 @@ export function SwapCard({ tokens: tokensOverride, showChart, onToggleChart }: S
         amountOutMinimum,
         recipient: address ?? zeroAddress,
         deadlineMinutes: settings.deadlineMinutes,
-        legs: aggLegs,
+        plan: useAggPath ? aggPlan : null,
         skipSimulation: skipSwapSimulation,
     })
     const {
