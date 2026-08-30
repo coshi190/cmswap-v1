@@ -1,13 +1,15 @@
 'use client'
 
 import { useMemo, useEffect, useState, useRef } from 'react'
-import { useWriteContract, useReadContract, usePublicClient } from 'wagmi'
+import { useWriteContract, usePublicClient } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { parseEther } from 'viem'
 import type { Address } from 'viem'
 import {
-    BONDING_CURVE_JUNOSWAP_ABI,
+    getCurveCreationEvent,
     calculateBuyOutput,
+    getCurveState,
+    planCurveCall,
     INITIAL_TOKEN_SUPPLY,
 } from '@coshi190/juno-moneta-sdk'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
@@ -54,25 +56,10 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
         buyAmount: bigint
     } | null>(null)
 
-    const { data: createFee } = useReadContract({
-        address: bondingCurveAddress,
-        abi: BONDING_CURVE_JUNOSWAP_ABI,
-        functionName: 'createFee',
-        chainId: chainId,
-    })
-
-    const { data: initialNative } = useReadContract({
-        address: bondingCurveAddress,
-        abi: BONDING_CURVE_JUNOSWAP_ABI,
-        functionName: 'initialNative',
-        chainId: chainId,
-    })
-
-    const { data: virtualAmount } = useReadContract({
-        address: bondingCurveAddress,
-        abi: BONDING_CURVE_JUNOSWAP_ABI,
-        functionName: 'virtualAmount',
-        chainId: chainId,
+    const { data: curve } = useQuery({
+        queryKey: ['curve-config', chainId],
+        queryFn: () => getCurveState(publicClient!, { chainId }),
+        enabled: !!publicClient,
     })
 
     const upfrontBuyNative = useMemo(() => {
@@ -87,15 +74,14 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
     }, [form?.upfrontBuyAmount])
 
     const expectedTokens = useMemo(() => {
-        if (upfrontBuyNative <= 0n || initialNative === undefined || virtualAmount === undefined)
-            return 0n
+        if (upfrontBuyNative <= 0n || !curve) return 0n
         return calculateBuyOutput(
             upfrontBuyNative,
-            initialNative as bigint,
+            curve.initialNative,
             INITIAL_TOKEN_SUPPLY,
-            virtualAmount as bigint
+            curve.virtualAmount
         )
-    }, [upfrontBuyNative, initialNative, virtualAmount])
+    }, [upfrontBuyNative, curve])
 
     const minTokenOut = useMemo(
         () => calculateMinOutput(expectedTokens, slippageBps),
@@ -103,9 +89,9 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
     )
 
     const createCost = useMemo(() => {
-        if (createFee === undefined || initialNative === undefined) return 0n
-        return (createFee as bigint) + (initialNative as bigint)
-    }, [createFee, initialNative])
+        if (!curve) return 0n
+        return curve.createFee + curve.initialNative
+    }, [curve])
 
     const totalCost = useMemo(() => createCost + upfrontBuyNative, [createCost, upfrontBuyNative])
 
@@ -162,7 +148,7 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
         try {
             const receipt = await publicClient.getTransactionReceipt({ hash })
             const args = findEventArgs<{ tokenAddr: Address }>(receipt.logs, {
-                abi: BONDING_CURVE_JUNOSWAP_ABI,
+                abi: [getCurveCreationEvent()],
                 eventName: 'Creation',
                 address: bondingCurveAddress,
             })
@@ -194,14 +180,8 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
                     setPhase('error')
                     return
                 }
-                const reserveData = await publicClient.readContract({
-                    address: bondingCurveAddress,
-                    abi: BONDING_CURVE_JUNOSWAP_ABI,
-                    functionName: 'pumpReserve',
-                    args: [tokenAddr],
-                })
-                const [nativeReserve, tokenReserve] = reserveData as [bigint, bigint]
-                if (tokenReserve <= 0n) {
+                const state = await getCurveState(publicClient, { chainId, token: tokenAddr })
+                if (!state || state.tokenReserve <= 0n) {
                     setPhaseError(new Error('Token reserves not yet available'))
                     setPhase('error')
                     return
@@ -209,9 +189,9 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
 
                 const actualExpected = calculateBuyOutput(
                     upfrontBuyNative,
-                    nativeReserve,
-                    tokenReserve,
-                    virtualAmount as bigint
+                    state.nativeReserve,
+                    state.tokenReserve,
+                    state.virtualAmount
                 )
                 const actualMinOut = calculateMinOutput(actualExpected, slippageBps)
 
@@ -221,11 +201,12 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
                     buyAmount: upfrontBuyNative,
                 }
                 writeBuy({
-                    address: bondingCurveAddress,
-                    abi: BONDING_CURVE_JUNOSWAP_ABI,
-                    functionName: 'buy',
-                    args: [tokenAddr, actualMinOut],
-                    value: upfrontBuyNative,
+                    ...planCurveCall(chainId, {
+                        kind: 'buy',
+                        token: tokenAddr,
+                        minOut: actualMinOut,
+                        value: upfrontBuyNative,
+                    }),
                     chainId: chainId,
                 })
             })
@@ -271,19 +252,19 @@ export function useCreateToken({ form }: UseCreateTokenParams): UseCreateTokenRe
         didTriggerBuy.current = false
         buyParamsRef.current = null
         writeCreate({
-            address: bondingCurveAddress,
-            abi: BONDING_CURVE_JUNOSWAP_ABI,
-            functionName: 'createToken',
-            args: [
-                form.name,
-                form.symbol,
-                logoOverride ?? form.logo,
-                form.description,
-                form.link1,
-                form.link2,
-                form.link3,
-            ],
-            value: createCost,
+            ...planCurveCall(chainId, {
+                kind: 'create',
+                metadata: {
+                    name: form.name,
+                    symbol: form.symbol,
+                    logo: logoOverride ?? form.logo,
+                    description: form.description,
+                    link1: form.link1,
+                    link2: form.link2,
+                    link3: form.link3,
+                },
+                value: createCost,
+            }),
             chainId: chainId,
         })
     }
