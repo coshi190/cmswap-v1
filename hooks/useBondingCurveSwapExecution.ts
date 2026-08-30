@@ -7,14 +7,15 @@ import {
     useSimulateContract,
     useWriteContract,
     usePublicClient,
+    type UseSimulateContractParameters,
 } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { zeroAddress, type Address } from 'viem'
 import {
-    BONDING_CURVE_JUNOSWAP_ABI,
     ERC20_ABI,
     calculateBuyOutput,
     calculateSellOutput,
+    planCurveCall,
 } from '@coshi190/juno-moneta-sdk'
 import { getAllowanceFunctionName } from '@/lib/tokens'
 import { useLaunchpadContract } from '@/hooks/useLaunchpadChainId'
@@ -83,22 +84,28 @@ export function useBondingCurveSwapExecution({
         [expectedOut, slippageBps]
     )
 
-    const { data: simulationData, isLoading: isPreparing } = useSimulateContract({
-        address: bondingCurveAddress,
-        abi: BONDING_CURVE_JUNOSWAP_ABI,
-        functionName: isBuy ? 'buy' : 'sell',
-        args: tokenAddr ? (isBuy ? [tokenAddr, minOut] : [tokenAddr, amount, minOut]) : undefined,
-        value: isBuy ? amount : undefined,
+    const call = useMemo(() => {
+        if (!tokenAddr || !bondingCurveAddress) return null
+        return planCurveCall(
+            chainId,
+            isBuy
+                ? { kind: 'buy', token: tokenAddr, minOut, value: amount }
+                : { kind: 'sell', token: tokenAddr, amountIn: amount, minOut }
+        )
+    }, [chainId, isBuy, tokenAddr, bondingCurveAddress, amount, minOut])
+
+    const simulateConfig: UseSimulateContractParameters = {
+        address: call?.address,
+        abi: call?.abi,
+        functionName: call?.functionName,
+        args: call?.args,
+        value: call?.value,
         chainId,
         query: {
-            enabled:
-                !!tokenAddr &&
-                !!bondingCurveAddress &&
-                amount > 0n &&
-                (isBuy || allowance >= amount) &&
-                enabled,
+            enabled: !!call && amount > 0n && (isBuy || allowance >= amount) && enabled,
         },
-    })
+    }
+    const { data: simulationData, isLoading: isPreparing } = useSimulateContract(simulateConfig)
 
     const {
         data: hash,

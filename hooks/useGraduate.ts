@@ -7,13 +7,14 @@ import { maxUint256, maxUint128, parseEther } from 'viem'
 import {
     ProtocolType,
     getDexConfig,
-    BONDING_CURVE_JUNOSWAP_ABI,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
     UNISWAP_V3_FACTORY_ABI,
     UNISWAP_V3_POOL_ABI,
     UNISWAP_V3_SWAP_ROUTER_ABI,
     WETH9_ABI,
     ERC20_ABI,
+    getCurveState,
+    planCurveCall,
     isReadyToGraduate,
     isSqrtPriceWithinTolerance,
     PRICE_TOLERANCE_BPS,
@@ -99,7 +100,7 @@ export function useGraduate({
             address: Address
             abi: readonly unknown[]
             functionName: string
-            args?: unknown[]
+            args?: readonly unknown[]
             value?: bigint
         }) => {
             if (!publicClient || !address) throw new Error('Wallet not connected')
@@ -144,24 +145,11 @@ export function useGraduate({
             const positionManager = v3Config.positionManager!
             const swapRouter = v3Config.swapRouter!
 
-            const [freshReserves, onChainCap] = await Promise.all([
-                publicClient.readContract({
-                    address: bondingCurveAddress,
-                    abi: BONDING_CURVE_JUNOSWAP_ABI,
-                    functionName: 'pumpReserve',
-                    args: [tokenAddr],
-                }),
-                publicClient.readContract({
-                    address: bondingCurveAddress,
-                    abi: BONDING_CURVE_JUNOSWAP_ABI,
-                    functionName: 'graduationAmount',
-                }),
-            ])
-            const nativeReserve = (freshReserves as [bigint, bigint])[0]
-            const tokenReserve = (freshReserves as [bigint, bigint])[1]
-            const cap = onChainCap as bigint
+            const curve = await getCurveState(publicClient, { chainId, token: tokenAddr })
+            if (!curve) throw new Error('Bonding curve state unavailable')
+            const { nativeReserve, tokenReserve } = curve
 
-            if (!isReadyToGraduate(nativeReserve, tokenReserve, cap, false)) {
+            if (!isReadyToGraduate(nativeReserve, tokenReserve, curve.graduationAmount, false)) {
                 throw new Error('Not ready to graduate — bonding curve has not reached the cap')
             }
 
@@ -234,13 +222,14 @@ export function useGraduate({
 
                 if (tokenBalBefore === 0n) {
                     setStep('buying-tokens')
-                    await sendTx({
-                        address: bondingCurveAddress,
-                        abi: BONDING_CURVE_JUNOSWAP_ABI,
-                        functionName: 'buy',
-                        args: [tokenAddr, 0n],
-                        value: parseEther('0.006'),
-                    })
+                    await sendTx(
+                        planCurveCall(chainId, {
+                            kind: 'buy',
+                            token: tokenAddr,
+                            minOut: 0n,
+                            value: parseEther('0.006'),
+                        })
+                    )
                 }
 
                 const kubToWrap = (nativeReserve * 85n) / 1000n
@@ -544,12 +533,7 @@ export function useGraduate({
             }
 
             setStep('graduating')
-            await sendTx({
-                address: bondingCurveAddress,
-                abi: BONDING_CURVE_JUNOSWAP_ABI,
-                functionName: 'graduate',
-                args: [tokenAddr],
-            })
+            await sendTx(planCurveCall(chainId, { kind: 'graduate', token: tokenAddr }))
 
             if (rescue) {
                 setStep('unwrapping')
@@ -578,7 +562,16 @@ export function useGraduate({
         } finally {
             isRunning.current = false
         }
-    }, [tokenAddr, publicClient, v3Config, wrappedNative, address, bondingCurveAddress, sendTx])
+    }, [
+        tokenAddr,
+        chainId,
+        publicClient,
+        v3Config,
+        wrappedNative,
+        address,
+        bondingCurveAddress,
+        sendTx,
+    ])
 
     const isPreparing = step === 'checking-pool'
     const isExecuting = !isPreparing && step !== 'idle' && step !== 'done' && step !== 'error'
