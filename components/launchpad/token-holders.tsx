@@ -84,7 +84,7 @@ export function TokenHolders({
     isGraduated,
     className,
 }: TokenHoldersProps) {
-    const [page, setPage] = useState(1)
+    const [requestedPage, setPage] = useState(1)
     const {
         holders: rawHolders,
         holderCount: rawHolderCount,
@@ -96,7 +96,8 @@ export function TokenHolders({
         : rawHolders
     const holderCount = filteredPool ? Math.max(0, rawHolderCount - 1) : rawHolderCount
 
-    const totalPages = Math.ceil(holders.length / PAGE_SIZE)
+    const totalPages = Math.max(1, Math.ceil(holders.length / PAGE_SIZE))
+    const page = Math.min(requestedPage, totalPages)
     const paginatedHolders = holders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
     const tableHeader = (
