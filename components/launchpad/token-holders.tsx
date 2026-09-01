@@ -165,6 +165,7 @@ export function TokenHolders({
                                     currentPage={page}
                                     totalPages={totalPages}
                                     onPageChange={setPage}
+                                    siblingCount={0}
                                 />
                             </div>
                         )}
