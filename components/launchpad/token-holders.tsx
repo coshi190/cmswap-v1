@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Address } from 'viem'
+import { formatUnits, type Address } from 'viem'
 import { useTokenHolders } from '@/hooks/useTokenHolders'
 import type { HolderData } from '@/hooks/useTokenHolders'
 import { PortfolioLink } from '@/components/ui/portfolio-link'
@@ -17,10 +17,17 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Switch } from '@/components/ui/switch'
 import { PaginationControls } from '@/components/ui/pagination'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 10
+const TOKEN_DECIMALS = 18
+
+const amountFormatter = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 2,
+})
 
 interface TokenHoldersProps {
     tokenAddr: Address
@@ -34,10 +41,12 @@ function HolderRow({
     holder,
     index,
     isCreator,
+    showAmount,
 }: {
     holder: HolderData
     index: number
     isCreator: boolean
+    showAmount: boolean
 }) {
     return (
         <TableRow
@@ -54,7 +63,9 @@ function HolderRow({
                 </div>
             </TableCell>
             <TableCell className="w-24 py-2.5 text-right text-xs tabular-nums text-muted-foreground">
-                {holder.percentage.toFixed(2)}%
+                {showAmount
+                    ? amountFormatter.format(Number(formatUnits(holder.balance, TOKEN_DECIMALS)))
+                    : `${holder.percentage.toFixed(2)}%`}
             </TableCell>
         </TableRow>
     )
@@ -84,7 +95,8 @@ export function TokenHolders({
     isGraduated,
     className,
 }: TokenHoldersProps) {
-    const [page, setPage] = useState(1)
+    const [requestedPage, setPage] = useState(1)
+    const [showAmount, setShowAmount] = useState(false)
     const {
         holders: rawHolders,
         holderCount: rawHolderCount,
@@ -96,7 +108,8 @@ export function TokenHolders({
         : rawHolders
     const holderCount = filteredPool ? Math.max(0, rawHolderCount - 1) : rawHolderCount
 
-    const totalPages = Math.ceil(holders.length / PAGE_SIZE)
+    const totalPages = Math.max(1, Math.ceil(holders.length / PAGE_SIZE))
+    const page = Math.min(requestedPage, totalPages)
     const paginatedHolders = holders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
     const tableHeader = (
@@ -106,7 +119,7 @@ export function TokenHolders({
                     Address
                 </TableHead>
                 <TableHead className="w-28 text-right text-[10px] font-semibold uppercase tracking-wider">
-                    % of Supply
+                    {showAmount ? 'Amount' : '% of Supply'}
                 </TableHead>
             </TableRow>
         </TableHeader>
@@ -122,6 +135,16 @@ export function TokenHolders({
                             {holderCount}
                         </Badge>
                     )}
+                    <label className="ml-auto flex cursor-pointer items-center gap-1.5">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Amount
+                        </span>
+                        <Switch
+                            checked={showAmount}
+                            onCheckedChange={setShowAmount}
+                            aria-label="Show token amount instead of percentage"
+                        />
+                    </label>
                 </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -148,6 +171,7 @@ export function TokenHolders({
                                             key={holder.address}
                                             holder={holder}
                                             index={i}
+                                            showAmount={showAmount}
                                             isCreator={
                                                 !!creator &&
                                                 holder.address.toLowerCase() ===
@@ -159,11 +183,12 @@ export function TokenHolders({
                             </Table>
                         </div>
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-end border-t border-border/40 px-3 py-2.5">
+                            <div className="flex items-center justify-center border-t border-border/40 px-3 py-2.5">
                                 <PaginationControls
                                     currentPage={page}
                                     totalPages={totalPages}
                                     onPageChange={setPage}
+                                    siblingCount={0}
                                 />
                             </div>
                         )}

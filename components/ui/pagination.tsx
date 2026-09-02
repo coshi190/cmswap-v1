@@ -11,7 +11,7 @@ const Pagination = ({ className, ...props }: React.ComponentProps<'nav'>) => (
     <nav
         role="navigation"
         aria-label="pagination"
-        className={cn('mx-auto flex w-full max-w-full justify-center', className)}
+        className={cn('mx-auto flex w-full min-w-0 max-w-full justify-center', className)}
         {...props}
     />
 )
@@ -20,7 +20,10 @@ const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProp
     ({ className, ...props }, ref) => (
         <ul
             ref={ref}
-            className={cn('flex flex-row items-center gap-0.5 sm:gap-1', className)}
+            className={cn(
+                'flex w-full min-w-0 flex-row flex-wrap items-center justify-center gap-1',
+                className
+            )}
             {...props}
         />
     )
@@ -45,7 +48,7 @@ const PaginationLink = ({ className, isActive, size, ...props }: PaginationLinkP
                 variant: 'outline',
                 size,
             }),
-            'h-8 min-w-8 cursor-pointer',
+            'h-8 min-w-8 shrink-0 cursor-pointer px-2 text-xs',
             isActive &&
                 'pointer-events-none border-transparent bg-foreground text-background shadow-sm',
             className
